@@ -1,3 +1,12 @@
+[project]
+name = "hass-tryfi"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13.2"
+dependencies = [
+]
+
 [tool.black]
 line-length = 88
 target-version = ['py311']
