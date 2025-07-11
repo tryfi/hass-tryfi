@@ -20,9 +20,6 @@ jobs:
             ~/.cache/pip
           key: custom-component-ci
       - uses: astral-sh/ruff-action@v3
-        with:
-          # TODO: Remove these ignores, but right now there's too many issues
-          args: "check --ignore F405,F403,E722"
       - uses: hacs/action@22.5.0
         with:
           CATEGORY: integration

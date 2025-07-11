@@ -25,6 +25,13 @@ extend-exclude = '''
 )/
 '''
 
+[tool.ruff.lint]
+ignore = [
+    "F405",
+    "F403",
+    "E722"
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
