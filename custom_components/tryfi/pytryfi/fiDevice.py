@@ -113,6 +113,9 @@ class FiDevice(object):
     def connectedTo(self):
         return self._connectedTo
     @property
+    def connectionSignalStrength(self) -> int:
+        return self._connectionSignalStrength
+    @property
     def availableLedColors(self) -> list[ledColors]:
         return self._availableLedColors
     @property
