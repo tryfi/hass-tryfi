@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 
 async def test_setup_auth_failure(hass: HomeAssistant) -> None:
     """Test setup with authentication failure."""
-    with patch("custom_components.tryfi._pytryfi_loader.PyTryFi") as mock_pytryfi:
+    with patch("custom_components.tryfi.pytryfi.PyTryFi") as mock_pytryfi:
         # Simulate auth failure - no currentUser
         mock_pytryfi.return_value = Mock(spec=["update"])
         
@@ -42,7 +42,7 @@ async def test_setup_auth_failure(hass: HomeAssistant) -> None:
 async def test_setup_exception(hass: HomeAssistant) -> None:
     """Test setup with PyTryFi initialization exception."""
     with patch(
-        "custom_components.tryfi._pytryfi_loader.PyTryFi",
+        "custom_components.tryfi.pytryfi.PyTryFi",
         side_effect=Exception("Connection failed")
     ):
         config_entry = MockConfigEntry(
@@ -201,7 +201,7 @@ async def test_config_flow_validation_errors(hass: HomeAssistant) -> None:
     # Test with invalid polling rate (handled by schema validation)
     # Test with connection timeout
     with patch(
-        "custom_components.tryfi._pytryfi_loader.PyTryFi",
+        "custom_components.tryfi.pytryfi.PyTryFi",
         side_effect=TimeoutError("Connection timeout")
     ):
         with pytest.raises(Exception):

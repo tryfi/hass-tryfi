@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_tryfi_api():
     """Create a fully mocked TryFi API."""
-    with patch("custom_components.tryfi._pytryfi_loader.PyTryFi") as mock_pytryfi:
+    with patch("custom_components.tryfi.pytryfi.PyTryFi") as mock_pytryfi:
         # Create instance
         instance = Mock()
         mock_pytryfi.return_value = instance
@@ -231,7 +231,7 @@ async def test_multiple_pets_and_bases(
     hass: HomeAssistant
 ) -> None:
     """Test integration with multiple pets and bases."""
-    with patch("custom_components.tryfi._pytryfi_loader.PyTryFi") as mock_pytryfi:
+    with patch("custom_components.tryfi.pytryfi.PyTryFi") as mock_pytryfi:
         instance = Mock()
         mock_pytryfi.return_value = instance
         

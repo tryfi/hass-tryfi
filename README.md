@@ -8,6 +8,8 @@
 
 This allows you to integrate [TryFi](https://tryfi.com) Smart GPS Collars with Home Assistant.
 
+**Note:** This integration includes an embedded version of the pytryfi library, so no separate installation is required.
+
 ## Features
 Current functionality includes:
 * Device Tracker - your pet will show up in HA using the GPS coordinates from the collar

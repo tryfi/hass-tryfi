@@ -186,34 +186,9 @@ def test_find_closest_color_empty_map():
     assert find_closest_color_code((255, 0, 0), {}) == 8  # Default white
 
 
-def test_pytryfi_loader():
-    """Test the pytryfi loader module."""
-    import os
+def test_embedded_pytryfi_import():
+    """Test that embedded pytryfi can be imported."""
+    from custom_components.tryfi.pytryfi import PyTryFi
     
-    # Test with environment variable
-    os.environ["TRYFI_USE_EXTERNAL_PYTRYFI"] = "true"
-    
-    # Clear the module cache to force reload
-    import sys
-    if "custom_components.tryfi._pytryfi_loader" in sys.modules:
-        del sys.modules["custom_components.tryfi._pytryfi_loader"]
-    
-    with patch("pytryfi.PyTryFi") as mock_external:
-        mock_external.__name__ = "PyTryFi"
-        try:
-            from custom_components.tryfi._pytryfi_loader import PYTRYFI_MODE, PyTryFi
-            assert PYTRYFI_MODE == "external"
-        except ImportError:
-            # External pytryfi not installed, should fall back
-            from custom_components.tryfi._pytryfi_loader import PYTRYFI_MODE, PyTryFi
-            assert PYTRYFI_MODE == "embedded"
-    
-    # Clean up
-    os.environ.pop("TRYFI_USE_EXTERNAL_PYTRYFI", None)
-    
-    # Test default (embedded)
-    if "custom_components.tryfi._pytryfi_loader" in sys.modules:
-        del sys.modules["custom_components.tryfi._pytryfi_loader"]
-    
-    from custom_components.tryfi._pytryfi_loader import PYTRYFI_MODE, PyTryFi
-    assert PYTRYFI_MODE == "embedded"
+    # Should be able to import without error
+    assert PyTryFi is not None

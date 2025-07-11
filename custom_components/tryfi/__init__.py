@@ -24,7 +24,7 @@ from .const import (
     DEFAULT_POLLING_RATE,
     DOMAIN,
 )
-from ._pytryfi_loader import PyTryFi
+from .pytryfi import PyTryFi
 
 _LOGGER = logging.getLogger(__name__)
 
