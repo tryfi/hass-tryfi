@@ -1,158 +1,217 @@
+"""Support for TryFi collar LED lights."""
+from __future__ import annotations
+
 import logging
-
-from homeassistant.components.light import LightEntity, ColorMode
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-)
 import math
+from typing import Any
 
-from .const import DOMAIN
+from homeassistant.components.light import (
+    ATTR_RGB_COLOR,
+    ColorMode,
+    LightEntity,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, MANUFACTURER, MODEL
 
-def hex_to_rgb(hex_color):
-    """
-    Convert a hex representation of a color to an RGB tuple.
+_LOGGER = logging.getLogger(__name__)
 
-    Parameters:
-    - hex_color (str): Hexadecimal representation of the color (e.g., "#RRGGBB" or "RRGGBB").
 
+def hex_to_rgb(hex_color: str) -> tuple[int, int, int]:
+    """Convert a hex color to RGB tuple.
+    
+    Args:
+        hex_color: Hex color string (e.g., "#RRGGBB" or "RRGGBB")
+        
     Returns:
-    - tuple: RGB tuple (red, green, blue).
+        RGB tuple (red, green, blue)
     """
     # Remove the "#" if present
     hex_color = hex_color.lstrip('#')
-
-    # Convert the hex values to integers
-    rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
-
-    return rgb
+    
+    # Convert hex to RGB
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
 
 
-
-def calculate_distance(color1, color2):
-    """
-    Calculate Euclidean distance between two RGB colors.
-
-    Parameters:
-    - color1 (Tuple[int, int, int]): RGB values of the first color.
-    - color2 (Tuple[int, int, int]): RGB values of the second color.
-
+def calculate_distance(color1: tuple[int, int, int], color2: tuple[int, int, int]) -> float:
+    """Calculate Euclidean distance between two RGB colors.
+    
+    Args:
+        color1: First RGB color tuple
+        color2: Second RGB color tuple
+        
     Returns:
-    - float: The Euclidean distance between the two RGB colors.
+        Euclidean distance between the two colors
     """
     return math.sqrt(sum((c1 - c2) ** 2 for c1, c2 in zip(color1, color2)))
 
-def find_closest_color_code(target_color , color_list):
-    """
-    Find the RGB color closest to the target color in a list.
 
-    Parameters:
-    - target_color (Tuple[int, int, int]): RGB values of the target color.
-    - color_list (Dict[Int: Tuple[int, int, int]]): Map of RGB colors to compare, where the key is the color code used by the device
-
+def find_closest_color_code(
+    target_color: tuple[int, int, int],
+    color_map: dict[int, tuple[int, int, int]]
+) -> int:
+    """Find the color code closest to the target RGB color.
+    
+    Args:
+        target_color: Target RGB color tuple
+        color_map: Map of color codes to RGB tuples
+        
     Returns:
-    - int: The color code for this device closest to the target color
+        Color code closest to the target color
     """
     min_distance = float('inf')
-    closest_color = None  # type: Tuple[int, int, int]
-    # default to white, which is 8
-    closest_color_code = 8 # type: int
-
-    for code, color in color_list.items():
+    closest_color_code = 8  # Default to white
+    
+    for code, color in color_map.items():
         distance = calculate_distance(target_color, color)
         if distance < min_distance:
             min_distance = distance
             closest_color_code = code
-
+    
     return closest_color_code
 
 
-
-async def async_setup_entry(hass, config_entry, async_add_devices):
-    """Add sensors for passed config_entry in HA."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up TryFi lights from a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-
-    tryfi = coordinator.data
-
-    new_devices = []
-    for pet in tryfi.pets:
-        new_devices.append(TryFiPetLight(hass, pet, coordinator))
-    if new_devices:
-        async_add_devices(new_devices)
+    
+    entities = [
+        TryFiPetLight(coordinator, pet)
+        for pet in coordinator.data.pets
+        if hasattr(pet, "device") and pet.device
+    ]
+    
+    async_add_entities(entities)
 
 
 class TryFiPetLight(CoordinatorEntity, LightEntity):
-    def __init__(self, hass, pet, coordinator):
-        self._petId = pet.petId
-        self._hass = hass
-
-        self._colorMap = {ledColor.ledColorCode: hex_to_rgb(ledColor.hexCode) for ledColor in pet.device.availableLedColors}
-
+    """Representation of a TryFi collar LED light."""
+    
+    _attr_has_entity_name = False
+    _attr_color_mode = ColorMode.RGB
+    _attr_supported_color_modes = {ColorMode.RGB}
+    
+    def __init__(self, coordinator: Any, pet: Any) -> None:
+        """Initialize the light entity."""
         super().__init__(coordinator)
-
+        self._pet_id = pet.petId
+        self._attr_unique_id = f"{pet.petId}-light"
+        self._attr_name = f"{pet.name} Collar Light"
+        
+        # Build color map from available LED colors
+        self._color_map: dict[int, tuple[int, int, int]] = {}
+        if hasattr(pet.device, "availableLedColors"):
+            for led_color in pet.device.availableLedColors:
+                if hasattr(led_color, "ledColorCode") and hasattr(led_color, "hexCode"):
+                    self._color_map[led_color.ledColorCode] = hex_to_rgb(led_color.hexCode)
+        
+        # Default color map if none available
+        if not self._color_map:
+            self._color_map = {
+                1: (255, 0, 0),      # Red
+                2: (0, 255, 0),      # Green
+                3: (0, 0, 255),      # Blue
+                4: (255, 255, 0),    # Yellow
+                5: (255, 0, 255),    # Magenta
+                6: (0, 255, 255),    # Cyan
+                7: (255, 165, 0),    # Orange
+                8: (255, 255, 255),  # White
+            }
+    
     @property
-    def name(self):
-        return f"{self.pet.name} - Collar Light"
-
+    def pet(self) -> Any:
+        """Get the pet object from coordinator data."""
+        return self.coordinator.data.getPet(self._pet_id)
+    
     @property
-    def petId(self):
-        return self._petId
-
+    def is_on(self) -> bool | None:
+        """Return true if the light is on."""
+        if self.pet and hasattr(self.pet, "device") and self.pet.device:
+            return bool(getattr(self.pet.device, "ledOn", False))
+        return None
+    
     @property
-    def pet(self):
-        return self.coordinator.data.getPet(self.petId)
-
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return the RGB color value."""
+        if self.pet and hasattr(self.pet, "device") and self.pet.device:
+            hex_color = getattr(self.pet.device, "ledColorHex", None)
+            if hex_color:
+                try:
+                    return hex_to_rgb(hex_color)
+                except (ValueError, IndexError):
+                    _LOGGER.debug("Invalid color hex: %s", hex_color)
+        return None
+    
     @property
-    def tryfi(self):
-        return self.coordinator.data
-
-    @property
-    def unique_id(self):
-        return f"{self.pet.petId}-light"
-
-    @property
-    def device_id(self):
-        return self.unique_id
-
-    @property
-    def is_on(self):
-        return bool(self.pet.device.ledOn)
-
-    @property
-    def supported_color_modes(self):
-       return [ColorMode.RGB]
-
-    @property
-    def color_mode(self):
-       return ColorMode.RGB
-
-    @property
-    def rgb_color(self):
-        return hex_to_rgb(self.pet.device.ledColorHex)
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.pet.petId)},
-            "name": self.pet.name,
-            "manufacturer": "TryFi",
-            "model": self.pet.breed,
-            "sw_version": self.pet.device.buildId,
+    def device_info(self) -> dict[str, Any]:
+        """Return device information."""
+        pet = self.pet
+        if not pet:
+            return {}
+        
+        device_info = {
+            "identifiers": {(DOMAIN, pet.petId)},
+            "name": pet.name,
+            "manufacturer": MANUFACTURER,
+            "model": MODEL,
         }
-
-    # Fix later, request update
-    def turn_on(self, **kwargs):
-        self.pet.turnOnOffLed(self.tryfi.session, True)
-
-        if "rgb_color" in kwargs:
-            # This is set when the color is changed
-            # if the brightness(which is a no-op) is changed, for example, this is not set
-            requested_color = kwargs["rgb_color"]
-            closest_color_code = find_closest_color_code(requested_color, self._colorMap)
-
-            self.pet.setLedColorCode(self.tryfi.session, closest_color_code)
-            self.lastKnownColor = self._colorMap[closest_color_code]
-
-    def turn_off(self, **kwargs):
-        self.pet.turnOnOffLed(self.tryfi.session, False)
+        
+        # Add breed if available
+        if hasattr(pet, "breed") and pet.breed:
+            device_info["model"] = f"{MODEL} - {pet.breed}"
+        
+        # Add firmware version if available
+        if hasattr(pet, "device") and pet.device:
+            if hasattr(pet.device, "buildId"):
+                device_info["sw_version"] = pet.device.buildId
+        
+        return device_info
+    
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the light."""
+        if not self.pet:
+            _LOGGER.error("Cannot turn on light - pet not found")
+            return
+        
+        # Turn on the LED
+        await self.hass.async_add_executor_job(
+            self.pet.turnOnOffLed,
+            self.coordinator.data.session,
+            True
+        )
+        
+        # Set color if requested
+        if ATTR_RGB_COLOR in kwargs:
+            requested_color = kwargs[ATTR_RGB_COLOR]
+            closest_color_code = find_closest_color_code(requested_color, self._color_map)
+            
+            await self.hass.async_add_executor_job(
+                self.pet.setLedColorCode,
+                self.coordinator.data.session,
+                closest_color_code
+            )
+        
+        # Request coordinator update
+        await self.coordinator.async_request_refresh()
+    
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light."""
+        if not self.pet:
+            _LOGGER.error("Cannot turn off light - pet not found")
+            return
+        
+        await self.hass.async_add_executor_job(
+            self.pet.turnOnOffLed,
+            self.coordinator.data.session,
+            False
+        )
+        
+        # Request coordinator update
+        await self.coordinator.async_request_refresh()

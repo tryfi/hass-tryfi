@@ -1,0 +1,20 @@
+{
+  "updateDeviceOperationParams": "Change device modes (normal/lost, LED on/off)",
+  "setDeviceLed": "Set LED color",
+  "updatePetProfile": "Update pet information",
+  "updateUserProfile": "Update user information",
+  "createPlace": "Create a saved place",
+  "updatePlace": "Update a saved place",
+  "deletePlace": "Delete a saved place",
+  "createGeofence": "Create a geofence",
+  "updateGeofence": "Update geofence settings",
+  "deleteGeofence": "Delete a geofence",
+  "updateNotificationPreferences": "Update notification settings",
+  "acknowledgePetAlert": "Acknowledge an alert",
+  "startWalk": "Manually start walk tracking",
+  "endWalk": "Manually end walk tracking",
+  "updateStepGoal": "Update daily step goal",
+  "sharePetLocation": "Share pet location",
+  "addHouseholdMember": "Add member to household",
+  "removeHouseholdMember": "Remove member from household"
+}

@@ -1,0 +1,1535 @@
+{
+  "data": {
+    "currentUser": {
+      "__typename": "User",
+      "id": "1nxYvE5ZHbI1TdGUvg5qxF",
+      "email": "adam@adam.gs",
+      "firstName": "Adam",
+      "lastName": "Jacob Muller",
+      "phoneNumber": "+12019513172",
+      "fiNewsNotificationsEnabled": false,
+      "chipReseller": null,
+      "userHouseholds": [
+        {
+          "__typename": "UserHousehold",
+          "household": {
+            "__typename": "Household",
+            "pets": [
+              {
+                "__typename": "Pet",
+                "id": "3yUUuI237wH93eLyHHhBZE",
+                "name": "Amity",
+                "homeCityState": "Lyndhurst, NJ",
+                "yearOfBirth": 2025,
+                "monthOfBirth": 3,
+                "dayOfBirth": 3,
+                "gender": "FEMALE",
+                "weight": 3.628736,
+                "isPurebred": true,
+                "breed": {
+                  "__typename": "Breed",
+                  "id": "7DQuKf722tlVEYX6uCSJ10",
+                  "name": "Beagle",
+                  "popularityScore": 0
+                },
+                "photos": {
+                  "__typename": "PhotoFeed",
+                  "first": {
+                    "__typename": "Photo",
+                    "id": "5k0vQcgZKsLGMUE2l4VQWo",
+                    "caption": null,
+                    "date": "2025-05-17T02:36:32.333Z",
+                    "likeCount": 2,
+                    "liked": false,
+                    "image": {
+                      "__typename": "Image",
+                      "fullSize": "https://media.tryfi.com/pet/avatar/df781d3039298ba3e4ebe260b90802b40382d193627f86c5894de108c8470d71.jpg"
+                    }
+                  },
+                  "items": [
+                    {
+                      "__typename": "Photo",
+                      "id": "5k0vQcgZKsLGMUE2l4VQWo",
+                      "caption": null,
+                      "date": "2025-05-17T02:36:32.333Z",
+                      "likeCount": 2,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/df781d3039298ba3e4ebe260b90802b40382d193627f86c5894de108c8470d71.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "4FBmzq8mLdITZLOcI2dP2s",
+                      "caption": null,
+                      "date": "2025-05-08T23:53:36.784Z",
+                      "likeCount": 0,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/21c698abb8cb75d7360aaf6dc42c1b149dbc8c26a3f1a9e184c9e6848fc5e119.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "6Piw5ABEIp7vOpuavnP2Zf",
+                      "caption": null,
+                      "date": "2025-05-07T14:58:45.144Z",
+                      "likeCount": 0,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/c98f8713643215dc5daff86de5845b642b0da69c9aa5c0c3896eadb239a3cd00.jpg"
+                      }
+                    }
+                  ]
+                },
+                "instagramHandle": null,
+                "chip": null,
+                "device": {
+                  "__typename": "Device",
+                  "id": "FC33A364956",
+                  "moduleId": "FC33A364956",
+                  "info": {
+                    "batteryPercent": 92,
+                    "credentialPackHash": "v3ev3gJlJLat3YFH1yJZ6JYwtCScT/8j4dXotZ85EtA=",
+                    "wifiNetworkNames": [
+                      "MAVeCap",
+                      "BeachHouse116",
+                      "RLC_Shonehaus_5GHz",
+                      "wirelessx"
+                    ],
+                    "buildId": "4.16.61-d8fcd9279-fc3_f3-prod",
+                    "uptime": 887824,
+                    "clock": {
+                      "low": 887824069,
+                      "high": 0,
+                      "unsigned": true
+                    },
+                    "manifest": {
+                      "nrf52App": {
+                        "major": 4,
+                        "minor": 16,
+                        "patch": 61,
+                        "label": "d8fcd9279-fc3_f3-prod"
+                      },
+                      "nrf52Bl": {
+                        "major": 4,
+                        "minor": 15,
+                        "patch": 3,
+                        "label": "eb4485839-fc3_f3-prod-bl"
+                      },
+                      "nrf9160": {
+                        "major": 2,
+                        "label": "mfw_nrf9160_1.3.1"
+                      },
+                      "da16200": {
+                        "minor": 69
+                      }
+                    },
+                    "wifiStats": {
+                      "ssidStats": [
+                        {
+                          "ssid": "MAVeCap",
+                          "scanned": 2,
+                          "connectSuccess": 2
+                        },
+                        {
+                          "ssid": "BeachHouse116"
+                        },
+                        {
+                          "ssid": "RLC_Shonehaus_5GHz"
+                        },
+                        {
+                          "ssid": "wirelessx",
+                          "scanned": 78,
+                          "connectSuccess": 65,
+                          "connectFailed": 1
+                        }
+                      ],
+                      "key": 76938651
+                    },
+                    "batteryResistanceProfile": [],
+                    "nrf52840GpioStats": {},
+                    "bleConnectionStats": {
+                      "minConnIntervalMs": 200,
+                      "maxConnIntervalMs": 200,
+                      "connSupTimeoutMs": 4000,
+                      "mtu": 247,
+                      "dleTx": 251,
+                      "dleRx": 251,
+                      "rssi": -59,
+                      "bleConnectionStatus": "CONNECTED_FULLY_ATTACHED"
+                    },
+                    "capabilityFlags": 7,
+                    "lleStatus": {
+                      "gpsValidity": {
+                        "startYear": 2025,
+                        "startMonth": 6,
+                        "startDay": 16,
+                        "validityDays": 3
+                      },
+                      "glonassValidity": {
+                        "startYear": 2025,
+                        "startMonth": 6,
+                        "startDay": 16,
+                        "validityDays": 3
+                      },
+                      "galileoValidity": {
+                        "startYear": 2023,
+                        "startMonth": 3,
+                        "startDay": 9,
+                        "validityDays": 3
+                      }
+                    },
+                    "bq27421Info": {
+                      "batteryPercent": 92,
+                      "batteryVoltageMv": 4190,
+                      "batteryHealthPercent": 97,
+                      "batteryHealthStatus": "SOH_INITIAL_READY",
+                      "batteryNominalAvailableCapacityMah": 244,
+                      "batteryFullAvailableCapacityMah": 265,
+                      "temperatureK": 3043,
+                      "batteryRemainingCapacityMah": 240,
+                      "batteryFullChargeCapacityMah": 261,
+                      "batteryQmaxcell0": 16384,
+                      "batteryResistanceProfile": [
+                        8,
+                        9,
+                        11,
+                        13,
+                        11,
+                        10,
+                        11,
+                        11,
+                        11,
+                        12,
+                        13,
+                        16,
+                        26,
+                        52,
+                        199
+                      ],
+                      "batteryUnfilteredRemainingCapacityMah": 241,
+                      "batteryFilteredRemainingCapacityMah": 240,
+                      "batteryUnfilteredFullChargeCapacityMah": 262,
+                      "batteryFilteredFullChargeCapacityMah": 261,
+                      "batteryUnfilteredStateOfCharge": 92,
+                      "batteryFilteredStateOfCharge": 92,
+                      "batteryDesignCapacityMah": 265,
+                      "batteryDesignEnergyMwh": 1007
+                    },
+                    "bootSessionKey": 1850160740,
+                    "wallClockSec": {
+                      "low": 1750123534,
+                      "high": 0,
+                      "unsigned": true
+                    },
+                    "deviceStats": {
+                      "fields": {
+                        "gnssOnTime": 6540,
+                        "gnssSuccessCount": 24,
+                        "gnssFailureCount": 3,
+                        "modemOnCount": 20,
+                        "modemOnTime": 15825,
+                        "modemRegTime": 14489,
+                        "modemRegCount": 14,
+                        "modemNoRegCount": 6,
+                        "agnssReqCount": 22,
+                        "ledPowerOnCount": 2,
+                        "ledPowerOnTime": 4568,
+                        "bleConnCount": 980,
+                        "bleModeConnOnTime": 841911,
+                        "lteModeConnOnTime": 5988,
+                        "agnssBytes": 246540,
+                        "wifiModeConnTime": 18960,
+                        "wifiDisconnect": 11,
+                        "noconnModeTime": 20932,
+                        "wifiWakeHoldUpTime": 574603,
+                        "mainLoopTurns": 15460414,
+                        "pubsubTotalPublishedMessages": 3660574,
+                        "mainLoopSleepEnterCalls": 13702105,
+                        "modemToCpuDataAnnouncements": 35032,
+                        "bleEventHandlerCalls": 36528,
+                        "wifiAssocHotStartCount": 39,
+                        "wifiAssocColdStartCount": 135,
+                        "wifiScanCount": 184,
+                        "wifiQuickconnectAttempt": 70,
+                        "wifiQuickconnectSuccess": 70,
+                        "wifiOpTimeoutCount": 2,
+                        "i2cRxTransactionCount": 641004,
+                        "i2cTxTransactionCount": 663678,
+                        "i2cRv4162c7TransactionCount": 123529,
+                        "i2cBq27421TransactionCount": 736513,
+                        "i2cBq25180TransactionCount": 177580,
+                        "i2cRa9530TransactionCount": 151228,
+                        "i2cLp5523TransactionCount": 1168,
+                        "i2cCxd5605TransactionCount": 114664,
+                        "bleBreakFastCount": 35,
+                        "bleBreakSlowCount": 132,
+                        "bq27421StateChangeCount": 11508,
+                        "lis2dw12FifoOverflow": 440,
+                        "wifiScanFailCount": 1,
+                        "lickClassifyBitstreamExhaustionCount": 4037,
+                        "lickClassifyBitstreamInterFeatureSetDelayBlowoutCount": 1,
+                        "bleModeConnUnattachedOnTime": 4359,
+                        "bleModeConnPendingOnTime": 15926,
+                        "blePendingAttachTimeoutCount": 1,
+                        "modemlinkMsgLongOp": 11,
+                        "submissionReportCount": 14474,
+                        "utcWallclockUpdateCount": 627,
+                        "wifiScanOnLteReport": 49,
+                        "bleReportSent": 14249,
+                        "bleReportResponse": 13689,
+                        "wifiReportSent": 182,
+                        "wifiReportResponse": 156,
+                        "lteReportSent": 43,
+                        "lteReportResponse": 42,
+                        "wifiWsConnect": 107,
+                        "wifiWsClose": 97,
+                        "wifiWsTxBytes": 286172,
+                        "wifiWsRxBytes": 237241,
+                        "lteWsConnect": 15,
+                        "lteWsHostClose": 15,
+                        "lteWsTxBytes": 171482,
+                        "lteWsRxBytes": 54073,
+                        "modemActorTimeout": 1,
+                        "locationActorTimeout": 2,
+                        "modemActorStandbyMode": 13,
+                        "modemActorStandbyExpire": 11,
+                        "modemActorFailure": 1,
+                        "lteBackoffOnFailReport": 6,
+                        "continuousModeTimeout": 3,
+                        "hsmLteBackoffTime": 1531
+                      },
+                      "sessionKey": 732530887,
+                      "durationSec": 887801,
+                      "stateCounters": {
+                        "nrf9160NotRegistered": {
+                          "enterCount": 20,
+                          "exitCount": 19,
+                          "msecTime": 776766154
+                        },
+                        "nrf9160Registered": {
+                          "enterCount": 14,
+                          "exitCount": 14,
+                          "msecTime": 14489479
+                        },
+                        "nrf9160Searching": {
+                          "enterCount": 18,
+                          "exitCount": 18,
+                          "msecTime": 212458
+                        },
+                        "nrf9160RegUnknown": {
+                          "enterCount": 11,
+                          "exitCount": 12,
+                          "msecTime": 96333586
+                        },
+                        "nrf9160RrcIdle": {
+                          "enterCount": 70,
+                          "exitCount": 70,
+                          "msecTime": 14156125
+                        },
+                        "nrf9160RrcConnected": {
+                          "enterCount": 70,
+                          "exitCount": 70,
+                          "msecTime": 426070
+                        },
+                        "cxd5605FixNotValid": {
+                          "enterCount": 129,
+                          "exitCount": 129,
+                          "msecTime": 3690417
+                        },
+                        "cxd5605FixValid": {
+                          "enterCount": 110,
+                          "exitCount": 110,
+                          "msecTime": 2315436
+                        },
+                        "cxd5605IdleState": {
+                          "enterCount": 213,
+                          "exitCount": 213,
+                          "msecTime": 293385
+                        },
+                        "cxd5605Sleep_1State": {
+                          "enterCount": 154,
+                          "exitCount": 154,
+                          "msecTime": 239632
+                        },
+                        "da16200RemainAssocAfterWifiOff": {
+                          "enterCount": 97,
+                          "exitCount": 97,
+                          "msecTime": 80406551
+                        },
+                        "da16200WakeInterruptAsserted": {
+                          "enterCount": 2733,
+                          "exitCount": 2733,
+                          "msecTime": 15906
+                        },
+                        "nrf9160Edrx_20_48SInterval": {
+                          "enterCount": 1,
+                          "exitCount": 1,
+                          "msecTime": 334016
+                        },
+                        "nrf9160SleepRfInactive": {
+                          "enterCount": 613,
+                          "exitCount": 613,
+                          "msecTime": 10650554
+                        }
+                      }
+                    },
+                    "selfTestResults": {}
+                  },
+                  "subscriptionId": "6783c3746d2ff042a3d72e4a13857191",
+                  "hasActiveSubscription": true,
+                  "hasSubscriptionOverride": false,
+                  "nextLocationUpdateExpectedBy": "2025-06-17T01:32:41.774Z",
+                  "operationParams": {
+                    "__typename": "OperationParams",
+                    "mode": "NORMAL",
+                    "ledEnabled": null,
+                    "ledOffAt": null
+                  },
+                  "lastConnectionState": {
+                    "__typename": "ConnectedToBase",
+                    "date": "2025-06-17T01:25:41.705Z",
+                    "chargingBase": {
+                      "__typename": "ChargingBase",
+                      "id": "FB33A514868"
+                    }
+                  },
+                  "ledColor": {
+                    "__typename": "LedColor",
+                    "ledColorCode": 8,
+                    "hexCode": "ffffff",
+                    "name": "White"
+                  },
+                  "availableLedColors": [
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 2,
+                      "hexCode": "ff4242",
+                      "name": "Red"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 3,
+                      "hexCode": "3cba0f",
+                      "name": "Green"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 4,
+                      "hexCode": "0071ff",
+                      "name": "Blue"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 5,
+                      "hexCode": "ff2fcc",
+                      "name": "Purple"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 6,
+                      "hexCode": "ffff01",
+                      "name": "Yellow"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 7,
+                      "hexCode": "00ffff",
+                      "name": "Cyan"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 8,
+                      "hexCode": "ffffff",
+                      "name": "White"
+                    }
+                  ]
+                }
+              },
+              {
+                "__typename": "Pet",
+                "id": "4UoGKTzY7Qg4NNbQkaeQ8M",
+                "name": "Sadie",
+                "homeCityState": "Lyndhurst, New Jersey",
+                "yearOfBirth": 2016,
+                "monthOfBirth": 1,
+                "dayOfBirth": 1,
+                "gender": "FEMALE",
+                "weight": 9.07184,
+                "isPurebred": true,
+                "breed": {
+                  "__typename": "Breed",
+                  "id": "7DQuKf722tlVEYX6uCSJ10",
+                  "name": "Beagle",
+                  "popularityScore": 0
+                },
+                "photos": {
+                  "__typename": "PhotoFeed",
+                  "first": {
+                    "__typename": "Photo",
+                    "id": "1delnbVOChbMffiJiEKibI",
+                    "caption": null,
+                    "date": "2019-08-20T23:45:01.000Z",
+                    "likeCount": 1,
+                    "liked": false,
+                    "image": {
+                      "__typename": "Image",
+                      "fullSize": "https://media.tryfi.com/pet/avatar/01dac1fd6447887fb1e6497cc67ba34d4c1e54fb2eb211577c134dba0cedcdb9.jpg"
+                    }
+                  },
+                  "items": [
+                    {
+                      "__typename": "Photo",
+                      "id": "1delnbVOChbMffiJiEKibI",
+                      "caption": null,
+                      "date": "2019-08-20T23:45:01.000Z",
+                      "likeCount": 1,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/01dac1fd6447887fb1e6497cc67ba34d4c1e54fb2eb211577c134dba0cedcdb9.jpg"
+                      }
+                    }
+                  ]
+                },
+                "instagramHandle": null,
+                "chip": null,
+                "device": null
+              },
+              {
+                "__typename": "Pet",
+                "id": "LsTjGAVEHAhctAgt79e98",
+                "name": "Zooey",
+                "homeCityState": "Lyndhurst, New Jersey",
+                "yearOfBirth": 2014,
+                "monthOfBirth": 6,
+                "dayOfBirth": 2,
+                "gender": "FEMALE",
+                "weight": 6.350288,
+                "isPurebred": false,
+                "breed": {
+                  "__typename": "Breed",
+                  "id": "2b46KZfggVBNKGIuXpo98k",
+                  "name": "Pomeranian",
+                  "popularityScore": 0
+                },
+                "photos": {
+                  "__typename": "PhotoFeed",
+                  "first": {
+                    "__typename": "Photo",
+                    "id": "1zGog1a9JRrciMQilBLZRT",
+                    "caption": null,
+                    "date": "2020-04-26T23:29:02.000Z",
+                    "likeCount": 3,
+                    "liked": false,
+                    "image": {
+                      "__typename": "Image",
+                      "fullSize": "https://media.tryfi.com/pet/avatar/7d8df9dfef00900d6cea0ecebcb90717c17de922bd7f236d289be9d5b6617608.jpg"
+                    }
+                  },
+                  "items": [
+                    {
+                      "__typename": "Photo",
+                      "id": "5MjiFUqLLNXX3AlIKuwEiT",
+                      "caption": null,
+                      "date": "2020-04-26T23:29:02.000Z",
+                      "likeCount": 2,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/7d8df9dfef00900d6cea0ecebcb90717c17de922bd7f236d289be9d5b6617608.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "1zGog1a9JRrciMQilBLZRT",
+                      "caption": null,
+                      "date": "2020-04-26T23:29:02.000Z",
+                      "likeCount": 3,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/7d8df9dfef00900d6cea0ecebcb90717c17de922bd7f236d289be9d5b6617608.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "5FcKrAGCcVCJ4BbmV6xwrR",
+                      "caption": null,
+                      "date": "2020-04-26T23:26:22.000Z",
+                      "likeCount": 2,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/c8e2b70044c72c041ab8dbe0ea01e4fd33130ae85a3c706b48f6913ec327ec07.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "65U0YiaprCIAbq1dIlbB6S",
+                      "caption": null,
+                      "date": "2020-04-26T23:24:59.000Z",
+                      "likeCount": 2,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/09598935ff52666eac8e75082bc9a3845ae111eb0f657b10a44b83349d52420b.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "2J0gYmyFSCGwUROTWXjffo",
+                      "caption": null,
+                      "date": "2020-04-26T23:20:57.000Z",
+                      "likeCount": 3,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/09867af8363a788329127a1d78538b85db8e070c73a274a0eccc2bd2c2ffe03a.jpg"
+                      }
+                    }
+                  ]
+                },
+                "instagramHandle": null,
+                "chip": null,
+                "device": {
+                  "__typename": "Device",
+                  "id": "FC32M565378",
+                  "moduleId": "FC32M565378",
+                  "info": {
+                    "batteryPercent": 65,
+                    "credentialPackHash": "v3ev3gJlJLat3YFH1yJZ6JYwtCScT/8j4dXotZ85EtA=",
+                    "wifiNetworkNames": [
+                      "MAVeCap",
+                      "BeachHouse116",
+                      "RLC_Shonehaus_5GHz",
+                      "wirelessx"
+                    ],
+                    "buildId": "4.16.61-d8fcd9279-fc3_f3-prod",
+                    "uptime": 205687,
+                    "clock": {
+                      "low": 205687056,
+                      "high": 0,
+                      "unsigned": true
+                    },
+                    "manifest": {
+                      "nrf52App": {
+                        "major": 4,
+                        "minor": 16,
+                        "patch": 61,
+                        "label": "d8fcd9279-fc3_f3-prod"
+                      },
+                      "nrf52Bl": {
+                        "major": 4,
+                        "minor": 15,
+                        "patch": 3,
+                        "label": "eb4485839-fc3_f3-prod-bl"
+                      },
+                      "nrf9160": {
+                        "major": 2,
+                        "label": "mfw_nrf9160_1.3.1"
+                      },
+                      "da16200": {
+                        "minor": 69
+                      }
+                    },
+                    "wifiStats": {
+                      "ssidStats": [
+                        {
+                          "ssid": "MAVeCap"
+                        },
+                        {
+                          "ssid": "BeachHouse116"
+                        },
+                        {
+                          "ssid": "RLC_Shonehaus_5GHz"
+                        },
+                        {
+                          "ssid": "wirelessx",
+                          "scanned": 3,
+                          "connectSuccess": 2
+                        }
+                      ],
+                      "key": 1357341444
+                    },
+                    "batteryResistanceProfile": [],
+                    "nrf52840GpioStats": {},
+                    "bleConnectionStats": {
+                      "minConnIntervalMs": 200,
+                      "maxConnIntervalMs": 200,
+                      "connSupTimeoutMs": 4000,
+                      "mtu": 247,
+                      "dleTx": 251,
+                      "dleRx": 251,
+                      "rssi": -51,
+                      "bleConnectionStatus": "CONNECTED_FULLY_ATTACHED"
+                    },
+                    "capabilityFlags": 7,
+                    "lleStatus": {
+                      "gpsValidity": {
+                        "startYear": 2025,
+                        "startMonth": 6,
+                        "startDay": 16,
+                        "validityDays": 3
+                      },
+                      "glonassValidity": {
+                        "startYear": 2025,
+                        "startMonth": 6,
+                        "startDay": 16,
+                        "validityDays": 3
+                      },
+                      "galileoValidity": {
+                        "startYear": 2023,
+                        "startMonth": 3,
+                        "startDay": 9,
+                        "validityDays": 3
+                      }
+                    },
+                    "bq27421Info": {
+                      "batteryPercent": 65,
+                      "batteryVoltageMv": 3936,
+                      "batteryHealthPercent": 95,
+                      "batteryHealthStatus": "SOH_INSTANT_READY",
+                      "batteryNominalAvailableCapacityMah": 168,
+                      "batteryFullAvailableCapacityMah": 261,
+                      "temperatureK": 3007,
+                      "batteryRemainingCapacityMah": 168,
+                      "batteryFullChargeCapacityMah": 261,
+                      "batteryQmaxcell0": 16384,
+                      "batteryResistanceProfile": [
+                        8,
+                        9,
+                        11,
+                        13,
+                        11,
+                        10,
+                        11,
+                        11,
+                        11,
+                        12,
+                        13,
+                        16,
+                        26,
+                        52,
+                        199
+                      ],
+                      "batteryUnfilteredRemainingCapacityMah": 168,
+                      "batteryFilteredRemainingCapacityMah": 168,
+                      "batteryUnfilteredFullChargeCapacityMah": 261,
+                      "batteryFilteredFullChargeCapacityMah": 261,
+                      "batteryUnfilteredStateOfCharge": 65,
+                      "batteryFilteredStateOfCharge": 65,
+                      "batteryDesignCapacityMah": 265,
+                      "batteryDesignEnergyMwh": 1007
+                    },
+                    "bootSessionKey": 472768635,
+                    "wallClockSec": {
+                      "low": 1750123526,
+                      "high": 0,
+                      "unsigned": true
+                    },
+                    "deviceStats": {
+                      "fields": {
+                        "gnssOnTime": 886,
+                        "gnssSuccessCount": 5,
+                        "modemOnCount": 2,
+                        "modemOnTime": 3041,
+                        "modemRegTime": 3036,
+                        "modemRegCount": 2,
+                        "agnssReqCount": 2,
+                        "bleConnCount": 64,
+                        "bleModeConnOnTime": 202418,
+                        "lteModeConnOnTime": 807,
+                        "agnssBytes": 19416,
+                        "wifiModeConnTime": 174,
+                        "noconnModeTime": 2266,
+                        "wifiWakeHoldUpTime": 28475,
+                        "mainLoopTurns": 3488675,
+                        "pubsubTotalPublishedMessages": 800500,
+                        "mainLoopSleepEnterCalls": 3115932,
+                        "modemToCpuDataAnnouncements": 8049,
+                        "bleEventHandlerCalls": 7311,
+                        "wifiAssocColdStartCount": 11,
+                        "wifiScanCount": 20,
+                        "wifiQuickconnectAttempt": 2,
+                        "wifiQuickconnectSuccess": 2,
+                        "i2cRxTransactionCount": 120809,
+                        "i2cTxTransactionCount": 133911,
+                        "i2cRv4162c7TransactionCount": 27397,
+                        "i2cBq27421TransactionCount": 170625,
+                        "i2cBq25180TransactionCount": 41132,
+                        "i2cCxd5605TransactionCount": 15566,
+                        "bleBreakFastCount": 2,
+                        "bleBreakSlowCount": 4,
+                        "bq27421StateChangeCount": 2666,
+                        "lis2dw12FifoOverflow": 52,
+                        "lickClassifyBitstreamExhaustionCount": 939,
+                        "bleModeConnUnattachedOnTime": 198,
+                        "bleModeConnPendingOnTime": 518,
+                        "modemlinkMsgLongOp": 2,
+                        "submissionReportCount": 3413,
+                        "utcWallclockUpdateCount": 77,
+                        "wifiScanOnLteReport": 9,
+                        "bleReportSent": 3391,
+                        "bleReportResponse": 3361,
+                        "wifiReportSent": 2,
+                        "wifiReportResponse": 2,
+                        "lteReportSent": 20,
+                        "lteReportResponse": 20,
+                        "wifiWsConnect": 2,
+                        "wifiWsClose": 2,
+                        "wifiWsTxBytes": 3276,
+                        "wifiWsRxBytes": 516,
+                        "lteWsConnect": 2,
+                        "lteWsHostClose": 2,
+                        "lteWsTxBytes": 66856,
+                        "lteWsRxBytes": 21253,
+                        "modemActorStandbyMode": 3,
+                        "modemActorStandbyExpire": 2
+                      },
+                      "sessionKey": 1104854190,
+                      "durationSec": 205664,
+                      "stateCounters": {
+                        "nrf9160NotRegistered": {
+                          "enterCount": 2,
+                          "exitCount": 1,
+                          "msecTime": 36216746
+                        },
+                        "nrf9160Registered": {
+                          "enterCount": 2,
+                          "exitCount": 2,
+                          "msecTime": 3036023
+                        },
+                        "nrf9160Searching": {
+                          "enterCount": 2,
+                          "exitCount": 2,
+                          "msecTime": 1473
+                        },
+                        "nrf9160RegUnknown": {
+                          "exitCount": 1,
+                          "msecTime": 166410590
+                        },
+                        "nrf9160RrcIdle": {
+                          "enterCount": 22,
+                          "exitCount": 22,
+                          "msecTime": 2934801
+                        },
+                        "nrf9160RrcConnected": {
+                          "enterCount": 22,
+                          "exitCount": 22,
+                          "msecTime": 102460
+                        },
+                        "cxd5605FixNotValid": {
+                          "enterCount": 21,
+                          "exitCount": 21,
+                          "msecTime": 229094
+                        },
+                        "cxd5605FixValid": {
+                          "enterCount": 20,
+                          "exitCount": 20,
+                          "msecTime": 577106
+                        },
+                        "cxd5605IdleState": {
+                          "enterCount": 32,
+                          "exitCount": 32,
+                          "msecTime": 39800
+                        },
+                        "cxd5605Sleep_1State": {
+                          "enterCount": 22,
+                          "exitCount": 22,
+                          "msecTime": 39386
+                        },
+                        "da16200RemainAssocAfterWifiOff": {
+                          "enterCount": 2,
+                          "exitCount": 2,
+                          "msecTime": 2399219
+                        },
+                        "da16200WakeInterruptAsserted": {
+                          "enterCount": 113,
+                          "exitCount": 113,
+                          "msecTime": 526
+                        },
+                        "nrf9160Edrx_20_48SInterval": {
+                          "enterCount": 1,
+                          "exitCount": 1,
+                          "msecTime": 1386203
+                        },
+                        "nrf9160SleepRfInactive": {
+                          "enterCount": 121,
+                          "exitCount": 121,
+                          "msecTime": 1917508
+                        }
+                      }
+                    },
+                    "selfTestResults": {}
+                  },
+                  "subscriptionId": "6783c37445cbbaf534797b4991a92337",
+                  "hasActiveSubscription": true,
+                  "hasSubscriptionOverride": false,
+                  "nextLocationUpdateExpectedBy": "2025-06-17T01:32:35.504Z",
+                  "operationParams": {
+                    "__typename": "OperationParams",
+                    "mode": "NORMAL",
+                    "ledEnabled": false,
+                    "ledOffAt": null
+                  },
+                  "lastConnectionState": {
+                    "__typename": "ConnectedToBase",
+                    "date": "2025-06-17T01:25:35.353Z",
+                    "chargingBase": {
+                      "__typename": "ChargingBase",
+                      "id": "FB33A514868"
+                    }
+                  },
+                  "ledColor": {
+                    "__typename": "LedColor",
+                    "ledColorCode": 8,
+                    "hexCode": "ffffff",
+                    "name": "White"
+                  },
+                  "availableLedColors": [
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 2,
+                      "hexCode": "ff4242",
+                      "name": "Red"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 3,
+                      "hexCode": "3cba0f",
+                      "name": "Green"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 4,
+                      "hexCode": "0071ff",
+                      "name": "Blue"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 5,
+                      "hexCode": "ff2fcc",
+                      "name": "Purple"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 6,
+                      "hexCode": "ffff01",
+                      "name": "Yellow"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 7,
+                      "hexCode": "00ffff",
+                      "name": "Cyan"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 8,
+                      "hexCode": "ffffff",
+                      "name": "White"
+                    }
+                  ]
+                }
+              },
+              {
+                "__typename": "Pet",
+                "id": "3RJOe3oDf9mEXhAB1q0clk",
+                "name": "Oliver",
+                "homeCityState": "Lyndhurst, New Jersey",
+                "yearOfBirth": 2019,
+                "monthOfBirth": 1,
+                "dayOfBirth": 18,
+                "gender": "MALE",
+                "weight": 8.618248,
+                "isPurebred": true,
+                "breed": {
+                  "__typename": "Breed",
+                  "id": "6ES6GToVDlg9PXNumLiL6n",
+                  "name": "Parson Russell Terrier",
+                  "popularityScore": 0
+                },
+                "photos": {
+                  "__typename": "PhotoFeed",
+                  "first": {
+                    "__typename": "Photo",
+                    "id": "1u4NFb8ogSd1s4ADCG2My7",
+                    "caption": null,
+                    "date": "2023-09-13T19:45:57.009Z",
+                    "likeCount": 6,
+                    "liked": false,
+                    "image": {
+                      "__typename": "Image",
+                      "fullSize": "https://media.tryfi.com/pet/avatar/cf4a2c0cab708d7b77d2e42d26acd4c969507aca0268cf108f74e3bf38c60d5d.jpg"
+                    }
+                  },
+                  "items": [
+                    {
+                      "__typename": "Photo",
+                      "id": "70bzEtqgO5lqdBSYMisQxI",
+                      "caption": null,
+                      "date": "2023-09-13T20:57:58.157Z",
+                      "likeCount": 3,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/3702ef2f537826c13bd3532c50749060ae3c6fe4bbbca1b7320f684416cc7f2e.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "pIcvZ8pXViJU1aJNG38hX",
+                      "caption": null,
+                      "date": "2023-09-13T19:47:15.118Z",
+                      "likeCount": 5,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/e62203899bbfc67ac5be2a41a79c031a869793ef4ca85e4d3812d8e9388371fb.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "1u4NFb8ogSd1s4ADCG2My7",
+                      "caption": null,
+                      "date": "2023-09-13T19:45:57.009Z",
+                      "likeCount": 6,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/cf4a2c0cab708d7b77d2e42d26acd4c969507aca0268cf108f74e3bf38c60d5d.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "2kuar7O6aGtarsyGvpri3",
+                      "caption": null,
+                      "date": "2023-09-13T19:45:29.834Z",
+                      "likeCount": 9,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/cd6e22c589b62de558e10ae04c6c1e26623ddf754fb6dad59209d43844911c24.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "79Sb9Ut3tAPrIFmP2KfNKm",
+                      "caption": null,
+                      "date": "2021-05-14T01:20:10.377Z",
+                      "likeCount": 9,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/ce0f3428c3e401817370a67da865757c1247684d070d41c0f62e2bd6f9fcf713.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "7Knr9FSoPSPSgfeeEI0iay",
+                      "caption": null,
+                      "date": "2020-11-21T12:28:40.444Z",
+                      "likeCount": 2,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/f64980f98518e51adfd0555c1e4bd00abe500040ce5ee1783b27ff3a2ca714c2.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "2gnn7Xnp4BlnRC7e0ESOgG",
+                      "caption": "Once again #1 JRT in the nation on Fi \ud83e\udd73",
+                      "date": "2020-11-16T01:08:57.781Z",
+                      "likeCount": 3,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/photos/c20980860e55303a1269202228fd839c6fed67f05f7242d071b29a866141933c.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "OCs3ih5PG9ZQ1OMYbba3R",
+                      "caption": null,
+                      "date": "2020-05-18T01:14:47.002Z",
+                      "likeCount": 3,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/1f1d0fb9c600d5c9ed40c09338011aa547466aa717b1b8aecf7fab4dd56d08c5.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "18sWOzQnN2MsOPmjqXjwIf",
+                      "caption": null,
+                      "date": "2020-05-18T01:14:46.835Z",
+                      "likeCount": 2,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/fa45c4b020519ccc9d2807bc004bcfb7de74358fe56ca70736c7782bad13ef66.jpg"
+                      }
+                    },
+                    {
+                      "__typename": "Photo",
+                      "id": "1eBrlv1gmGTLCorvW9QZ69",
+                      "caption": null,
+                      "date": "2020-02-03T00:10:34.000Z",
+                      "likeCount": 2,
+                      "liked": false,
+                      "image": {
+                        "__typename": "Image",
+                        "fullSize": "https://media.tryfi.com/pet/avatar/0a22d4941123bcf72d708783ff41cb2837f9e16411c8c360996c1593cdf86da4.jpg"
+                      }
+                    }
+                  ]
+                },
+                "instagramHandle": "stupendousoliver",
+                "chip": null,
+                "device": {
+                  "__typename": "Device",
+                  "id": "FC34F155612",
+                  "moduleId": "FC34F155612",
+                  "info": {
+                    "batteryPercent": 100,
+                    "credentialPackHash": "v3ev3gJlJLat3YFH1yJZ6JYwtCScT/8j4dXotZ85EtA=",
+                    "wifiNetworkNames": [
+                      "MAVeCap",
+                      "BeachHouse116",
+                      "RLC_Shonehaus_5GHz",
+                      "wirelessx"
+                    ],
+                    "buildId": "4.16.61-d8fcd9279-fc3_f3-prod",
+                    "hasPowerSupply": true,
+                    "uptime": 204747,
+                    "clock": {
+                      "low": 204747066,
+                      "high": 0,
+                      "unsigned": true
+                    },
+                    "manifest": {
+                      "nrf52App": {
+                        "major": 4,
+                        "minor": 16,
+                        "patch": 61,
+                        "label": "d8fcd9279-fc3_f3-prod"
+                      },
+                      "nrf52Bl": {
+                        "major": 4,
+                        "minor": 15,
+                        "patch": 3,
+                        "label": "eb4485839-fc3_f3-prod-bl"
+                      },
+                      "nrf9160": {
+                        "major": 3,
+                        "patch": 5,
+                        "label": "mfw_nrf9160_1.3.5"
+                      },
+                      "da16200": {
+                        "minor": 69
+                      }
+                    },
+                    "wifiStats": {
+                      "ssidStats": [
+                        {
+                          "ssid": "MAVeCap"
+                        },
+                        {
+                          "ssid": "BeachHouse116"
+                        },
+                        {
+                          "ssid": "RLC_Shonehaus_5GHz"
+                        },
+                        {
+                          "ssid": "wirelessx",
+                          "scanned": 2,
+                          "connectSuccess": 2
+                        }
+                      ],
+                      "key": 1132763246
+                    },
+                    "batteryResistanceProfile": [],
+                    "nrf52840GpioStats": {},
+                    "bleConnectionStats": {
+                      "minConnIntervalMs": 200,
+                      "maxConnIntervalMs": 200,
+                      "connSupTimeoutMs": 4000,
+                      "mtu": 247,
+                      "dleTx": 251,
+                      "dleRx": 251,
+                      "rssi": -17,
+                      "bleConnectionStatus": "CONNECTED_FULLY_ATTACHED"
+                    },
+                    "capabilityFlags": 7,
+                    "lleStatus": {
+                      "gpsValidity": {
+                        "startYear": 2025,
+                        "startMonth": 6,
+                        "startDay": 16,
+                        "validityDays": 3
+                      },
+                      "glonassValidity": {
+                        "startYear": 2025,
+                        "startMonth": 6,
+                        "startDay": 16,
+                        "validityDays": 3
+                      },
+                      "galileoValidity": {}
+                    },
+                    "bq27421Info": {
+                      "batteryPercent": 100,
+                      "batteryVoltageMv": 4264,
+                      "batteryHealthPercent": 88,
+                      "batteryHealthStatus": "SOH_VALUE_READY",
+                      "batteryNominalAvailableCapacityMah": 233,
+                      "batteryFullAvailableCapacityMah": 238,
+                      "temperatureK": 3043,
+                      "batteryRemainingCapacityMah": 262,
+                      "batteryFullChargeCapacityMah": 264,
+                      "batteryQmaxcell0": 14715,
+                      "batteryResistanceProfile": [
+                        8,
+                        9,
+                        11,
+                        13,
+                        11,
+                        10,
+                        11,
+                        11,
+                        11,
+                        12,
+                        13,
+                        16,
+                        26,
+                        52,
+                        199
+                      ],
+                      "batteryUnfilteredRemainingCapacityMah": 230,
+                      "batteryFilteredRemainingCapacityMah": 262,
+                      "batteryUnfilteredFullChargeCapacityMah": 235,
+                      "batteryFilteredFullChargeCapacityMah": 264,
+                      "batteryUnfilteredStateOfCharge": 98,
+                      "batteryFilteredStateOfCharge": 100,
+                      "batteryDesignCapacityMah": 265,
+                      "batteryDesignEnergyMwh": 1007
+                    },
+                    "bootSessionKey": 2071673853,
+                    "wallClockSec": {
+                      "low": 1750123564,
+                      "high": 0,
+                      "unsigned": true
+                    },
+                    "deviceStats": {
+                      "fields": {
+                        "gnssOnTime": 3718,
+                        "gnssSuccessCount": 4,
+                        "gnssFailureCount": 1,
+                        "modemOnCount": 18,
+                        "modemOnTime": 16443,
+                        "modemRegTime": 16393,
+                        "modemRegCount": 18,
+                        "agnssReqCount": 4,
+                        "ledPowerOnCount": 65,
+                        "ledPowerOnTime": 8763,
+                        "bleConnCount": 122,
+                        "bleModeConnOnTime": 192268,
+                        "lteModeConnOnTime": 3292,
+                        "agnssBytes": 43200,
+                        "wifiModeConnTime": 305,
+                        "noconnModeTime": 8800,
+                        "wifiWakeHoldUpTime": 94456,
+                        "mainLoopTurns": 3733892,
+                        "pubsubTotalPublishedMessages": 982784,
+                        "pubsubActivePublishedMessages": 1,
+                        "mainLoopSleepEnterCalls": 3197540,
+                        "modemToCpuDataAnnouncements": 10868,
+                        "bleEventHandlerCalls": 7708,
+                        "wifiAssocColdStartCount": 36,
+                        "i2cNackRetryCount": 261,
+                        "wifiScanCount": 88,
+                        "gnssStallCount": 1,
+                        "wifiQuickconnectAttempt": 2,
+                        "wifiQuickconnectSuccess": 2,
+                        "i2cRxTransactionCount": 321706,
+                        "i2cTxTransactionCount": 300838,
+                        "i2cRv4162c7TransactionCount": 27909,
+                        "i2cBq27421TransactionCount": 169792,
+                        "i2cBq25180TransactionCount": 45847,
+                        "i2cRa9530TransactionCount": 308603,
+                        "i2cLp5523TransactionCount": 9965,
+                        "i2cCxd5605TransactionCount": 60428,
+                        "i2cBq25180TransactionErrorCount": 18,
+                        "i2cRa9530TransactionErrorCount": 261,
+                        "bleBreakFastCount": 12,
+                        "bleBreakSlowCount": 41,
+                        "bq27421StateChangeCount": 2653,
+                        "lis2dw12FifoOverflow": 127,
+                        "lickClassifyBitstreamExhaustionCount": 937,
+                        "bleModeConnUnattachedOnTime": 396,
+                        "bleModeConnPendingOnTime": 2512,
+                        "modemlinkMsgLongOp": 19,
+                        "submissionReportCount": 3300,
+                        "utcWallclockUpdateCount": 79,
+                        "wifiScanOnLteReport": 52,
+                        "bleReportSent": 3233,
+                        "bleReportResponse": 3202,
+                        "wifiReportSent": 2,
+                        "wifiReportResponse": 2,
+                        "lteReportSent": 65,
+                        "lteReportResponse": 64,
+                        "wifiWsConnect": 2,
+                        "wifiWsClose": 2,
+                        "wifiWsTxBytes": 3572,
+                        "wifiWsRxBytes": 19964,
+                        "lteWsConnect": 19,
+                        "lteWsHostClose": 20,
+                        "lteWsTxBytes": 192698,
+                        "lteWsRxBytes": 30502,
+                        "modemActorTimeout": 1,
+                        "modemActorStandbyMode": 26,
+                        "modemActorStandbyExpire": 19,
+                        "modemActorFailure": 1,
+                        "lteBackoffOnFailReport": 1,
+                        "hsmLteBackoffTime": 286
+                      },
+                      "sessionKey": 142589971,
+                      "durationSec": 204665,
+                      "stateCounters": {
+                        "nrf9160NotRegistered": {
+                          "enterCount": 19,
+                          "exitCount": 18,
+                          "msecTime": 188250895
+                        },
+                        "nrf9160Registered": {
+                          "enterCount": 18,
+                          "exitCount": 19,
+                          "msecTime": 16396317
+                        },
+                        "nrf9160Searching": {
+                          "enterCount": 18,
+                          "exitCount": 18,
+                          "msecTime": 18728
+                        },
+                        "nrf9160RrcIdle": {
+                          "enterCount": 94,
+                          "exitCount": 94,
+                          "msecTime": 15853628
+                        },
+                        "nrf9160RrcConnected": {
+                          "enterCount": 93,
+                          "exitCount": 94,
+                          "msecTime": 558705
+                        },
+                        "cxd5605FixNotValid": {
+                          "enterCount": 36,
+                          "exitCount": 37,
+                          "msecTime": 3345507
+                        },
+                        "cxd5605FixValid": {
+                          "enterCount": 9,
+                          "exitCount": 9,
+                          "msecTime": 134688
+                        },
+                        "cxd5605IdleState": {
+                          "enterCount": 111,
+                          "exitCount": 111,
+                          "msecTime": 121138
+                        },
+                        "cxd5605Sleep_1State": {
+                          "enterCount": 76,
+                          "exitCount": 76,
+                          "msecTime": 119225
+                        },
+                        "da16200RemainAssocAfterWifiOff": {
+                          "enterCount": 2,
+                          "exitCount": 2,
+                          "msecTime": 2399591
+                        },
+                        "da16200WakeInterruptAsserted": {
+                          "enterCount": 367,
+                          "exitCount": 367,
+                          "msecTime": 1706
+                        },
+                        "nrf9160Edrx_20_48SInterval": {
+                          "exitCount": 1,
+                          "msecTime": 1139647
+                        },
+                        "nrf9160SleepRfInactive": {
+                          "enterCount": 677,
+                          "exitCount": 677,
+                          "msecTime": 11743247
+                        }
+                      }
+                    },
+                    "selfTestResults": {}
+                  },
+                  "subscriptionId": "6783c374811e02cd892af34d44881f60",
+                  "hasActiveSubscription": true,
+                  "hasSubscriptionOverride": false,
+                  "nextLocationUpdateExpectedBy": "2025-06-17T01:33:10.609Z",
+                  "operationParams": {
+                    "__typename": "OperationParams",
+                    "mode": "NORMAL",
+                    "ledEnabled": false,
+                    "ledOffAt": null
+                  },
+                  "lastConnectionState": {
+                    "__typename": "ConnectedToBase",
+                    "date": "2025-06-17T01:26:10.466Z",
+                    "chargingBase": {
+                      "__typename": "ChargingBase",
+                      "id": "FB33A514868"
+                    }
+                  },
+                  "ledColor": {
+                    "__typename": "LedColor",
+                    "ledColorCode": 8,
+                    "hexCode": "ffffff",
+                    "name": "White"
+                  },
+                  "availableLedColors": [
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 2,
+                      "hexCode": "ff4242",
+                      "name": "Red"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 3,
+                      "hexCode": "3cba0f",
+                      "name": "Green"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 4,
+                      "hexCode": "0071ff",
+                      "name": "Blue"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 5,
+                      "hexCode": "ff2fcc",
+                      "name": "Purple"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 6,
+                      "hexCode": "ffff01",
+                      "name": "Yellow"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 7,
+                      "hexCode": "00ffff",
+                      "name": "Cyan"
+                    },
+                    {
+                      "__typename": "LedColor",
+                      "ledColorCode": 8,
+                      "hexCode": "ffffff",
+                      "name": "White"
+                    }
+                  ]
+                }
+              }
+            ],
+            "bases": [
+              {
+                "__typename": "ChargingBase",
+                "baseId": "FB33A514868",
+                "name": "FB33A514868",
+                "position": {
+                  "__typename": "Position",
+                  "latitude": 40.800435534796065,
+                  "longitude": -74.11945581436157
+                },
+                "infoLastUpdated": "2025-06-17T01:26:10.545Z",
+                "networkName": "wirelessx",
+                "online": true,
+                "onlineQuality": "HEALTHY"
+              },
+              {
+                "__typename": "ChargingBase",
+                "baseId": "FB33A519352",
+                "name": "FB33A519352",
+                "position": {
+                  "__typename": "Position",
+                  "latitude": 40.800435534796065,
+                  "longitude": -74.11945581436157
+                },
+                "infoLastUpdated": "2025-06-17T01:26:00.802Z",
+                "networkName": "wirelessx",
+                "online": true,
+                "onlineQuality": "HEALTHY"
+              },
+              {
+                "__typename": "ChargingBase",
+                "baseId": "FB35B401294",
+                "name": "Adam Office",
+                "position": {
+                  "__typename": "Position",
+                  "latitude": 40.83827404203731,
+                  "longitude": -74.18123915791512
+                },
+                "infoLastUpdated": "2025-06-17T01:25:21.474Z",
+                "networkName": "MAVeCap",
+                "online": true,
+                "onlineQuality": "HEALTHY"
+              },
+              {
+                "__typename": "ChargingBase",
+                "baseId": "FB35B401286",
+                "name": "FB35B401286",
+                "position": {
+                  "__typename": "Position",
+                  "latitude": 40.800435534796065,
+                  "longitude": -74.11945581436157
+                },
+                "infoLastUpdated": "2025-06-17T01:25:34.509Z",
+                "networkName": "wirelessx",
+                "online": true,
+                "onlineQuality": "HEALTHY"
+              },
+              {
+                "__typename": "ChargingBase",
+                "baseId": "FB32M904858",
+                "name": "Diane Travel",
+                "position": {
+                  "__typename": "Position",
+                  "latitude": 40.800435534796065,
+                  "longitude": -74.11945581436157
+                },
+                "infoLastUpdated": "2025-02-02T00:12:33.124Z",
+                "networkName": "wirelessx",
+                "online": false,
+                "onlineQuality": "UNHEALTHY"
+              },
+              {
+                "__typename": "ChargingBase",
+                "baseId": "FB19F16399",
+                "name": "Adam\u2019s Room",
+                "position": {
+                  "__typename": "Position",
+                  "latitude": 40.800435534796065,
+                  "longitude": -74.11945581436157
+                },
+                "infoLastUpdated": "2025-06-17T01:25:21.603Z",
+                "networkName": "wirelessx",
+                "online": true,
+                "onlineQuality": "HEALTHY"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

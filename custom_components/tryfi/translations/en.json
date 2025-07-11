@@ -2,28 +2,39 @@
   "config": {
     "step": {
       "user": {
+        "title": "TryFi Configuration",
+        "description": "Enter your TryFi account credentials",
         "data": {
-          "username": "username",
-          "password": "password"
+          "username": "Email",
+          "password": "Password",
+          "polling": "Update interval (seconds)"
         }
       }
     },
     "error": {
-      "cannot_connect": "Cannot Connect",
-      "invalid_polling": "Invalid Polling",
-      "unknown": "Unkown Error"
+      "cannot_connect": "Failed to connect to TryFi",
+      "invalid_polling": "Invalid polling interval",
+      "unknown": "Unexpected error"
     },
     "abort": {
-      "already_configured": "Device Already Configured for User"
+      "already_configured": "Account is already configured"
     }
   },
   "options": {
     "step": {
-        "init": {
-            "data": {
-                "polling": "Polling"
-            }
+      "user": {
+        "title": "TryFi Options",
+        "description": "Update your TryFi configuration. Current user: {current_user}",
+        "data": {
+          "username": "Email (leave blank to keep current)",
+          "password": "Password (leave blank to keep current)",
+          "polling": "Update interval (seconds)"
         }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect with new credentials",
+      "unknown": "Unexpected error"
     }
   }
 }

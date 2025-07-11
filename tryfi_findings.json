@@ -1,0 +1,20 @@
+{
+  "discovered_features": {},
+  "api_capabilities": {
+    "historical_data": true,
+    "geofencing": true,
+    "health_metrics": true,
+    "analytics": true,
+    "training_data": true,
+    "advanced_notifications": true,
+    "base_station_monitoring": true
+  },
+  "integration_gaps": [
+    "No historical data access",
+    "No geofencing support",
+    "Limited device diagnostics",
+    "No analytics or insights",
+    "Basic notification support only",
+    "No base station entities beyond online status"
+  ]
+}
