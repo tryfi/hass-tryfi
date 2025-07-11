@@ -33,7 +33,10 @@ If you would like to donate you can use my TryFi referral code "[395FX4](https:/
 ## Installation Methods
 
 ### HACS Install
-1. Search for `TryFi` under `Integrations` in the HACS Store tab.
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=tryfi&repository=hass-tryfi&category=integration)
+
+1. Click the button above to open this repository in HACS, or manually search for `TryFi` under `Integrations` in the HACS Store tab.
 2. Add the [Integration](#configuration) to your HA and configure.
 
 ### Manual Install
