@@ -1,5 +1,4 @@
 import datetime
-from sentry_sdk import capture_exception
 
 class FiBase(object):
     def __init__(self, baseId):

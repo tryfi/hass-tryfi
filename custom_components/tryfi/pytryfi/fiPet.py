@@ -76,7 +76,7 @@ class FiPet(object):
             self._currLatitude = float(currentPosition['latitude'])
             self._currStartTime = datetime.datetime.fromisoformat(activityJSON['start'].replace('Z', '+00:00'))
 
-            if 'place' in activityJSON and activityJSON['place'] != None:
+            if 'place' in activityJSON and activityJSON['place'] is not None:
                 self._currPlaceName = activityJSON['place']['name']
                 self._currPlaceAddress = activityJSON['place']['address']
             else:
@@ -118,7 +118,7 @@ class FiPet(object):
     def _extractSleep(self, restObject: dict) -> tuple[int, int]:
         sleep, nap = 0, 0
         sleepData = restObject['restSummaries'][0]['data']
-        if not 'sleepAmounts' in sleepData:
+        if 'sleepAmounts' not in sleepData:
             LOGGER.warning(f"Can't extract sleep because sleepAmounts is missing: {restObject}")
             return None, None
         for sleepAmount in sleepData['sleepAmounts']:

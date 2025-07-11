@@ -18,7 +18,7 @@ class PyTryFi(object):
     def __init__(self, username=None, password=None):
         self._api_host = API_HOST_URL_BASE
         self._session = requests.Session()
-        self._user_agent = f"pyTryFi"
+        self._user_agent = "pyTryFi"
         self._username = username
         self.login(username, password)
 
