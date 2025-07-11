@@ -86,12 +86,6 @@ async def test_with_fixture(
 Before submitting, ensure code passes all checks:
 
 ```bash
-# Format code
-black custom_components/tryfi tests
-
 # Check linting
-flake8 custom_components/tryfi tests
-
-# Check types
-mypy custom_components/tryfi
+uv run ruff check --fix
 ```

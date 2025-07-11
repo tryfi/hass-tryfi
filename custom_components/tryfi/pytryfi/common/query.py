@@ -1,159 +1,117 @@
 from ..const import *
 from ..exceptions import *
+from typing import Literal
 import json
 import logging
 import requests
-from typing import Literal
 
 LOGGER = logging.getLogger(__name__)
 
-def getUserDetail(sessionId):
+def getUserDetail(session: requests.Session):
     qString = QUERY_CURRENT_USER + FRAGMENT_USER_DETAILS
-    response = query(sessionId, qString)
+    response = query(session, qString)
     LOGGER.debug(f"getUserDetails: {response}")
     return response['data']['currentUser']
 
-def getPetList(sessionId):
+def getHouseHolds(session: requests.Session):
     qString = QUERY_CURRENT_USER_FULL_DETAIL + FRAGMENT_USER_DETAILS \
         + FRAGMENT_USER_FULL_DETAILS + FRAGMENT_PET_PROFILE + FRAGEMENT_BASE_PET_PROFILE \
         + FRAGMENT_BASE_DETAILS + FRAGMENT_POSITION_COORDINATES + FRAGMENT_BREED_DETAILS \
         + FRAGMENT_PHOTO_DETAILS + FRAGMENT_DEVICE_DETAILS + FRAGMENT_LED_DETAILS + FRAGMENT_OPERATIONAL_DETAILS \
         + FRAGMENT_CONNECTION_STATE_DETAILS
-    response = query(sessionId, qString)
-    LOGGER.debug(f"getPetList: {response}")
+    response = query(session, qString)
+    LOGGER.debug(f"getHouseHolds: {response}")
     return response['data']['currentUser']['userHouseholds']
 
-def getBaseList(sessionId):
-    qString = QUERY_CURRENT_USER_FULL_DETAIL + FRAGMENT_USER_DETAILS \
-        + FRAGMENT_USER_FULL_DETAILS + FRAGMENT_PET_PROFILE + FRAGEMENT_BASE_PET_PROFILE \
-        + FRAGMENT_BASE_DETAILS + FRAGMENT_POSITION_COORDINATES + FRAGMENT_BREED_DETAILS \
-        + FRAGMENT_PHOTO_DETAILS + FRAGMENT_DEVICE_DETAILS + FRAGMENT_LED_DETAILS + FRAGMENT_OPERATIONAL_DETAILS \
-        + FRAGMENT_CONNECTION_STATE_DETAILS
-    response = query(sessionId, qString)
+# Simplified version of the above, but only gets details about the bases
+def getBaseList(session: requests.Session):
+    qString = QUERY_GET_BASES + FRAGMENT_BASE_DETAILS + FRAGMENT_POSITION_COORDINATES
+    response = query(session, qString)
     LOGGER.debug(f"getBaseList: {response}")
     return response['data']['currentUser']['userHouseholds']
 
-def getCurrentPetLocation(sessionId, petId):
+def getCurrentPetLocation(session: requests.Session, petId: str):
     qString = QUERY_PET_CURRENT_LOCATION.replace(VAR_PET_ID, petId) + FRAGMENT_ONGOING_ACTIVITY_DETAILS \
-        + FRAGMENT_UNCERTAINTY_DETAILS + FRAGMENT_CIRCLE_DETAILS + FRAGMENT_LOCATION_POINT \
-        + FRAGMENT_PLACE_DETAILS + FRAGMENT_USER_DETAILS + FRAGMENT_POSITION_COORDINATES
-    response = query(sessionId, qString)
+        + FRAGMENT_LOCATION_POINT \
+        + FRAGMENT_PLACE_DETAILS + FRAGMENT_POSITION_COORDINATES
+    response = query(session, qString)
     LOGGER.debug(f"getCurrentPetLocation: {response}")
     return response['data']['pet']['ongoingActivity']
 
-def getCurrentPetStats(sessionId, petId):
+def getPetAllInfo(session: requests.Session, petId: str):
+    qString = QUERY_PET_ACTIVE_DETAILS.replace(VAR_PET_ID, petId) + FRAGMENT_ACTIVITY_SUMMARY_DETAILS + FRAGMENT_ONGOING_ACTIVITY_DETAILS + FRAGMENT_OPERATIONAL_DETAILS + FRAGMENT_CONNECTION_STATE_DETAILS + FRAGMENT_LED_DETAILS \
+        + FRAGMENT_REST_SUMMARY_DETAILS + FRAGMENT_POSITION_COORDINATES + FRAGMENT_LOCATION_POINT + FRAGMENT_USER_DETAILS + FRAGMENT_PLACE_DETAILS
+    response = query(session, qString)
+    LOGGER.debug(f"getPetAllInfo: {response}")
+    return response['data']['pet']
+
+def getCurrentPetStats(session: requests.Session, petId: str):
     qString = QUERY_PET_ACTIVITY.replace(VAR_PET_ID, petId) + FRAGMENT_ACTIVITY_SUMMARY_DETAILS
-    response = query(sessionId, qString)
+    response = query(session, qString)
     LOGGER.debug(f"getCurrentPetStats: {response}")
     return response['data']['pet']
 
-def getCurrentPetRestStats(sessionId, petId):
+def getCurrentPetRestStats(session: requests.Session, petId: str):
     qString = QUERY_PET_REST.replace(VAR_PET_ID, petId) + FRAGMENT_REST_SUMMARY_DETAILS
-    response = query(sessionId, qString)
+    response = query(session, qString)
     LOGGER.debug(f"getCurrentPetStats: {response}")
     return response['data']['pet']
 
-def getDevicedetails(sessionId, petId):
-    qString = QUERY_PET_DEVICE_DETAILS.replace(VAR_PET_ID, petId) + FRAGMENT_PET_PROFILE + FRAGEMENT_BASE_PET_PROFILE + FRAGMENT_DEVICE_DETAILS + FRAGMENT_LED_DETAILS + FRAGMENT_OPERATIONAL_DETAILS + FRAGMENT_CONNECTION_STATE_DETAILS + FRAGMENT_USER_DETAILS + FRAGMENT_BREED_DETAILS + FRAGMENT_PHOTO_DETAILS
-    response = query(sessionId, qString)
+def getDevicedetails(session: requests.Session, petId: str):
+    qString = QUERY_PET_DEVICE_DETAILS.replace(VAR_PET_ID, petId) + FRAGMENT_PET_PROFILE + FRAGEMENT_BASE_PET_PROFILE + \
+        FRAGMENT_DEVICE_DETAILS + FRAGMENT_LED_DETAILS + FRAGMENT_OPERATIONAL_DETAILS + FRAGMENT_CONNECTION_STATE_DETAILS + \
+        FRAGMENT_USER_DETAILS + FRAGMENT_BREED_DETAILS + FRAGMENT_PHOTO_DETAILS
+    response = query(session, qString)
     LOGGER.debug(f"getDevicedetails: {response}")
     return response['data']['pet']
 
-def setLedColor(sessionId, deviceId, ledColorCode):
+def setLedColor(session: requests.Session, deviceId: str, ledColorCode):
     qString = MUTATION_SET_LED_COLOR + FRAGMENT_DEVICE_DETAILS + FRAGMENT_OPERATIONAL_DETAILS + FRAGMENT_CONNECTION_STATE_DETAILS + FRAGMENT_USER_DETAILS + FRAGMENT_LED_DETAILS
     qVariables = '{"moduleId":"'+deviceId+'","ledColorCode":'+str(ledColorCode)+'}'
-    response = mutation(sessionId, qString, qVariables)
+    response = mutation(session, qString, qVariables)
     LOGGER.debug(f"setLedColor: {response}")
     return response['data']
 
-def turnOnOffLed(sessionId, moduleId, ledEnabled):
+def turnOnOffLed(session: requests.Session, moduleId, ledEnabled: bool):
     qString = MUTATION_DEVICE_OPS + FRAGMENT_DEVICE_DETAILS + FRAGMENT_OPERATIONAL_DETAILS + FRAGMENT_CONNECTION_STATE_DETAILS + FRAGMENT_USER_DETAILS + FRAGMENT_LED_DETAILS
     qVariables = '{"input": {"moduleId":"'+moduleId+'","ledEnabled":'+str(ledEnabled).lower()+'}}'
-    response = mutation(sessionId, qString, qVariables)
+    response = mutation(session, qString, qVariables)
     LOGGER.debug(f"turnOnOffLed: {response}")
     return response['data']
 
-def setLostDogMode(sessionId, moduleId, action):
+def setLostDogMode(session: requests.Session, moduleId, action: bool):
     if action:
         mode = PET_MODE_LOST
     else:
         mode = PET_MODE_NORMAL
     qString = MUTATION_DEVICE_OPS + FRAGMENT_DEVICE_DETAILS + FRAGMENT_OPERATIONAL_DETAILS + FRAGMENT_CONNECTION_STATE_DETAILS + FRAGMENT_USER_DETAILS + FRAGMENT_LED_DETAILS
     qVariables = '{"input": {"moduleId":"'+moduleId+'","mode":"'+mode+'"}}'
-    response = mutation(sessionId, qString, qVariables)
+    response = mutation(session, qString, qVariables)
     LOGGER.debug(f"setLostDogMode: {response}")
     return response['data']
 
 def getGraphqlURL():
     return API_HOST_URL_BASE + API_GRAPHQL
 
-def mutation(sessionId, qString, qVariables):
-    jsonObject = None
+def mutation(session: requests.Session, qString, qVariables):
     url = getGraphqlURL()
     
     params = {"query": qString, "variables": json.loads(qVariables)}
-    response = execute(url, sessionId, params=params, method='POST')
-    
-    try:
-        jsonObject = response.json()
-    except json.JSONDecodeError as e:
-        LOGGER.error(f"Failed to parse JSON response: {response.text}")
-        raise TryFiError(f"Invalid JSON response from API: {e}") from e
-        
-    # Check for GraphQL errors
-    if 'errors' in jsonObject:
-        error_msg = jsonObject['errors'][0].get('message', 'Unknown GraphQL error')
-        LOGGER.error(f"GraphQL error: {error_msg}")
-        # Check if it's an authentication error
-        if any(auth_err in error_msg.lower() for auth_err in ['unauthorized', 'unauthenticated', 'authentication', 'forbidden']):
-            raise TryFiError(f"Authentication error: {error_msg}")
-        raise TryFiError(f"GraphQL error: {error_msg}")
-        
-    return jsonObject
+    return execute(url, session, params=params, method='POST').json()
 
-def query(sessionId : requests.Session, qString):
-    jsonObject = None
+def query(session: requests.Session, qString):
     url = getGraphqlURL()
     params={'query': qString}
-    response = execute(url, sessionId, params=params)
-    
-    try:
-        jsonObject = response.json()
-    except json.JSONDecodeError as e:
-        LOGGER.error(f"Failed to parse JSON response: {response.text}")
-        raise TryFiError(f"Invalid JSON response from API: {e}") from e
-        
-    # Check for GraphQL errors
-    if 'errors' in jsonObject:
-        error_msg = jsonObject['errors'][0].get('message', 'Unknown GraphQL error')
-        LOGGER.error(f"GraphQL error: {error_msg}")
-        # Check if it's an authentication error
-        if any(auth_err in error_msg.lower() for auth_err in ['unauthorized', 'unauthenticated', 'authentication', 'forbidden']):
-            raise TryFiError(f"Authentication error: {error_msg}")
-        raise TryFiError(f"GraphQL error: {error_msg}")
-        
-    return jsonObject
+    resp = execute(url, session, params=params)
+    if not resp.ok:
+        LOGGER.warning(f"non-okay response: {resp.json()}")
+        resp.raise_for_status()
+    return resp.json()
 
-def execute(url : str, sessionId : requests.Session, method: Literal['GET', 'POST'] = 'GET', params=None, cookies=None):
-    response = None
-    try:
-        if method == 'GET':
-            response = sessionId.get(url, params=params)
-        elif method == 'POST':
-            response = sessionId.post(url, json=params)
-        else:
-            raise TryFiError(f"Method Passed was invalid: {method}. Only GET and POST are supported")
-        
-        # Check for HTTP errors
-        if response.status_code in [401, 403]:
-            raise TryFiError(f"Authentication error: HTTP {response.status_code}")
-        response.raise_for_status()
-        
-        # Check if we got a valid response
-        if not response.text:
-            raise TryFiError("Empty response from TryFi API")
-            
-        return response
-    except requests.exceptions.RequestException as e:
-        LOGGER.error(f"Request to TryFi API failed: {e}")
-        raise TryFiError(f"API request failed: {e}") from e
+def execute(url : str, session : requests.Session, method: Literal['GET', 'POST'] = 'GET', params=None, cookies=None):
+    if method == 'GET':
+        return session.get(url, params=params)
+    elif method == 'POST':
+        return session.post(url, json=params)
+    else:
+        raise TryFiError(f"Method Passed was invalid: {method}. Only GET and POST are supported")

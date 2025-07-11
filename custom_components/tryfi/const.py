@@ -13,7 +13,7 @@ DEFAULT_POLLING_RATE: Final = 10
 
 # Sensor constants
 SENSOR_STATS_BY_TIME: Final = ["DAILY", "WEEKLY", "MONTHLY"]
-SENSOR_STATS_BY_TYPE: Final = ["STEPS", "DISTANCE", "SLEEP", "NAP"]
+SENSOR_STATS_BY_TYPE: Final = ["STEPS", "DISTANCE", "SLEEP", "NAP", "GOAL"]
 
 # Device info
 MANUFACTURER: Final = "TryFi"
