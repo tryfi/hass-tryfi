@@ -6,11 +6,9 @@ to discover additional features and data.
 """
 
 import json
-import requests
 import sys
 import os
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Dict, Optional
 
 # Add the pytryfi module to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'custom_components/tryfi'))
@@ -157,8 +155,8 @@ class TryFiExplorerV2:
     def explore_pet_history_alt(self, pet_id: str):
         """Try alternative approaches to get historical data"""
         # Try different date formats and query structures
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=7)
+        #end_date = datetime.now()
+        #start_date = end_date - timedelta(days=7)
         
         history_queries = [
             # Activity feed style

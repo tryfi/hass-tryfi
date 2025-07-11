@@ -1,12 +1,12 @@
 import logging
 import requests
 
-from .const import (API_HOST_URL_BASE, API_LOGIN, PYTRYFI_VERSION, HEADER)
+from .const import (API_HOST_URL_BASE, API_LOGIN, HEADER)
 from .fiUser import FiUser
 from .fiPet import FiPet
 from .fiBase import FiBase
 from .common import query
-from sentry_sdk import capture_message, capture_exception
+from sentry_sdk import capture_exception
 
 
 
@@ -68,7 +68,6 @@ class PyTryFi(object):
 
     def __str__(self):
         instString = f"Username: {self.username}"
-        userString = f"{self.currentUser}"
         baseString = ""
         petString = ""
         for b in self.bases:
@@ -233,9 +232,6 @@ class PyTryFi(object):
     @property
     def userID(self):
         return self._userID
-    @property
-    def session(self):
-        return self._session
 
     # login to the api and get a session
     def login(self):
@@ -246,14 +242,14 @@ class PyTryFi(object):
                 'password' : self._password,
             }
         
-        LOGGER.debug(f"Logging into TryFi")
+        LOGGER.debug("Logging into TryFi")
         try:
             response = self._session.post(url, data=params)
             response.raise_for_status()
             #validate if the response contains error or not
             try:
                 error = response.json()['error']
-            except Exception as e:
+            except Exception:
                 #capture_exception(e)
                 error = None
             #if error set or response is non-200

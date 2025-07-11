@@ -1,17 +1,13 @@
 """Test TryFi light platform."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
 from homeassistant.components.light import (
     ATTR_RGB_COLOR,
-    DOMAIN as LIGHT_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from custom_components.tryfi.const import DOMAIN
@@ -21,7 +17,6 @@ from custom_components.tryfi.light import (
     hex_to_rgb,
 )
 
-from tests.common import MockConfigEntry
 
 
 def test_hex_to_rgb():

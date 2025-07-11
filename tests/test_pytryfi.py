@@ -70,7 +70,7 @@ def test_pytryfi_update_error_handling():
 
 def test_query_error_handling():
     """Test query module error handling."""
-    from custom_components.tryfi.pytryfi.common.query import execute, query, mutation
+    from custom_components.tryfi.pytryfi.common.query import execute
     
     session = Mock()
     

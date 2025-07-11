@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from custom_components.tryfi.binary_sensor import TryFiBatteryChargingBinarySensor
 from custom_components.tryfi.const import DOMAIN
 
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
 import logging
 import datetime
 from .ledColors import ledColors
-from .const import PET_MODE_NORMAL, PET_MODE_LOST
+from .const import PET_MODE_LOST
 
 LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class FiDevice(object):
             #V1 of the collar has this parameter but V2 it is missing
             try:
                 self._isCharging = bool(deviceJSON['info']['isCharging'])
-            except Exception as e1:
+            except Exception:
                 self._isCharging = False
             
             #self._batteryHealth = deviceJSON['info']['batteryHealth']  
@@ -36,7 +36,6 @@ class FiDevice(object):
                 self._availableLedColors.append(c)
         except Exception as e:
             LOGGER.debug(f"tryfi Error: {e}")
-            capture_exception(e)
 
     def __str__(self):
         return f"Last Updated - {self.lastUpdated} - Device ID: {self.deviceId} Device Mode: {self.mode} Battery Left: {self.batteryPercent}% LED State: {self.ledOn} Last Connected: {self.connectionStateDate} by: {self.connectionStateType}"
@@ -111,7 +110,7 @@ class FiDevice(object):
                 return True
 #Created function to return a date/time regardless.
     def setLedOffAtDate(self, ledOffAt):
-        if ledOffAt == None:
+        if ledOffAt is None:
             ## if object is null, return current date/time in UTC
             LOGGER.debug("LedOffAt is None, returning current datetime in UTC")
             return datetime.datetime.now(datetime.timezone.utc)

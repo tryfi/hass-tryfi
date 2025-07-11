@@ -1,23 +1,15 @@
 """Test TryFi sensor platform."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
-    PERCENTAGE,
-    STATE_UNKNOWN,
     UnitOfLength,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
 from custom_components.tryfi.const import DOMAIN
 from custom_components.tryfi.sensor import (
@@ -27,7 +19,6 @@ from custom_components.tryfi.sensor import (
     TryFiBaseSensor,
 )
 
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

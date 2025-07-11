@@ -46,7 +46,7 @@ for ssid_stat in device_info['wifiStats']['ssidStats']:
 print("\n## Device Statistics")
 stats = device_info['deviceStats']['fields']
 print(f"- GNSS Success Rate: {stats['gnssSuccessCount']}/{stats['gnssSuccessCount'] + stats['gnssFailureCount']} ({100 * stats['gnssSuccessCount'] / (stats['gnssSuccessCount'] + stats['gnssFailureCount']):.1f}%)")
-print(f"- Total Distance Tracked: Not available in current stats")
+print("- Total Distance Tracked: Not available in current stats")
 print(f"- LED Usage: {stats['ledPowerOnTime']} seconds total")
 print(f"- BLE Connections: {stats['bleConnCount']}")
 print(f"- WiFi Disconnects: {stats['wifiDisconnect']}")
@@ -73,13 +73,13 @@ print("10. LED usage statistics")
 
 # Check place information
 pet = data['data']['currentUser']['userHouseholds'][0]['household']['pets'][0]
-print(f"\n## Current Activity Information")
+print("\n## Current Activity Information")
 print(f"- Pet Name: {pet['name']}")
 print(f"- Instagram Handle: {pet.get('instagramHandle', 'Not set')}")
 
 # Check base station additional info
 bases = data['data']['currentUser']['userHouseholds'][0]['household']['bases']
-print(f"\n## Base Station Information")
+print("\n## Base Station Information")
 for base in bases:
     print(f"\n- Base: {base['name']} ({base['baseId']})")
     print(f"  - Online: {base['online']} ({base['onlineQuality']})")

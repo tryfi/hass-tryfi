@@ -1,8 +1,4 @@
 {
-    "config_flow": true,
-    "documentation": "https://github.com/tryfi/hass-tryfi",
-    "domains": ["device_tracker", "light", "sensor", "select"],
-    "homeassistant": "2023.1.0",
-    "name": "TryFi Dog Monitor",
-    "render_readme": true
-  }
+  "homeassistant": "2023.1.0",
+  "name": "TryFi Dog Monitor"
+}
