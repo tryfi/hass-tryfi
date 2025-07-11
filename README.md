@@ -2,9 +2,9 @@
 ![beta_badge](https://img.shields.io/badge/maturity-Beta-yellow.png?style=for-the-badge)
 [![](https://img.shields.io/github/release/tryfi/hass-tryfi/all.svg?style=for-the-badge)](https://github.com/tryfi/hass-tryfi/releases)
 ![release_date](https://img.shields.io/github/release-date/tryfi/hass-tryfi.svg?style=for-the-badge)
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://github.com/tryfi/hass-tryfi)
 [![](https://img.shields.io/github/license/tryfi/hass-tryfi?style=for-the-badge)](LICENSE)
-[![](https://img.shields.io/github/workflow/status/tryfi/hass-tryfi/Validate%20with%20hassfest?style=for-the-badge)](https://github.com/tryfi/hass-tryfi/actions)
+[![](https://img.shields.io/github/actions/workflow/status/tryfi/hass-tryfi/combined.yaml?style=for-the-badge)](https://github.com/tryfi/hass-tryfi/actions)
 
 This allows you to integrate [TryFi](https://tryfi.com) Smart GPS Collars with Home Assistant.
 
