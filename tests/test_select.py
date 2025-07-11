@@ -10,7 +10,6 @@ from homeassistant.core import HomeAssistant
 from custom_components.tryfi.const import DOMAIN
 from custom_components.tryfi.select import LOST_MODE_OPTIONS, TryFiLostModeSelect
 
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture

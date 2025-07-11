@@ -2,7 +2,7 @@ import datetime
 import logging
 from .common import query
 from .const import PET_ACTIVITY_ONGOINGWALK
-from .exceptions import *
+from .exceptions import TryFiError
 from .fiDevice import FiDevice
 from sentry_sdk import capture_exception
 
@@ -18,32 +18,32 @@ class FiPet(object):
         try:
             self._yearOfBirth = int(petJSON['yearOfBirth'])
         except:
-            LOGGER.warning(f"Unknown Year of Birth")
+            LOGGER.warning("Unknown Year of Birth")
             self._yearOfBirth = 1900
         try:
             self._monthOfBirth = int(petJSON['monthOfBirth'])
         except:
-            LOGGER.warning(f"Unknown Month of Birth")
+            LOGGER.warning("Unknown Month of Birth")
             self._monthOfBirth = 1
         try:
             self._dayOfBirth = int(petJSON['dayOfBirth'])
         except:
-            LOGGER.warning(f"Unknown day of birth")
+            LOGGER.warning("Unknown day of birth")
             self._dayOfBirth = None
         self._gender = petJSON.get('gender')
         self._weight = float(petJSON['weight']) if 'weight' in petJSON else None
         try:
             self._breed = petJSON['breed']['name']
         except:
-            LOGGER.warning(f"Unknown Breed of Dog")
+            LOGGER.warning("Unknown Breed of Dog")
             self._breed = None
             #track last updated
         self._lastUpdated = datetime.datetime.now()
         try:
             self._photoLink = petJSON['photos']['first']['image']['fullSize']
-        except Exception as e:
+        except Exception:
             #capture_exception(e)
-            LOGGER.warning(f"Cannot find photo of your pet. Defaulting to empty string.")
+            LOGGER.warning("Cannot find photo of your pet. Defaulting to empty string.")
             self._photoLink = ""
         self._device = FiDevice(petJSON['device']['id'])
         self._device.setDeviceDetailsJSON(petJSON['device'])

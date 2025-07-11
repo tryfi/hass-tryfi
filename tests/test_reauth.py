@@ -1,7 +1,7 @@
 """Test automatic re-authentication functionality."""
 from __future__ import annotations
 
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, patch
 
 import pytest
 

@@ -8,11 +8,11 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4.2.2
         name: Download repo
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5.6.0
         name: Setup Python
       - uses: actions/cache@v4
         name: Cache
@@ -20,11 +20,7 @@ jobs:
           path: |
             ~/.cache/pip
           key: custom-component-ci
-      - uses: hacs/integration/action@main
+      - uses: astral-sh/ruff-action@v3
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CATEGORY: integration
-      - uses: KTibow/ha-blueprint@stable
-        name: CI
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # TODO: Remove these ignores, but right now there's too many issues
+          args: "check --ignore F405,F403,E722"

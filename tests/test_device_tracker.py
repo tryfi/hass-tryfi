@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from custom_components.tryfi.const import DOMAIN
 from custom_components.tryfi.device_tracker import TryFiPetTracker
 
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture
