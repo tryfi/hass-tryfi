@@ -1,1 +1,31 @@
 __pycache__
+
+# Local development documentation
+.local-docs/
+.claude/
+
+# Local test files
+test_dir/
+
+# API exploration and research files  
+device_info_analysis.py
+tryfi_api_*.py
+tryfi_api_*.md
+fragment_analysis.json
+full_household_data.json
+known_mutations.json
+tryfi_findings.json
+working_queries.md
+
+# Local deployment scripts
+check-tryfi-logs.sh
+deploy-tryfi.sh
+reload-tryfi.sh
+PR_INSTRUCTIONS.md
+
+# IDE and environment files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
