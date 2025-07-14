@@ -1,14 +1,15 @@
 """Common test utilities for TryFi integration."""
+
 from __future__ import annotations
 
 from unittest.mock import Mock
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, SOURCE_USER
 
 
 class MockConfigEntry(ConfigEntry):
     """Helper to create a mock config entry."""
-    
+
     def __init__(
         self,
         *,
@@ -26,10 +27,13 @@ class MockConfigEntry(ConfigEntry):
             data=data or {},
             options=options or {},
             entry_id=entry_id,
+            unique_id=entry_id,
+            minor_version=1,
+            discovery_keys=None,
+            source=SOURCE_USER,
             **kwargs,
         )
         self.add_to_hass = Mock()
-        self.state = None
 
 
 def mock_pet_data() -> dict:
@@ -39,7 +43,7 @@ def mock_pet_data() -> dict:
         "name": "Test Dog",
         "device": {
             "id": "test_device_id",
-            "moduleId": "test_module_id", 
+            "moduleId": "test_module_id",
             "batteryPercent": 85,
             "isCharging": False,
             "ledOn": True,

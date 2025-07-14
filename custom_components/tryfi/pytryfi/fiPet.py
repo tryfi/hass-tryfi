@@ -28,21 +28,9 @@ class FiPet(object):
     def setPetDetailsJSON(self, petJSON: dict):
         self._name = petJSON.get('name')
         self._homeCityState = petJSON.get('homeCityState')
-        try:
-            self._yearOfBirth = int(petJSON['yearOfBirth'])
-        except:
-            LOGGER.warning("Unknown Year of Birth")
-            self._yearOfBirth = 1900
-        try:
-            self._monthOfBirth = int(petJSON['monthOfBirth'])
-        except:
-            LOGGER.warning("Unknown Month of Birth")
-            self._monthOfBirth = 1
-        try:
-            self._dayOfBirth = int(petJSON['dayOfBirth'])
-        except:
-            LOGGER.warning("Unknown day of birth")
-            self._dayOfBirth = None
+        self._yearOfBirth = petJSON['yearOfBirth']
+        self._monthOfBirth = int(petJSON['monthOfBirth'])
+        self._dayOfBirth = int(petJSON['dayOfBirth'])
         self._gender = petJSON.get('gender')
         self._weight = float(petJSON['weight']) if 'weight' in petJSON else None
         self._breed = petJSON['breed'].get('name') if 'breed' in petJSON else None
@@ -72,8 +60,8 @@ class FiPet(object):
             else:
                 currentPosition = activityJSON['position']
 
-            self._currLongitude = float(currentPosition['longitude'])
-            self._currLatitude = float(currentPosition['latitude'])
+            self._currLongitude = currentPosition['longitude']
+            self._currLatitude = currentPosition['latitude']
             self._currStartTime = datetime.datetime.fromisoformat(activityJSON['start'].replace('Z', '+00:00'))
 
             if 'place' in activityJSON and activityJSON['place'] is not None:
@@ -253,13 +241,13 @@ class FiPet(object):
     def breed(self):
         return self._breed
     @property
-    def photoLink(self):
+    def photoLink(self) -> str | None:
         return self._photoLink
     @property
-    def currLongitude(self):
+    def currLongitude(self) -> float | None:
         return self._currLongitude
     @property
-    def currLatitude(self):
+    def currLatitude(self) -> float | None:
         return self._currLatitude
     @property
     def currStartTime(self):

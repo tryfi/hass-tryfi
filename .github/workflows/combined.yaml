@@ -11,15 +11,27 @@ jobs:
         name: Download repo
         with:
           fetch-depth: 0
+
+      # Install Tools
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
       - uses: actions/setup-python@v5.6.0
         name: Setup Python
-      - uses: actions/cache@v4
-        name: Cache
         with:
-          path: |
-            ~/.cache/pip
-          key: custom-component-ci
-      - uses: astral-sh/ruff-action@v3
+          python-version-file: ".python-version"
+
+      - name: Install project dependencies
+        run: uv sync --locked --all-extras --dev
+
+      - name: Syntax check source files
+        uses: astral-sh/ruff-action@v3
+
+      - name: Run tests
+        # Unshare to prevent any accidental network calls to the real API
+        run: sudo unshare --net sudo -u $USER $(which uv) run pytest tests
+
       - uses: hacs/action@22.5.0
         with:
-          CATEGORY: integration
+          category: integration

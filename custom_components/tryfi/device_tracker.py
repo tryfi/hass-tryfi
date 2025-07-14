@@ -12,7 +12,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL
-from .pytryfi import PyTryFi
+from .pytryfi import PyTryFi, FiPet, FiBase
+from . import TryFiDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ class TryFiPetTracker(CoordinatorEntity, TrackerEntity):
     
     _attr_has_entity_name = False
     
-    def __init__(self, coordinator: Any, pet: Any) -> None:
+    def __init__(self, coordinator: TryFiDataUpdateCoordinator, pet: FiPet) -> None:
         """Initialize the pet tracker."""
         super().__init__(coordinator)
         self._pet_id = pet.petId
@@ -56,7 +57,7 @@ class TryFiPetTracker(CoordinatorEntity, TrackerEntity):
         self._attr_name = f"{pet.name} Tracker"
     
     @property
-    def pet(self) -> Any:
+    def pet(self) -> FiPet:
         """Get the pet object from coordinator data."""
         return self.coordinator.data.getPet(self._pet_id)
     
@@ -64,27 +65,21 @@ class TryFiPetTracker(CoordinatorEntity, TrackerEntity):
     def entity_picture(self) -> str | None:
         """Return the entity picture."""
         if self.pet:
-            return getattr(self.pet, "photoLink", None)
+            return self.pet.photoLink
         return None
     
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
         if self.pet and hasattr(self.pet, "currLatitude"):
-            try:
-                return float(self.pet.currLatitude)
-            except (TypeError, ValueError):
-                _LOGGER.debug("Invalid latitude for pet %s", self.pet.name)
+            return self.pet.currLatitude
         return None
     
     @property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         if self.pet and hasattr(self.pet, "currLongitude"):
-            try:
-                return float(self.pet.currLongitude)
-            except (TypeError, ValueError):
-                _LOGGER.debug("Invalid longitude for pet %s", self.pet.name)
+            return self.pet.currLongitude
         return None
     
     @property
@@ -109,17 +104,18 @@ class TryFiPetTracker(CoordinatorEntity, TrackerEntity):
         device_info = {
             "identifiers": {(DOMAIN, pet.petId)},
             "name": pet.name,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
+            "manufacturer": MANUFACTURER
         }
         
         # Add breed if available
         if hasattr(pet, "breed") and pet.breed:
             device_info["model"] = f"{MODEL} - {pet.breed}"
+        else:
+            device_info["model"] = MODEL
         
         # Add firmware version if available
         if hasattr(pet, "device") and pet.device:
-            if hasattr(pet.device, "buildId"):
+            if hasattr(pet.device, "buildId") and pet.device.buildId is not None:
                 device_info["sw_version"] = pet.device.buildId
         
         return device_info
@@ -130,7 +126,7 @@ class TryFiBaseTracker(CoordinatorEntity, TrackerEntity):
     
     _attr_has_entity_name = False
     
-    def __init__(self, coordinator: Any, base: Any) -> None:
+    def __init__(self, coordinator: Any, base: FiBase) -> None:
         """Initialize the base tracker."""
         super().__init__(coordinator)
         self._base_id = base.baseId
@@ -139,7 +135,7 @@ class TryFiBaseTracker(CoordinatorEntity, TrackerEntity):
         self._attr_icon = "mdi:home-map-marker"
     
     @property
-    def base(self) -> Any:
+    def base(self) -> FiBase:
         """Get the base object from coordinator data."""
         return self.coordinator.data.getBase(self._base_id)
     
@@ -147,20 +143,14 @@ class TryFiBaseTracker(CoordinatorEntity, TrackerEntity):
     def latitude(self) -> float | None:
         """Return latitude value of the base station."""
         if self.base and hasattr(self.base, "latitude"):
-            try:
-                return float(self.base.latitude)
-            except (TypeError, ValueError):
-                _LOGGER.debug("Invalid latitude for base %s", self.base.name)
+            return float(self.base.latitude)
         return None
     
     @property
     def longitude(self) -> float | None:
         """Return longitude value of the base station."""
         if self.base and hasattr(self.base, "longitude"):
-            try:
-                return float(self.base.longitude)
-            except (TypeError, ValueError):
-                _LOGGER.debug("Invalid longitude for base %s", self.base.name)
+            return float(self.base.longitude)
         return None
     
     @property

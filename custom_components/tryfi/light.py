@@ -15,6 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .coordinator import TryFiDataUpdateCoordinator
+
+from .pytryfi import FiPet
 from .const import DOMAIN, MANUFACTURER, MODEL
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,7 +101,7 @@ class TryFiPetLight(CoordinatorEntity, LightEntity):
     _attr_color_mode = ColorMode.RGB
     _attr_supported_color_modes = {ColorMode.RGB}
     
-    def __init__(self, coordinator: Any, pet: Any) -> None:
+    def __init__(self, coordinator: TryFiDataUpdateCoordinator, pet: FiPet) -> None:
         """Initialize the light entity."""
         super().__init__(coordinator)
         self._pet_id = pet.petId
@@ -107,7 +110,7 @@ class TryFiPetLight(CoordinatorEntity, LightEntity):
         
         # Build color map from available LED colors
         self._color_map: dict[int, tuple[int, int, int]] = {}
-        if hasattr(pet.device, "availableLedColors"):
+        if hasattr(pet.device, "availableLedColors") and pet.device.availableLedColors is not None:
             for led_color in pet.device.availableLedColors:
                 if hasattr(led_color, "ledColorCode") and hasattr(led_color, "hexCode"):
                     self._color_map[led_color.ledColorCode] = hex_to_rgb(led_color.hexCode)

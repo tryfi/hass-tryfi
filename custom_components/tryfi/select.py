@@ -103,11 +103,14 @@ class TryFiLostModeSelect(CoordinatorEntity, SelectEntity):
         # Set lost mode based on selected option
         is_lost = option == "Lost"
         
-        await self.hass.async_add_executor_job(
-            self.pet.setLostDogMode,
-            self.coordinator.data.session,
-            is_lost
-        )
+        try:
+            await self.hass.async_add_executor_job(
+                self.pet.setLostDogMode,
+                self.coordinator.data.session,
+                is_lost
+            )
+        except Exception:
+            _LOGGER.warning("Couldn't change dog lost mode", exc_info=True)
         
         # Request coordinator update
         await self.coordinator.async_request_refresh()

@@ -1,11 +1,12 @@
+"""Library dedicated for interacting with tryfi.com"""
+
 import logging
 import requests
 
-from .const import (API_HOST_URL_BASE, API_LOGIN, HEADER)
 from .fiUser import FiUser
 from .fiPet import FiPet
 from .fiBase import FiBase
-from .common import query
+from .common.query import API_HOST_URL_BASE, API_LOGIN, getHouseHolds, getBaseList
 from sentry_sdk import capture_exception
 
 
@@ -25,7 +26,7 @@ class PyTryFi(object):
         self._currentUser = FiUser(self._userId)
         self._currentUser.setUserDetails(self._session)
 
-        houses = query.getHouseHolds(self._session)
+        houses = getHouseHolds(self._session)
         self._pets = []
         self._bases = []
         for house in houses:
@@ -57,10 +58,6 @@ class PyTryFi(object):
         for p in self._pets:
             petString = petString + f"{p}"
         return f"TryFi Instance - {instString}\n Pets in Home:\n {petString}\n Bases In Home:\n {baseString}"
-    
-    #set the headers for the session
-    def setHeaders(self):
-        self.session.headers = HEADER
 
     #refresh pet details for all pets
     def updatePets(self):
@@ -78,7 +75,7 @@ class PyTryFi(object):
     #refresh base details
     def updateBases(self):
         updatedBases = []
-        baseListJSON = query.getBaseList(self._session)
+        baseListJSON = getBaseList(self._session)
         for house in baseListJSON:
             for base in house['household']['bases']:
                 b = FiBase(base['baseId'])
@@ -131,9 +128,9 @@ class PyTryFi(object):
     def login(self, username: str, password: str):
         url = API_HOST_URL_BASE + API_LOGIN
         params = {
-                'email' : username,
-                'password' : password,
-            }
+            'email': username,
+            'password': password,
+        }
         
         LOGGER.debug("Logging into TryFi")
         response = self._session.post(url, data=params)
@@ -154,4 +151,4 @@ class PyTryFi(object):
         self._sessionId = response.json()['sessionId']
         LOGGER.debug(f"Successfully logged in. UserId: {self._userId}")
 
-        self.setHeaders()
+        self.session.headers['content-type'] = 'application/json'

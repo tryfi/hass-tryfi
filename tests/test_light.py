@@ -1,4 +1,5 @@
 """Test TryFi light platform."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock
@@ -16,7 +17,6 @@ from custom_components.tryfi.light import (
     find_closest_color_code,
     hex_to_rgb,
 )
-
 
 
 def test_hex_to_rgb():
@@ -38,20 +38,20 @@ def test_calculate_distance():
 def test_find_closest_color_code():
     """Test finding closest color code."""
     color_map = {
-        1: (255, 0, 0),    # Red
-        2: (0, 255, 0),    # Green
-        3: (0, 0, 255),    # Blue
-        8: (255, 255, 255), # White
+        1: (255, 0, 0),  # Red
+        2: (0, 255, 0),  # Green
+        3: (0, 0, 255),  # Blue
+        8: (255, 255, 255),  # White
     }
-    
+
     # Exact matches
     assert find_closest_color_code((255, 0, 0), color_map) == 1
     assert find_closest_color_code((0, 255, 0), color_map) == 2
     assert find_closest_color_code((0, 0, 255), color_map) == 3
-    
+
     # Close to red
     assert find_closest_color_code((200, 50, 50), color_map) == 1
-    
+
     # Close to white
     assert find_closest_color_code((200, 200, 200), color_map) == 8
 
@@ -89,111 +89,102 @@ def mock_coordinator_with_light(mock_pet_with_light):
 
 
 async def test_light_entity_properties(
-    hass: HomeAssistant,
-    mock_coordinator_with_light,
-    mock_pet_with_light
+    hass: HomeAssistant, mock_coordinator_with_light, mock_pet_with_light
 ) -> None:
     """Test TryFi light entity properties."""
     from custom_components.tryfi.light import TryFiPetLight
-    
+
     light = TryFiPetLight(mock_coordinator_with_light, mock_pet_with_light)
-    
+
     assert light.unique_id == "test_pet_123-light"
     assert light.name == "Fido Collar Light"
     assert light.is_on is True
     assert light.rgb_color == (255, 0, 0)
     assert light.device_info["identifiers"] == {(DOMAIN, "test_pet_123")}
-    
+
     # Test with light off
     mock_pet_with_light.device.ledOn = False
     assert light.is_on is False
-    
+
     # Test with invalid hex color
     mock_pet_with_light.device.ledColorHex = "invalid"
     assert light.rgb_color is None
 
 
 async def test_light_turn_on(
-    hass: HomeAssistant,
-    mock_coordinator_with_light,
-    mock_pet_with_light
+    hass: HomeAssistant, mock_coordinator_with_light, mock_pet_with_light
 ) -> None:
     """Test turning on the light."""
     from custom_components.tryfi.light import TryFiPetLight
-    
+
     light = TryFiPetLight(mock_coordinator_with_light, mock_pet_with_light)
     light.hass = hass
-    
+
     # Turn on without color
     await light.async_turn_on()
-    
+
     mock_pet_with_light.turnOnOffLed.assert_called_once_with(
-        mock_coordinator_with_light.data.session,
-        True
+        mock_coordinator_with_light.data.session, True
     )
     mock_coordinator_with_light.async_request_refresh.assert_called_once()
-    
+
     # Reset mocks
     mock_pet_with_light.turnOnOffLed.reset_mock()
     mock_coordinator_with_light.async_request_refresh.reset_mock()
-    
+
     # Turn on with color
     await light.async_turn_on(**{ATTR_RGB_COLOR: (0, 255, 0)})
-    
+
     mock_pet_with_light.turnOnOffLed.assert_called_once_with(
-        mock_coordinator_with_light.data.session,
-        True
+        mock_coordinator_with_light.data.session, True
     )
     mock_pet_with_light.setLedColorCode.assert_called_once_with(
         mock_coordinator_with_light.data.session,
-        2  # Green color code
+        2,  # Green color code
     )
     assert mock_coordinator_with_light.async_request_refresh.call_count == 1
 
 
 async def test_light_turn_off(
-    hass: HomeAssistant,
-    mock_coordinator_with_light,
-    mock_pet_with_light
+    hass: HomeAssistant, mock_coordinator_with_light, mock_pet_with_light
 ) -> None:
     """Test turning off the light."""
     from custom_components.tryfi.light import TryFiPetLight
-    
+
     light = TryFiPetLight(mock_coordinator_with_light, mock_pet_with_light)
     light.hass = hass
-    
+
     await light.async_turn_off()
-    
+
     mock_pet_with_light.turnOnOffLed.assert_called_once_with(
-        mock_coordinator_with_light.data.session,
-        False
+        mock_coordinator_with_light.data.session, False
     )
     mock_coordinator_with_light.async_request_refresh.assert_called_once()
 
 
 async def test_light_no_pet_data(
-    hass: HomeAssistant,
-    mock_coordinator_with_light
+    hass: HomeAssistant, mock_coordinator_with_light
 ) -> None:
     """Test light when pet data is not available."""
     from custom_components.tryfi.light import TryFiPetLight
-    
+
     mock_coordinator_with_light.data.getPet.return_value = None
-    
+
     mock_pet = Mock()
     mock_pet.petId = "test_pet"
     mock_pet.name = "Test"
-    mock_pet.device = Mock()
-    
+    mock_pet.device.return_value = Mock()
+    mock_pet.device.availableLedColors = []
+
     light = TryFiPetLight(mock_coordinator_with_light, mock_pet)
     light.hass = hass
-    
+
     assert light.is_on is None
     assert light.rgb_color is None
-    
+
     # Try to turn on/off - should log error and return
     await light.async_turn_on()
     await light.async_turn_off()
-    
+
     # Should not crash, just return early
     mock_coordinator_with_light.async_request_refresh.assert_not_called()

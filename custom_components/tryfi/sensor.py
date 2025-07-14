@@ -175,6 +175,9 @@ class TryFiBatterySensor(TryFiSensorBase):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
+        # TODO: Can coordinator.data ever be None?
+        if self.coordinator.data is None:
+            return None
         pet = self.coordinator.data.getPet(self._pet_id)
         if pet and pet.device:
             return pet.device.batteryPercent
@@ -247,7 +250,7 @@ class PetStatsSensor(TryFiSensorBase):
             
         # Try to get the attribute value
         value = getattr(pet, attr_name, None)
-        
+
         # Convert distance from meters to kilometers
         if value is not None and self._stat_type == "DISTANCE":
             value = round(value / 1000, 2)
