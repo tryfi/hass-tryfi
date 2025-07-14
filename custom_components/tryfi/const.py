@@ -9,7 +9,7 @@ DOMAIN: Final = "tryfi"
 CONF_USERNAME: Final = "username"
 CONF_PASSWORD: Final = "password"
 CONF_POLLING_RATE: Final = "polling"
-DEFAULT_POLLING_RATE: Final = 10
+DEFAULT_POLLING_RATE: Final = 60
 
 # Sensor constants
 SENSOR_STATS_BY_TIME: Final = ["DAILY", "WEEKLY", "MONTHLY"]

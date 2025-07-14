@@ -26,7 +26,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Optional(CONF_POLLING_RATE, default=DEFAULT_POLLING_RATE): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=3600)
+            vol.Coerce(int), vol.Range(min=10, max=3600)
         ),
     }
 )
