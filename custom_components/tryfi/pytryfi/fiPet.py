@@ -5,7 +5,6 @@ from .common import query
 from .const import PET_ACTIVITY_ONGOINGWALK
 from .exceptions import TryFiError
 from .fiDevice import FiDevice
-from sentry_sdk import capture_exception
 from .common.response_handlers import parse_fi_date
 
 LOGGER = logging.getLogger(__name__)
@@ -73,7 +72,6 @@ class FiPet(object):
         try:
             self._photoLink = petJSON['photos']['first']['image']['fullSize']
         except Exception:
-            #capture_exception(e)
             LOGGER.warning("Cannot find photo of your pet. Defaulting to empty string.")
             self._photoLink = ""
         self._device = FiDevice(petJSON['device']['id'])
@@ -136,7 +134,6 @@ class FiPet(object):
             return True
         except Exception as e:
             LOGGER.error(f"Could not update stats for Pet {self.name}.\n{e}")
-            capture_exception(e)
             return False
 
     def _extractSleep(self, restObject: dict) -> tuple[int, int]:
@@ -162,7 +159,6 @@ class FiPet(object):
             return True
         except Exception as e:
             LOGGER.error(f"Could not update rest stats for Pet {self.name}\n{pRestStatsJSON}.\n{e}", exc_info=True)
-            capture_exception(e)
             return False
 
     # Update the Pet's GPS location
@@ -173,7 +169,6 @@ class FiPet(object):
             return True
         except Exception as e:
             LOGGER.error(f"Could not update Pet: {self.name}'s location.\n{e}")
-            capture_exception(e)
             return False
     
     # Update the device/collar details for this pet
@@ -184,7 +179,6 @@ class FiPet(object):
             return True
         except Exception as e:
             LOGGER.error(f"Could not update Device/Collar information for Pet: {self.name}\n{e}")
-            capture_exception(e)
             return False
 
     # Update all details regarding this pet
@@ -294,11 +288,9 @@ class FiPet(object):
                 self.device.setDeviceDetailsJSON(setColorJSON['setDeviceLed'])
             except Exception as e:
                 LOGGER.warning(f"Updated LED Color but could not get current status for Pet: {self.name}\nException: {e}")
-                capture_exception(e)
             return True
         except Exception as e:
             LOGGER.error(f"Could not complete Led Color request:\n{e}")
-            capture_exception(e)
             return False
     
     # turn on or off the led light. action = True will enable the light, false turns off the light
@@ -310,11 +302,9 @@ class FiPet(object):
                 self.device.setDeviceDetailsJSON(onOffResponse['updateDeviceOperationParams'])
             except Exception as e:
                 LOGGER.warning(f"Action: {action} was successful however unable to get current status for Pet: {self.name}")
-                capture_exception(e)
             return True
         except Exception as e:
             LOGGER.error(f"Could not complete LED request:\n{e}")
-            capture_exception(e)
             return False
 
     # set the lost dog mode to Normal or Lost Dog. Action is true for lost dog and false for normal (not lost)
@@ -326,11 +316,9 @@ class FiPet(object):
                 self.device.setDeviceDetailsJSON(petModeResponse['updateDeviceOperationParams'])
             except Exception as e:
                 LOGGER.warning(f"Action: {action} was successful however unable to get current status for Pet: {self.name}")
-                capture_exception(e)
             return True
         except Exception as e:
             LOGGER.error(f"Could not complete turn on/off light where ledEnable is {action}.\nException: {e}")
-            capture_exception(e)
             return False
 
     @property

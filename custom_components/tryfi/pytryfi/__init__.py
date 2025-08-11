@@ -7,7 +7,6 @@ from .fiUser import FiUser
 from .fiPet import FiPet
 from .fiBase import FiBase
 from .common.query import API_HOST_URL_BASE, API_LOGIN, getHouseHolds, getBaseList
-from sentry_sdk import capture_exception
 
 
 
@@ -141,7 +140,6 @@ class PyTryFi(object):
         if 'error' in json or not response.ok:
             errorMsg = json['error'].get('message', None)
             LOGGER.error(f"Cannot login, response: ({response.status_code}): {errorMsg} ")
-            capture_exception(errorMsg)
             raise Exception("TryFiLoginError")
         
         #storing cookies but don't need them. Handled by session mgmt
