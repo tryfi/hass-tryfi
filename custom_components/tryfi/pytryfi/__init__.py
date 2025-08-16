@@ -31,17 +31,18 @@ class PyTryFi(object):
         self._bases = []
         for house in houses:
             for pet in house['household']['pets']:
-                #If pet doesn't have a collar then ignore it. What good is a pet without a collar!
-                if pet['device'] != "None":
-                    p = FiPet(pet['id'])
-                    p.setPetDetailsJSON(pet)
-                    p.updatePetLocation(self._session)
-                    p.updateStats(self._session) # update steps
-                    p.updateRestStats(self._session)
-                    LOGGER.debug(f"Adding Pet: {p._name} with Device: {p._device._deviceId}")
-                    self._pets.append(p)
-                else:
+                # If pet doesn't have a collar then ignore it. What good is a pet without a collar!
+                if pet['device'] is None:
                     LOGGER.warning(f"Pet {pet['name']} - {pet['id']} has no collar. Ignoring Pet!")
+                    continue
+
+                p = FiPet(pet['id'])
+                p.setPetDetailsJSON(pet)
+                p.updatePetLocation(self._session)
+                p.updateStats(self._session) # update steps
+                p.updateRestStats(self._session)
+                LOGGER.debug(f"Adding Pet: {p._name} with Device: {p._device._deviceId}")
+                self._pets.append(p)
 
             for base in house['household']['bases']:
                 b = FiBase(base['baseId'])
