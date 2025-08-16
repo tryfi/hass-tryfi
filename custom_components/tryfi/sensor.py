@@ -22,6 +22,8 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.device_registry import DeviceInfo
+from custom_components.tryfi.pytryfi.fiPet import FiPet
 
 from .const import DOMAIN, MANUFACTURER, MODEL, SENSOR_STATS_BY_TIME, SENSOR_STATS_BY_TYPE
 from .pytryfi import PyTryFi
@@ -124,7 +126,7 @@ async def async_setup_entry(
             entities.append(PetSleepQualitySensor(coordinator, pet))
             
             # Add behavior sensors for Series 3+ collars
-            if hasattr(pet.device, "hardwareRevision") and pet.device.hardwareRevision in ["Series3+", "prod1"]:
+            if pet.device.supportsAdvancedBehaviorStats():
                 _LOGGER.debug("Adding behavior sensors for Series 3+ collar: %s", pet.name)
                 # Barking sensors
                 entities.append(PetBehaviorSensor(coordinator, pet, "barking", "count", "daily"))

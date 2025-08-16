@@ -3,7 +3,6 @@ import logging
 import requests
 from .common import query
 from .const import PET_ACTIVITY_ONGOINGWALK
-from .exceptions import TryFiError
 from .fiDevice import FiDevice
 from .common.response_handlers import parse_fi_date
 
@@ -88,26 +87,22 @@ class FiPet(object):
         self._activityType = activityType
         self._areaName = activityJSON['areaName']
         self._locationLastUpdate = parse_fi_date(activityJSON['lastReportTimestamp'])
-        try:
-            if activityType == PET_ACTIVITY_ONGOINGWALK:
-                currentPosition = activityJSON['positions'][-1]['position']
-            else:
-                currentPosition = activityJSON['position']
+        if activityType == PET_ACTIVITY_ONGOINGWALK:
+            currentPosition = activityJSON['positions'][-1]['position']
+        else:
+            currentPosition = activityJSON['position']
 
-            self._currLongitude = currentPosition['longitude']
-            self._currLatitude = currentPosition['latitude']
-            self._currStartTime = datetime.datetime.fromisoformat(activityJSON['start'].replace('Z', '+00:00'))
+        self._currLongitude = currentPosition['longitude']
+        self._currLatitude = currentPosition['latitude']
+        self._currStartTime = datetime.datetime.fromisoformat(activityJSON['start'].replace('Z', '+00:00'))
 
-            if 'place' in activityJSON and activityJSON['place'] is not None:
-                self._currPlaceName = activityJSON['place']['name']
-                self._currPlaceAddress = activityJSON['place']['address']
-            else:
-                self._currPlaceName = None
-                self._currPlaceAddress = None
-            self._lastUpdated = datetime.datetime.now()
-        except Exception as e:
-            LOGGER.error(f"Unable to set values Current Location for Pet {self.name}.\nException: {e}\nwhile parsing {activityJSON}")
-            raise TryFiError("Unable to set Pet Location Details") from e
+        if 'place' in activityJSON and activityJSON['place'] is not None:
+            self._currPlaceName = activityJSON['place']['name']
+            self._currPlaceAddress = activityJSON['place']['address']
+        else:
+            self._currPlaceName = None
+            self._currPlaceAddress = None
+        self._lastUpdated = datetime.datetime.now()
 
     # set the Pet's current steps, goals and distance details for daily, weekly and monthly
     def setStats(self, activityJSONDaily, activityJSONWeekly, activityJSONMonthly):
@@ -190,25 +185,23 @@ class FiPet(object):
         # TODO: Support weekly
         self._dailySleep, self._dailyNap = self._extractSleep(petJson['dailySleepStat'])
         self._monthlySleep, self._monthlyNap = self._extractSleep(petJson['monthlySleepStat'])
-        # Try to fetch behavior data for Series 3+ collars
-        try:
-            self.updateBehaviorStats(sessionId)
-        except Exception:
-            # Behavior stats may not be available for older collars
-            pass
+
+        if self.device.supportsAdvancedBehaviorStats():
+            # Try to fetch behavior data for Series 3+ collars
+            try:
+                self.updateBehaviorStats(sessionId)
+            except Exception as e:
+                LOGGER.debug(f"Could not update behavior stats for Pet {self.name}. This may be an older collar model.\n{e}")
+                # Behavior stats may not be available for older collars
+                pass
 
     # Update behavior stats for Series 3+ collars
     def updateBehaviorStats(self, sessionId: requests.Session):
         """Update behavior statistics for Series 3+ collars."""
-        try:
-            healthTrendsJSON = query.getPetHealthTrends(sessionId, self.petId, 'DAY')
-            behavior_trends = healthTrendsJSON.get('behaviorTrends', [])
-            self.setBehaviorStatsFromTrends(behavior_trends)
-            return True
-        except Exception as e:
-            LOGGER.debug(f"Could not update behavior stats for Pet {self.name}. This may be an older collar model.\n{e}")
-            return False
-    
+        healthTrendsJSON = query.getPetHealthTrends(sessionId, self.petId, 'DAY')
+        behavior_trends = healthTrendsJSON.get('behaviorTrends', [])
+        self.setBehaviorStatsFromTrends(behavior_trends)
+
     def setBehaviorStatsFromTrends(self, behaviorTrends):
         """Parse behavior data from health trends API."""
         # Reset all metrics
@@ -222,61 +215,56 @@ class FiPet(object):
         self._dailyEatingDuration = 0
         self._dailyDrinkingCount = 0
         self._dailyDrinkingDuration = 0
-        
-        try:
-            for trend in behaviorTrends:
-                if not isinstance(trend, dict):
-                    continue
-                    
-                trend_id = trend.get('id', '')
-                summary = trend.get('summaryComponents', {})
-                
-                # Extract events count
-                events_summary = summary.get('eventsSummary')
-                events_count = 0
-                if events_summary and 'event' in events_summary:
-                    try:
-                        events_count = int(events_summary.split()[0])
-                    except Exception:
-                        pass
-                
-                # Extract duration
-                duration_summary = summary.get('durationSummary')
-                duration_seconds = 0
-                if duration_summary:
-                    try:
-                        if duration_summary.startswith('<'):
-                            duration_seconds = 30
-                        else:
-                            parts = duration_summary.replace('h', '').replace('m', '').split()
-                            if len(parts) == 2:
-                                duration_seconds = int(parts[0]) * 3600 + int(parts[1]) * 60
-                            elif 'h' in duration_summary:
-                                duration_seconds = int(parts[0]) * 3600
-                            else:
-                                duration_seconds = int(parts[0]) * 60
-                    except Exception:
-                        pass
-                
-                # Map to our attributes
-                if trend_id == 'barking:DAY':
-                    self._dailyBarkingCount = events_count
-                    self._dailyBarkingDuration = duration_seconds
-                elif trend_id == 'cleaning_self:DAY':
-                    self._dailyLickingCount = events_count
-                    self._dailyLickingDuration = duration_seconds
-                elif trend_id == 'scratching:DAY':
-                    self._dailyScratchingCount = events_count
-                    self._dailyScratchingDuration = duration_seconds
-                elif trend_id == 'eating:DAY':
-                    self._dailyEatingCount = events_count
-                    self._dailyEatingDuration = duration_seconds
-                elif trend_id == 'drinking:DAY':
-                    self._dailyDrinkingCount = events_count
-                    self._dailyDrinkingDuration = duration_seconds
-                    
-        except Exception as e:
-            LOGGER.debug(f"Unable to parse behavior metrics: {e}")
+
+        for trend in behaviorTrends:
+            if not isinstance(trend, dict):
+                LOGGER.warning(f"Found non-dict item ('{type(trend)}') in behaviorTrends. Skipping.")
+                continue
+
+            trend_id = trend.get('id', '')
+            summary = trend.get('summaryComponents', {})
+
+            # Extract events count
+            events_summary = summary.get('eventsSummary')
+            events_count = 0
+            if events_summary is None:
+                # This will be None when the collar doesn't support the stat
+                # Skip it and move to the next one
+                continue
+            if events_summary and 'event' in events_summary:
+                events_count = int(events_summary.split()[0])
+
+            # Extract duration
+            duration_summary = summary.get('durationSummary')
+            duration_seconds = 0
+            if duration_summary:
+                if duration_summary.startswith('<'):
+                    duration_seconds = 30
+                else:
+                    parts = duration_summary.replace('h', '').replace('m', '').split()
+                    if len(parts) == 2:
+                        duration_seconds = int(parts[0]) * 3600 + int(parts[1]) * 60
+                    elif 'h' in duration_summary:
+                        duration_seconds = int(parts[0]) * 3600
+                    else:
+                        duration_seconds = int(parts[0]) * 60
+
+            # Map to our attributes
+            if trend_id == 'barking:DAY':
+                self._dailyBarkingCount = events_count
+                self._dailyBarkingDuration = duration_seconds
+            elif trend_id == 'cleaning_self:DAY':
+                self._dailyLickingCount = events_count
+                self._dailyLickingDuration = duration_seconds
+            elif trend_id == 'scratching:DAY':
+                self._dailyScratchingCount = events_count
+                self._dailyScratchingDuration = duration_seconds
+            elif trend_id == 'eating:DAY':
+                self._dailyEatingCount = events_count
+                self._dailyEatingDuration = duration_seconds
+            elif trend_id == 'drinking:DAY':
+                self._dailyDrinkingCount = events_count
+                self._dailyDrinkingDuration = duration_seconds
 
     # set the color code of the led light on the pet collar
     def setLedColorCode(self, sessionId: requests.Session, colorCode):
@@ -284,7 +272,7 @@ class FiPet(object):
             moduleId = self.device.moduleId
             ledColorCode = int(colorCode)
             setColorJSON = query.setLedColor(sessionId, moduleId, ledColorCode)
-            try:  
+            try:
                 self.device.setDeviceDetailsJSON(setColorJSON['setDeviceLed'])
             except Exception as e:
                 LOGGER.warning(f"Updated LED Color but could not get current status for Pet: {self.name}\nException: {e}")
@@ -300,7 +288,7 @@ class FiPet(object):
             onOffResponse = query.turnOnOffLed(sessionId, moduleId, action)
             try:
                 self.device.setDeviceDetailsJSON(onOffResponse['updateDeviceOperationParams'])
-            except Exception as e:
+            except Exception:
                 LOGGER.warning(f"Action: {action} was successful however unable to get current status for Pet: {self.name}")
             return True
         except Exception as e:
@@ -314,7 +302,7 @@ class FiPet(object):
             petModeResponse = query.setLostDogMode(sessionId, moduleId, action)
             try:
                 self.device.setDeviceDetailsJSON(petModeResponse['updateDeviceOperationParams'])
-            except Exception as e:
+            except Exception:
                 LOGGER.warning(f"Action: {action} was successful however unable to get current status for Pet: {self.name}")
             return True
         except Exception as e:
