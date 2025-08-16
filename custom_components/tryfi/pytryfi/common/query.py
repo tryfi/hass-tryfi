@@ -110,8 +110,6 @@ def getPetHealthTrends(session: requests.Session, petId: str, period: str = 'DAY
     qString = f"""
     query PetHealthTrends {{
         getPetHealthTrendsForPet(petId: "{petId}", period: {period}) {{
-            __typename
-            period
             behaviorTrends {{
                 __typename
                 id
@@ -120,20 +118,6 @@ def getPetHealthTrends(session: requests.Session, petId: str, period: str = 'DAY
                     __typename
                     eventsSummary
                     durationSummary
-                }}
-                chart {{
-                    __typename
-                    ... on PetHealthTrendSegmentedTimeline {{
-                        __typename
-                        length
-                        dataEnd
-                        segments: intervals {{
-                            __typename
-                            offset
-                            length
-                            color
-                        }}
-                    }}
                 }}
             }}
         }}
@@ -188,7 +172,7 @@ def query(session: requests.Session, qString):
     resp.raise_for_status()
     if not resp.text:
         raise RemoteApiError("Empty response payload from tryfi.com")
-    
+
     try:
         json_object = resp.json()
     except json.decoder.JSONDecodeError as e:
