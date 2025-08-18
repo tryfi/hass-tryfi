@@ -104,6 +104,45 @@ def getDevicedetails(session: requests.Session, petId: str):
     LOGGER.debug(f"getDevicedetails: {response}")
     return response['data']['pet']
 
+def getPetHealthTrends(session: requests.Session, petId: str, period: str = 'DAY'):
+    """Get pet health trends including behavior data for Series 3+ collars."""
+    # Build the query with the health trends fragment inline
+    qString = f"""
+    query PetHealthTrends {{
+        getPetHealthTrendsForPet(petId: "{petId}", period: {period}) {{
+            __typename
+            period
+            behaviorTrends {{
+                __typename
+                id
+                title
+                summaryComponents {{
+                    __typename
+                    eventsSummary
+                    durationSummary
+                }}
+                chart {{
+                    __typename
+                    ... on PetHealthTrendSegmentedTimeline {{
+                        __typename
+                        length
+                        dataEnd
+                        segments: intervals {{
+                            __typename
+                            offset
+                            length
+                            color
+                        }}
+                    }}
+                }}
+            }}
+        }}
+    }}
+    """
+    response = query(session, qString)
+    LOGGER.debug(f"getPetHealthTrends: {response}")
+    return response['data']['getPetHealthTrendsForPet']
+
 def setLedColor(session: requests.Session, deviceId: str, ledColorCode):
     qString = MUTATION_SET_LED_COLOR + FRAGMENT_DEVICE_DETAILS + FRAGMENT_OPERATIONAL_DETAILS + FRAGMENT_CONNECTION_STATE_DETAILS + FRAGMENT_USER_DETAILS + FRAGMENT_LED_DETAILS
     qVariables = '{"moduleId":"'+deviceId+'","ledColorCode":'+str(ledColorCode)+'}'

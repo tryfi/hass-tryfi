@@ -5,7 +5,6 @@ from .common import query
 from .const import PET_ACTIVITY_ONGOINGWALK
 from .exceptions import TryFiError
 from .fiDevice import FiDevice
-from sentry_sdk import capture_exception
 from .common.response_handlers import parse_fi_date
 
 LOGGER = logging.getLogger(__name__)
@@ -24,6 +23,42 @@ class FiPet(object):
         self._weight = None
         self._lastUpdated = None
         self._locationLastUpdate = None
+        
+        # Initialize behavior metrics (Series 3+ only)
+        self._dailyBarkingCount = 0
+        self._dailyBarkingDuration = 0
+        self._weeklyBarkingCount = 0
+        self._weeklyBarkingDuration = 0
+        self._monthlyBarkingCount = 0
+        self._monthlyBarkingDuration = 0
+        
+        self._dailyLickingCount = 0
+        self._dailyLickingDuration = 0
+        self._weeklyLickingCount = 0
+        self._weeklyLickingDuration = 0
+        self._monthlyLickingCount = 0
+        self._monthlyLickingDuration = 0
+        
+        self._dailyScratchingCount = 0
+        self._dailyScratchingDuration = 0
+        self._weeklyScratchingCount = 0
+        self._weeklyScratchingDuration = 0
+        self._monthlyScratchingCount = 0
+        self._monthlyScratchingDuration = 0
+        
+        self._dailyEatingCount = 0
+        self._dailyEatingDuration = 0
+        self._weeklyEatingCount = 0
+        self._weeklyEatingDuration = 0
+        self._monthlyEatingCount = 0
+        self._monthlyEatingDuration = 0
+        
+        self._dailyDrinkingCount = 0
+        self._dailyDrinkingDuration = 0
+        self._weeklyDrinkingCount = 0
+        self._weeklyDrinkingDuration = 0
+        self._monthlyDrinkingCount = 0
+        self._monthlyDrinkingDuration = 0
 
     def setPetDetailsJSON(self, petJSON: dict):
         self._name = petJSON.get('name')
@@ -37,7 +72,6 @@ class FiPet(object):
         try:
             self._photoLink = petJSON['photos']['first']['image']['fullSize']
         except Exception:
-            #capture_exception(e)
             LOGGER.warning("Cannot find photo of your pet. Defaulting to empty string.")
             self._photoLink = ""
         self._device = FiDevice(petJSON['device']['id'])
@@ -100,7 +134,6 @@ class FiPet(object):
             return True
         except Exception as e:
             LOGGER.error(f"Could not update stats for Pet {self.name}.\n{e}")
-            capture_exception(e)
             return False
 
     def _extractSleep(self, restObject: dict) -> tuple[int, int]:
@@ -126,7 +159,6 @@ class FiPet(object):
             return True
         except Exception as e:
             LOGGER.error(f"Could not update rest stats for Pet {self.name}\n{pRestStatsJSON}.\n{e}", exc_info=True)
-            capture_exception(e)
             return False
 
     # Update the Pet's GPS location
@@ -137,7 +169,6 @@ class FiPet(object):
             return True
         except Exception as e:
             LOGGER.error(f"Could not update Pet: {self.name}'s location.\n{e}")
-            capture_exception(e)
             return False
     
     # Update the device/collar details for this pet
@@ -148,7 +179,6 @@ class FiPet(object):
             return True
         except Exception as e:
             LOGGER.error(f"Could not update Device/Collar information for Pet: {self.name}\n{e}")
-            capture_exception(e)
             return False
 
     # Update all details regarding this pet
@@ -160,6 +190,93 @@ class FiPet(object):
         # TODO: Support weekly
         self._dailySleep, self._dailyNap = self._extractSleep(petJson['dailySleepStat'])
         self._monthlySleep, self._monthlyNap = self._extractSleep(petJson['monthlySleepStat'])
+        # Try to fetch behavior data for Series 3+ collars
+        try:
+            self.updateBehaviorStats(sessionId)
+        except Exception:
+            # Behavior stats may not be available for older collars
+            pass
+
+    # Update behavior stats for Series 3+ collars
+    def updateBehaviorStats(self, sessionId: requests.Session):
+        """Update behavior statistics for Series 3+ collars."""
+        try:
+            healthTrendsJSON = query.getPetHealthTrends(sessionId, self.petId, 'DAY')
+            behavior_trends = healthTrendsJSON.get('behaviorTrends', [])
+            self.setBehaviorStatsFromTrends(behavior_trends)
+            return True
+        except Exception as e:
+            LOGGER.debug(f"Could not update behavior stats for Pet {self.name}. This may be an older collar model.\n{e}")
+            return False
+    
+    def setBehaviorStatsFromTrends(self, behaviorTrends):
+        """Parse behavior data from health trends API."""
+        # Reset all metrics
+        self._dailyBarkingCount = 0
+        self._dailyBarkingDuration = 0
+        self._dailyLickingCount = 0
+        self._dailyLickingDuration = 0
+        self._dailyScratchingCount = 0
+        self._dailyScratchingDuration = 0
+        self._dailyEatingCount = 0
+        self._dailyEatingDuration = 0
+        self._dailyDrinkingCount = 0
+        self._dailyDrinkingDuration = 0
+        
+        try:
+            for trend in behaviorTrends:
+                if not isinstance(trend, dict):
+                    continue
+                    
+                trend_id = trend.get('id', '')
+                summary = trend.get('summaryComponents', {})
+                
+                # Extract events count
+                events_summary = summary.get('eventsSummary')
+                events_count = 0
+                if events_summary and 'event' in events_summary:
+                    try:
+                        events_count = int(events_summary.split()[0])
+                    except Exception:
+                        pass
+                
+                # Extract duration
+                duration_summary = summary.get('durationSummary')
+                duration_seconds = 0
+                if duration_summary:
+                    try:
+                        if duration_summary.startswith('<'):
+                            duration_seconds = 30
+                        else:
+                            parts = duration_summary.replace('h', '').replace('m', '').split()
+                            if len(parts) == 2:
+                                duration_seconds = int(parts[0]) * 3600 + int(parts[1]) * 60
+                            elif 'h' in duration_summary:
+                                duration_seconds = int(parts[0]) * 3600
+                            else:
+                                duration_seconds = int(parts[0]) * 60
+                    except Exception:
+                        pass
+                
+                # Map to our attributes
+                if trend_id == 'barking:DAY':
+                    self._dailyBarkingCount = events_count
+                    self._dailyBarkingDuration = duration_seconds
+                elif trend_id == 'cleaning_self:DAY':
+                    self._dailyLickingCount = events_count
+                    self._dailyLickingDuration = duration_seconds
+                elif trend_id == 'scratching:DAY':
+                    self._dailyScratchingCount = events_count
+                    self._dailyScratchingDuration = duration_seconds
+                elif trend_id == 'eating:DAY':
+                    self._dailyEatingCount = events_count
+                    self._dailyEatingDuration = duration_seconds
+                elif trend_id == 'drinking:DAY':
+                    self._dailyDrinkingCount = events_count
+                    self._dailyDrinkingDuration = duration_seconds
+                    
+        except Exception as e:
+            LOGGER.debug(f"Unable to parse behavior metrics: {e}")
 
     # set the color code of the led light on the pet collar
     def setLedColorCode(self, sessionId: requests.Session, colorCode):
@@ -171,11 +288,9 @@ class FiPet(object):
                 self.device.setDeviceDetailsJSON(setColorJSON['setDeviceLed'])
             except Exception as e:
                 LOGGER.warning(f"Updated LED Color but could not get current status for Pet: {self.name}\nException: {e}")
-                capture_exception(e)
             return True
         except Exception as e:
             LOGGER.error(f"Could not complete Led Color request:\n{e}")
-            capture_exception(e)
             return False
     
     # turn on or off the led light. action = True will enable the light, false turns off the light
@@ -187,11 +302,9 @@ class FiPet(object):
                 self.device.setDeviceDetailsJSON(onOffResponse['updateDeviceOperationParams'])
             except Exception as e:
                 LOGGER.warning(f"Action: {action} was successful however unable to get current status for Pet: {self.name}")
-                capture_exception(e)
             return True
         except Exception as e:
             LOGGER.error(f"Could not complete LED request:\n{e}")
-            capture_exception(e)
             return False
 
     # set the lost dog mode to Normal or Lost Dog. Action is true for lost dog and false for normal (not lost)
@@ -203,11 +316,9 @@ class FiPet(object):
                 self.device.setDeviceDetailsJSON(petModeResponse['updateDeviceOperationParams'])
             except Exception as e:
                 LOGGER.warning(f"Action: {action} was successful however unable to get current status for Pet: {self.name}")
-                capture_exception(e)
             return True
         except Exception as e:
             LOGGER.error(f"Could not complete turn on/off light where ledEnable is {action}.\nException: {e}")
-            capture_exception(e)
             return False
 
     @property
@@ -367,4 +478,100 @@ class FiPet(object):
 
     def getMonthlyDistance(self):
         return self.monthlyTotalDistance
+    
+    # Behavior properties (Series 3+ only)
+    @property
+    def dailyBarkingCount(self):
+        return self._dailyBarkingCount
+    @property
+    def dailyBarkingDuration(self):
+        return self._dailyBarkingDuration
+    @property
+    def weeklyBarkingCount(self):
+        return self._weeklyBarkingCount
+    @property
+    def weeklyBarkingDuration(self):
+        return self._weeklyBarkingDuration
+    @property
+    def monthlyBarkingCount(self):
+        return self._monthlyBarkingCount
+    @property
+    def monthlyBarkingDuration(self):
+        return self._monthlyBarkingDuration
+    
+    @property
+    def dailyLickingCount(self):
+        return self._dailyLickingCount
+    @property
+    def dailyLickingDuration(self):
+        return self._dailyLickingDuration
+    @property
+    def weeklyLickingCount(self):
+        return self._weeklyLickingCount
+    @property
+    def weeklyLickingDuration(self):
+        return self._weeklyLickingDuration
+    @property
+    def monthlyLickingCount(self):
+        return self._monthlyLickingCount
+    @property
+    def monthlyLickingDuration(self):
+        return self._monthlyLickingDuration
+    
+    @property
+    def dailyScratchingCount(self):
+        return self._dailyScratchingCount
+    @property
+    def dailyScratchingDuration(self):
+        return self._dailyScratchingDuration
+    @property
+    def weeklyScratchingCount(self):
+        return self._weeklyScratchingCount
+    @property
+    def weeklyScratchingDuration(self):
+        return self._weeklyScratchingDuration
+    @property
+    def monthlyScratchingCount(self):
+        return self._monthlyScratchingCount
+    @property
+    def monthlyScratchingDuration(self):
+        return self._monthlyScratchingDuration
+    
+    @property
+    def dailyEatingCount(self):
+        return self._dailyEatingCount
+    @property
+    def dailyEatingDuration(self):
+        return self._dailyEatingDuration
+    @property
+    def weeklyEatingCount(self):
+        return self._weeklyEatingCount
+    @property
+    def weeklyEatingDuration(self):
+        return self._weeklyEatingDuration
+    @property
+    def monthlyEatingCount(self):
+        return self._monthlyEatingCount
+    @property
+    def monthlyEatingDuration(self):
+        return self._monthlyEatingDuration
+    
+    @property
+    def dailyDrinkingCount(self):
+        return self._dailyDrinkingCount
+    @property
+    def dailyDrinkingDuration(self):
+        return self._dailyDrinkingDuration
+    @property
+    def weeklyDrinkingCount(self):
+        return self._weeklyDrinkingCount
+    @property
+    def weeklyDrinkingDuration(self):
+        return self._weeklyDrinkingDuration
+    @property
+    def monthlyDrinkingCount(self):
+        return self._monthlyDrinkingCount
+    @property
+    def monthlyDrinkingDuration(self):
+        return self._monthlyDrinkingDuration
         
