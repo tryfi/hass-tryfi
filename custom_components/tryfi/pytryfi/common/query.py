@@ -27,7 +27,7 @@ QUERY_PET_DEVICE_DETAILS = "query {  pet (id: \""+VAR_PET_ID+"\") {    __typenam
 
 FRAGMENT_USER_DETAILS = "fragment UserDetails on User {  __typename   id  email  firstName  lastName  phoneNumber }"
 FRAGMENT_USER_FULL_DETAILS = "fragment UserFullDetails on User {  __typename  ...UserDetails  userHouseholds {    __typename    household {      __typename      pets {        __typename        ...PetProfile      }      bases {        __typename        ...BaseDetails      }    }  }}"
-FRAGEMENT_BASE_PET_PROFILE = "fragment BasePetProfile on BasePet {  __typename  id  name  homeCityState  yearOfBirth  monthOfBirth  dayOfBirth  gender  weight  isPurebred  breed {    __typename    ...BreedDetails  }  photos {    __typename    first {      __typename      ...PhotoDetails    }    items {      __typename      ...PhotoDetails    }  }  }"
+FRAGMENT_BASE_PET_PROFILE = "fragment BasePetProfile on BasePet {  __typename  id  name  homeCityState  yearOfBirth  monthOfBirth  dayOfBirth  gender  weight  isPurebred  breed {    __typename    ...BreedDetails  }  photos {    __typename    first {      __typename      ...PhotoDetails    }    items {      __typename      ...PhotoDetails    }  }  }"
 FRAGMENT_BREED_DETAILS = "fragment BreedDetails on Breed {  __typename  id  name  }"
 FRAGMENT_PHOTO_DETAILS = "fragment PhotoDetails on Photo {  __typename  id  date  image {    __typename    fullSize  }}"
 FRAGMENT_PET_PROFILE = "fragment PetProfile on Pet {  __typename  ...BasePetProfile  chip {    __typename    shortId  }  device {    __typename    ...DeviceDetails  }}"
@@ -54,7 +54,7 @@ def getUserDetail(session: requests.Session):
 
 def getHouseHolds(session: requests.Session):
     qString = QUERY_CURRENT_USER_FULL_DETAIL + FRAGMENT_USER_DETAILS \
-        + FRAGMENT_USER_FULL_DETAILS + FRAGMENT_PET_PROFILE + FRAGEMENT_BASE_PET_PROFILE \
+        + FRAGMENT_USER_FULL_DETAILS + FRAGMENT_PET_PROFILE + FRAGMENT_BASE_PET_PROFILE \
         + FRAGMENT_BASE_DETAILS + FRAGMENT_POSITION_COORDINATES + FRAGMENT_BREED_DETAILS \
         + FRAGMENT_PHOTO_DETAILS + FRAGMENT_DEVICE_DETAILS + FRAGMENT_LED_DETAILS + FRAGMENT_OPERATIONAL_DETAILS \
         + FRAGMENT_CONNECTION_STATE_DETAILS
@@ -97,7 +97,7 @@ def getCurrentPetRestStats(session: requests.Session, petId: str):
     return response['data']['pet']
 
 def getDevicedetails(session: requests.Session, petId: str):
-    qString = QUERY_PET_DEVICE_DETAILS.replace(VAR_PET_ID, petId) + FRAGMENT_PET_PROFILE + FRAGEMENT_BASE_PET_PROFILE + \
+    qString = QUERY_PET_DEVICE_DETAILS.replace(VAR_PET_ID, petId) + FRAGMENT_PET_PROFILE + FRAGMENT_BASE_PET_PROFILE + \
         FRAGMENT_DEVICE_DETAILS + FRAGMENT_LED_DETAILS + FRAGMENT_OPERATIONAL_DETAILS + FRAGMENT_CONNECTION_STATE_DETAILS + \
         FRAGMENT_USER_DETAILS + FRAGMENT_BREED_DETAILS + FRAGMENT_PHOTO_DETAILS
     response = query(session, qString)

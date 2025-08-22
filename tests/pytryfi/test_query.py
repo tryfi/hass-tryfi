@@ -3,34 +3,13 @@ from __future__ import annotations
 from unittest.mock import Mock
 
 import pytest
+import responses
 import requests
 import json
 
 from custom_components.tryfi.pytryfi.exceptions import RemoteApiError
 from custom_components.tryfi.pytryfi.common.query import query
-
-
-def mock_response(status_code: int) -> Mock:
-    response = Mock()
-    response.status_code = status_code
-    if 200 <= status_code <= 299:
-        response.raise_for_status.return_value = None
-        response.ok.return_value = True
-    else:
-        response.raise_for_status.side_effect = Exception(
-            f"Fake HTTP Status: {status_code}"
-        )
-        response.ok.return_value = False
-    return response
-
-
-@pytest.fixture
-def mock_session():
-    """Create a mock session."""
-    session = Mock()
-    session.post = Mock()
-    session.get = Mock()
-    return session
+from tests.pytryfi.utils import mock_response
 
 
 def test_query_error_handling():
@@ -46,15 +25,15 @@ def test_query_error_handling():
         query(session, "test-query")
 
 
-def test_handle_empty_response(mock_session: requests.Session):
+@responses.activate
+def test_handle_empty_response():
     """Empty responses are treated as errors"""
-    response = Mock()
-    response.text = ""
-    response.raise_for_status.return_value = None
-    mock_session.get.return_value = response
+    responses.add(
+        status=200
+    )
 
     with pytest.raises(BaseException) as exc_info:
-        query(mock_session, "test-query")
+        query(requests.Session(), "test-query")
 
     assert "Empty response" in str(exc_info.value)
 
@@ -75,16 +54,15 @@ def test_query_json_parsing():
 
 def test_query_graphql_errors():
     """Test query GraphQL error handling."""
-    session = Mock()
-    response = mock_response(200)
-    response.text = "valid"
-    response.json.return_value = {
-        "errors": [{"message": "GraphQL Error: Invalid query"}]
-    }
-    session.get.return_value = response
-
+    responses.add(
+        responses.GET,
+        status=200,
+        json={
+            "errors": [{"message": "GraphQL Error: Invalid query"}]
+        }
+    )
     with pytest.raises(RemoteApiError) as exc_info:
-        query(session, "test query")
+        query(requests.Session(), "test query")
 
     assert "GraphQL error" in str(exc_info.value)
     assert "Invalid query" in str(exc_info.value)
