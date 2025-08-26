@@ -9,27 +9,32 @@ import json
 
 from custom_components.tryfi.pytryfi.exceptions import RemoteApiError
 from custom_components.tryfi.pytryfi.common.query import query
-from tests.pytryfi.utils import mock_response
+from tests.pytryfi.utils import mock_graphql, mock_response
 
 
+@responses.activate
 def test_query_error_handling():
     """When tryfi.com returns a non-200 response, the error gets bubbled up"""
-
-    session = Mock()
+    mock_graphql(
+        query="test-query",
+        status=500,
+        response=None
+    )
 
     # Test execute with HTTP error
-    response = mock_response(500)
-    session.get.return_value = response
 
     with pytest.raises(BaseException):
-        query(session, "test-query")
+        query(requests.Session(), "test-query")
 
 
 @responses.activate
 def test_handle_empty_response():
     """Empty responses are treated as errors"""
     responses.add(
-        status=200
+        method=responses.GET,
+        url="https://api.tryfi.com/graphql?query=test-query",
+        status=200,
+        body=""
     )
 
     with pytest.raises(BaseException) as exc_info:
@@ -56,6 +61,7 @@ def test_query_graphql_errors():
     """Test query GraphQL error handling."""
     responses.add(
         responses.GET,
+        url="https://api.tryfi.com/graphql?query=test-query",
         status=200,
         json={
             "errors": [{"message": "GraphQL Error: Invalid query"}]
