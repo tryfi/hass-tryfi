@@ -30,4 +30,5 @@ dev = [
     "pytest-cov",
     "pytest-homeassistant-custom-component",
     "pytest-timeout",
+    "ty>=0.0.1a19",
 ]

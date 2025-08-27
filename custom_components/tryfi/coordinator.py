@@ -1,6 +1,6 @@
 from datetime import timedelta
 import logging
-import homeassistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
@@ -16,7 +16,7 @@ class TryFiDataUpdateCoordinator(DataUpdateCoordinator[PyTryFi]):
     
     def __init__(
         self,
-        hass: homeassistant,
+        hass: HomeAssistant,
         tryfi: PyTryFi,
         polling_interval: int,
     ) -> None:

@@ -152,7 +152,7 @@ def query(session: requests.Session, qString):
     
     try:
         json_object = resp.json()
-    except json.decoder.JSONDecodeError as e:
+    except json.JSONDecodeError as e:
         LOGGER.error(f"Failed to parse JSON response: {resp.text}")
         raise RemoteApiError(f"Invalid JSON response from API: {e}. First few bytes: '{resp.text[:10]}'") from e
 
