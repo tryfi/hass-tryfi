@@ -11,7 +11,7 @@ from custom_components.tryfi.pytryfi.common.query import query
 
 
 def mock_response(status_code: int) -> Mock:
-    response = Mock()
+    response = Mock(spec=requests.Response)
     response.status_code = status_code
     if 200 <= status_code <= 299:
         response.raise_for_status.return_value = None
@@ -27,7 +27,7 @@ def mock_response(status_code: int) -> Mock:
 @pytest.fixture
 def mock_session():
     """Create a mock session."""
-    session = Mock()
+    session = Mock(spec=requests.Session)
     session.post = Mock()
     session.get = Mock()
     return session
@@ -36,7 +36,7 @@ def mock_session():
 def test_query_error_handling():
     """When tryfi.com returns a non-200 response, the error gets bubbled up"""
 
-    session = Mock()
+    session = Mock(spec=requests.Session)
 
     # Test execute with HTTP error
     response = mock_response(500)
@@ -46,7 +46,7 @@ def test_query_error_handling():
         query(session, "test-query")
 
 
-def test_handle_empty_response(mock_session: requests.Session):
+def test_handle_empty_response(mock_session: Mock):
     """Empty responses are treated as errors"""
     response = Mock()
     response.text = ""
