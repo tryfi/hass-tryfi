@@ -47,7 +47,7 @@ class PyTryFi(object):
                 p.updatePetLocation(self._session)
                 p.updateStats(self._session) # update steps
                 p.updateRestStats(self._session)
-                LOGGER.debug(f"Adding Pet: {p._name} with Device: {p._device._deviceId}")
+                LOGGER.debug(f"Adding Pet: {p._name} with Device: {p._device.deviceId}")
                 self._pets.append(p)
 
             for base in house['household']['bases']:

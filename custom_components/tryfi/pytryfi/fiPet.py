@@ -103,7 +103,7 @@ class FiPet(object):
             capture_exception(e)
             return False
 
-    def _extractSleep(self, restObject: dict) -> tuple[int, int]:
+    def _extractSleep(self, restObject: dict) -> tuple[int | None, int | None]:
         sleep, nap = 0, 0
         sleepData = restObject['restSummaries'][0]['data']
         if 'sleepAmounts' not in sleepData:
