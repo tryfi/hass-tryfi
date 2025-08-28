@@ -3,7 +3,6 @@ import logging
 import requests
 from .common import query
 from .const import PET_ACTIVITY_ONGOINGWALK
-from .exceptions import TryFiError
 from .fiDevice import FiDevice
 from .common.response_handlers import parse_fi_date
 
@@ -191,7 +190,7 @@ class FiPet(object):
             # Try to fetch behavior data for Series 3+ collars
             try:
                 self.updateBehaviorStats(sessionId)
-            except Exception:
+            except Exception as e:
                 LOGGER.debug(f"Could not update behavior stats for Pet {self.name}. This may be an older collar model.\n{e}")
                 # Behavior stats may not be available for older collars
                 pass
@@ -289,7 +288,7 @@ class FiPet(object):
             onOffResponse = query.turnOnOffLed(sessionId, moduleId, action)
             try:
                 self.device.setDeviceDetailsJSON(onOffResponse['updateDeviceOperationParams'])
-            except Exception as e:
+            except Exception:
                 LOGGER.warning(f"Action: {action} was successful however unable to get current status for Pet: {self.name}")
             return True
         except Exception as e:
@@ -303,7 +302,7 @@ class FiPet(object):
             petModeResponse = query.setLostDogMode(sessionId, moduleId, action)
             try:
                 self.device.setDeviceDetailsJSON(petModeResponse['updateDeviceOperationParams'])
-            except Exception as e:
+            except Exception:
                 LOGGER.warning(f"Action: {action} was successful however unable to get current status for Pet: {self.name}")
             return True
         except Exception as e:

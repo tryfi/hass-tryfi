@@ -22,6 +22,8 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.device_registry import DeviceInfo
+from custom_components.tryfi.pytryfi.fiPet import FiPet
 
 from .const import DOMAIN, MANUFACTURER, MODEL, SENSOR_STATS_BY_TIME, SENSOR_STATS_BY_TYPE
 from .pytryfi import PyTryFi
