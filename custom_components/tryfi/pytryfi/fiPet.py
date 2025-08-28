@@ -186,25 +186,23 @@ class FiPet(object):
         # TODO: Support weekly
         self._dailySleep, self._dailyNap = self._extractSleep(petJson['dailySleepStat'])
         self._monthlySleep, self._monthlyNap = self._extractSleep(petJson['monthlySleepStat'])
-        # Try to fetch behavior data for Series 3+ collars
-        try:
-            self.updateBehaviorStats(sessionId)
-        except Exception:
-            # Behavior stats may not be available for older collars
-            pass
+
+        if self.device.supportsAdvancedBehaviorStats():
+            # Try to fetch behavior data for Series 3+ collars
+            try:
+                self.updateBehaviorStats(sessionId)
+            except Exception:
+                LOGGER.debug(f"Could not update behavior stats for Pet {self.name}. This may be an older collar model.\n{e}")
+                # Behavior stats may not be available for older collars
+                pass
 
     # Update behavior stats for Series 3+ collars
     def updateBehaviorStats(self, sessionId: requests.Session):
         """Update behavior statistics for Series 3+ collars."""
-        try:
-            healthTrendsJSON = query.getPetHealthTrends(sessionId, self.petId, 'DAY')
-            behavior_trends = healthTrendsJSON.get('behaviorTrends', [])
-            self.setBehaviorStatsFromTrends(behavior_trends)
-            return True
-        except Exception as e:
-            LOGGER.debug(f"Could not update behavior stats for Pet {self.name}. This may be an older collar model.\n{e}")
-            return False
-    
+        healthTrendsJSON = query.getPetHealthTrends(sessionId, self.petId, 'DAY')
+        behavior_trends = healthTrendsJSON.get('behaviorTrends', [])
+        self.setBehaviorStatsFromTrends(behavior_trends)
+
     def setBehaviorStatsFromTrends(self, behaviorTrends):
         """Parse behavior data from health trends API."""
         # Reset all metrics
@@ -230,6 +228,10 @@ class FiPet(object):
             # Extract events count
             events_summary = summary.get('eventsSummary')
             events_count = 0
+            if events_summary is None:
+                # This will be None when the collar doesn't support the stat
+                # Skip it and move to the next one
+                continue
             if events_summary and 'event' in events_summary:
                 events_count = int(events_summary.split()[0])
 

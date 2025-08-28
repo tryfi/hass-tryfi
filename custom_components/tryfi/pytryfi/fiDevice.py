@@ -10,7 +10,7 @@ class FiDevice(object):
     def __init__(self, deviceId):
         self._deviceId = deviceId
         self._availableLedColors = None
-        self._moduleId = None
+        self._moduleId: str | None = None
         self._buildId = None
         self._batteryPercent = None
         self._isCharging = None
@@ -66,6 +66,19 @@ class FiDevice(object):
         else:
             connectedToString = None
         return connectedToString
+
+    # Returns True if the collar is new enough to support
+    # the getPetHealthTrendsForPet GraphQL call
+    def supportsAdvancedBehaviorStats(self) -> bool:
+        mid = self._moduleId
+        if mid is None:
+            return False
+
+        # Series 1, Series 2, or Mini Fi (Currently Mini does not support advanced stats)
+        if mid.startswith('FC1') or mid.startswith('FC2') or mid.startswith('M1'):
+            return False
+        else:
+            return True
 
     @property
     def deviceId(self) -> str:
