@@ -122,6 +122,25 @@ async def async_setup_entry(
         # Add sleep quality score sensor
         if hasattr(pet, "device") and pet.device:
             entities.append(PetSleepQualitySensor(coordinator, pet))
+            
+            # Add behavior sensors for Series 3+ collars
+            if hasattr(pet.device, "hardwareRevision") and pet.device.hardwareRevision in ["Series3+", "prod1"]:
+                _LOGGER.debug("Adding behavior sensors for Series 3+ collar: %s", pet.name)
+                # Barking sensors
+                entities.append(PetBehaviorSensor(coordinator, pet, "barking", "count", "daily"))
+                entities.append(PetBehaviorSensor(coordinator, pet, "barking", "duration", "daily"))
+                # Licking sensors
+                entities.append(PetBehaviorSensor(coordinator, pet, "licking", "count", "daily"))
+                entities.append(PetBehaviorSensor(coordinator, pet, "licking", "duration", "daily"))
+                # Scratching sensors
+                entities.append(PetBehaviorSensor(coordinator, pet, "scratching", "count", "daily"))
+                entities.append(PetBehaviorSensor(coordinator, pet, "scratching", "duration", "daily"))
+                # Eating sensors
+                entities.append(PetBehaviorSensor(coordinator, pet, "eating", "count", "daily"))
+                entities.append(PetBehaviorSensor(coordinator, pet, "eating", "duration", "daily"))
+                # Drinking sensors
+                entities.append(PetBehaviorSensor(coordinator, pet, "drinking", "count", "daily"))
+                entities.append(PetBehaviorSensor(coordinator, pet, "drinking", "duration", "daily"))
     
     # Add base sensors
     for base in tryfi.bases:
@@ -536,6 +555,70 @@ class PetSleepQualitySensor(TryFiSensorBase):
             score = min(100, score + (balance_ratio * 20))
         
         return round(score)
+
+
+class PetBehaviorSensor(TryFiSensorBase):
+    """Behavior tracking sensor for Series 3+ collars."""
+    
+    def __init__(self, coordinator: Any, pet: FiPet, behavior_type: str, metric_type: str, period: str = "daily") -> None:
+        """Initialize the behavior sensor."""
+        super().__init__(coordinator)
+        self._pet_id = pet.petId
+        self._behavior_type = behavior_type
+        self._metric_type = metric_type
+        self._period = period
+        
+        # Create unique ID and name
+        self._attr_unique_id = f"tryfi-pet-{pet.petId}-{period}-{behavior_type}-{metric_type}"
+        
+        # Create human-readable name
+        behavior_name = behavior_type.replace("_", " ").title()
+        metric_name = "Count" if metric_type == "count" else "Duration"
+        self._attr_name = f"{pet.name} {period.title()} {behavior_name} {metric_name}"
+        
+        # Set appropriate icon
+        icon_map = {
+            "barking": "mdi:dog",
+            "licking": "mdi:water",
+            "scratching": "mdi:paw",
+            "eating": "mdi:food-drumstick",
+            "drinking": "mdi:cup-water"
+        }
+        self._attr_icon = icon_map.get(behavior_type, "mdi:dog")
+        
+        # Set units and device class
+        if metric_type == "count":
+            self._attr_native_unit_of_measurement = "events"
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        else:  # duration
+            self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
+            self._attr_device_class = SensorDeviceClass.DURATION
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        
+        # Set device info
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, pet.petId)},
+            name=pet.name,
+            manufacturer="TryFi",
+            model="Series 3+ Collar",
+        )
+    
+    @property
+    def native_value(self) -> StateType:
+        """Return the behavior metric value."""
+        pet = self.coordinator.data.getPet(self._pet_id)
+        if not pet:
+            return None
+        
+        # Build attribute name
+        attr_name = f"{self._period}{self._behavior_type.title()}{'Count' if self._metric_type == 'count' else 'Duration'}"
+        attr_name = attr_name.replace("Licking", "Licking").replace("Barking", "Barking").replace("Scratching", "Scratching").replace("Eating", "Eating").replace("Drinking", "Drinking")
+        
+        # Get the value from the pet object
+        value = getattr(pet, attr_name, 0)
+        
+        # Return 0 if None
+        return value if value is not None else 0
 
 
 def icon_for_battery_level(
