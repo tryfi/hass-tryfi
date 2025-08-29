@@ -23,6 +23,7 @@ asyncio_mode = "auto"
 
 [dependency-groups]
 dev = [
+    "responses>=0.25.8",
     "ruff>=0.12.2",
     "sentry-sdk>=2.32.0",
     "pytest",
