@@ -6,10 +6,16 @@ import requests
 from .fiUser import FiUser
 from .fiPet import FiPet
 from .fiBase import FiBase
+from .fiDevice import FiDevice
 from .common.query import API_HOST_URL_BASE, API_LOGIN, getHouseHolds, getBaseList
 from sentry_sdk import capture_exception
 
-
+__all__ = [
+    'FiDevice',
+    'FiPet',
+    'FiUser',
+    'PyTryFi'
+]
 
 LOGGER = logging.getLogger(__name__)
 

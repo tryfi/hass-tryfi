@@ -8,29 +8,29 @@ This directory contains the test suite for the TryFi Home Assistant integration.
 
 Install test dependencies:
 ```bash
-pip install -r requirements_test.txt
+uv sync
 ```
 
 ### Run All Tests
 ```bash
-pytest
+uv run pytest tests/
 ```
 
 ### Run with Coverage
 ```bash
-pytest --cov=custom_components.tryfi --cov-report=html
+uv run pytest --cov=custom_components.tryfi --cov-report=html
 ```
 
 This will generate an HTML coverage report in `htmlcov/index.html`.
 
 ### Run Specific Test File
 ```bash
-pytest tests/test_sensor.py
+uv run pytest tests/test_sensor.py
 ```
 
 ### Run with Verbose Output
 ```bash
-pytest -v
+uv run pytest -v
 ```
 
 ## Test Structure
