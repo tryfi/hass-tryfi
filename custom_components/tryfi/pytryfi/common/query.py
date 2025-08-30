@@ -1,6 +1,6 @@
 from ..const import PET_MODE_NORMAL, PET_MODE_LOST
 from ..exceptions import TryFiError, RemoteApiError, ApiNotAuthorizedError
-from typing import Literal
+from typing import Any, Literal
 import json
 import logging
 import requests
@@ -121,14 +121,22 @@ def getPetHealthTrends(session: requests.Session, petId: str, period: str = 'DAY
 
 def setLedColor(session: requests.Session, deviceId: str, ledColorCode):
     qString = MUTATION_SET_LED_COLOR + FRAGMENT_DEVICE_DETAILS + FRAGMENT_OPERATIONAL_DETAILS + FRAGMENT_CONNECTION_STATE_DETAILS + FRAGMENT_USER_DETAILS + FRAGMENT_LED_DETAILS
-    qVariables = '{"moduleId":"'+deviceId+'","ledColorCode":'+str(ledColorCode)+'}'
+    qVariables = {
+        "moduleId": deviceId,
+        "ledColorCode": ledColorCode
+    }
     response = mutation(session, qString, qVariables)
     LOGGER.debug(f"setLedColor: {response}")
     return response['data']
 
 def turnOnOffLed(session: requests.Session, moduleId, ledEnabled: bool):
     qString = MUTATION_DEVICE_OPS + FRAGMENT_DEVICE_DETAILS + FRAGMENT_OPERATIONAL_DETAILS + FRAGMENT_CONNECTION_STATE_DETAILS + FRAGMENT_USER_DETAILS + FRAGMENT_LED_DETAILS
-    qVariables = '{"input": {"moduleId":"'+moduleId+'","ledEnabled":'+str(ledEnabled).lower()+'}}'
+    qVariables = {
+        "input": {
+            "moduleId": moduleId,
+            "ledEnabled": ledEnabled
+        }
+    }
     response = mutation(session, qString, qVariables)
     LOGGER.debug(f"turnOnOffLed: {response}")
     return response['data']
@@ -139,12 +147,12 @@ def setLostDogMode(session: requests.Session, moduleId, action: bool):
     else:
         mode = PET_MODE_NORMAL
     qString = MUTATION_DEVICE_OPS + FRAGMENT_DEVICE_DETAILS + FRAGMENT_OPERATIONAL_DETAILS + FRAGMENT_CONNECTION_STATE_DETAILS + FRAGMENT_USER_DETAILS + FRAGMENT_LED_DETAILS
-    qVariables = json.dumps({
+    qVariables = {
         "input": {
             "moduleId": moduleId,
             "mode": mode
         }
-    })
+    }
     response = mutation(session, qString, qVariables)
     LOGGER.debug(f"setLostDogMode: {response}")
     return response['data']
@@ -152,10 +160,10 @@ def setLostDogMode(session: requests.Session, moduleId, action: bool):
 def getGraphqlURL():
     return API_HOST_URL_BASE + API_GRAPHQL
 
-def mutation(session: requests.Session, qString, qVariables):
+def mutation(session: requests.Session, qString: str, qVariables: dict[str, Any]):
     url = getGraphqlURL()
-    
-    params = {"query": qString, "variables": json.loads(qVariables)}
+
+    params = {"query": qString, "variables": qVariables}
     return _execute(url, session, params=params, method='POST').json()
 
 def query(session: requests.Session, qString):
