@@ -11,7 +11,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from custom_components.tryfi import (
     TryFiDataUpdateCoordinator,
-    async_setup_entry
+    async_setup_entry,
 )
 from custom_components.tryfi.const import DOMAIN
 

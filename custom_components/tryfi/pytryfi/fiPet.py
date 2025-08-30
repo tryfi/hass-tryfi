@@ -177,8 +177,8 @@ class FiPet(object):
             return False
 
     # Update all details regarding this pet
-    def updateAllDetails(self, sessionId: requests.Session):
-        petJson = query.getPetAllInfo(sessionId, self.petId)
+    def updateAllDetails(self, session: requests.Session):
+        petJson = query.getPetAllInfo(session, self.petId)
         self.device.setDeviceDetailsJSON(petJson['device'])
         self.setCurrentLocation(petJson['ongoingActivity'])
         self.setStats(petJson['dailyStepStat'], petJson['weeklyStepStat'], petJson['monthlyStepStat'])
@@ -189,7 +189,7 @@ class FiPet(object):
         if self.device.supportsAdvancedBehaviorStats():
             # Try to fetch behavior data for Series 3+ collars
             try:
-                self.updateBehaviorStats(sessionId)
+                self.updateBehaviorStats(session)
             except Exception as e:
                 LOGGER.debug(f"Could not update behavior stats for Pet {self.name}. This may be an older collar model.\n{e}")
                 # Behavior stats may not be available for older collars
@@ -267,12 +267,12 @@ class FiPet(object):
                 self._dailyDrinkingDuration = duration_seconds
 
     # set the color code of the led light on the pet collar
-    def setLedColorCode(self, sessionId: requests.Session, colorCode):
+    def setLedColorCode(self, session: requests.Session, colorCode):
         try:
             moduleId = self.device.moduleId
             ledColorCode = int(colorCode)
-            setColorJSON = query.setLedColor(sessionId, moduleId, ledColorCode)
-            try:
+            setColorJSON = query.setLedColor(session, moduleId, ledColorCode)
+            try:  
                 self.device.setDeviceDetailsJSON(setColorJSON['setDeviceLed'])
             except Exception as e:
                 LOGGER.warning(f"Updated LED Color but could not get current status for Pet: {self.name}\nException: {e}")

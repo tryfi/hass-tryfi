@@ -1,0 +1,45 @@
+import responses
+from custom_components.tryfi.pytryfi import PyTryFi
+from custom_components.tryfi.pytryfi.common.query import REQUEST_GET_HOUSEHOLDS
+from tests.pytryfi.utils import (
+    GRAPHQL_RESP_GET_HOUSEHOLDS,
+    mock_graphql,
+    mock_household_with_pets,
+    mock_login_requests,
+)
+
+
+@responses.activate
+def test_pet_with_no_collar():
+    mock_login_requests()
+
+    mock_household_with_pets(
+        pets=[
+            {
+                "__typename": "Pet",
+                "id": "testpetwithnodevice",
+                "chip": None,
+                "name": "Yolo",
+                "device": None,
+            }
+        ]
+    )
+
+    tryfi = PyTryFi()
+
+    assert tryfi.pets == []
+
+
+@responses.activate
+def test_generic_init():
+    mock_login_requests()
+
+    mock_graphql(
+        query=REQUEST_GET_HOUSEHOLDS, status=200, response=GRAPHQL_RESP_GET_HOUSEHOLDS
+    )
+
+    tryfi = PyTryFi()
+
+    assert len(tryfi.pets) == 1
+
+    assert tryfi.pets[0].petId == "test-pet"
