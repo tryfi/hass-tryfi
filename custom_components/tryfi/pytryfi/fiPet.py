@@ -272,7 +272,7 @@ class FiPet(object):
             moduleId = self.device.moduleId
             ledColorCode = int(colorCode)
             setColorJSON = query.setLedColor(session, moduleId, ledColorCode)
-            try:  
+            try:
                 self.device.setDeviceDetailsJSON(setColorJSON['setDeviceLed'])
             except Exception as e:
                 LOGGER.warning(f"Updated LED Color but could not get current status for Pet: {self.name}\nException: {e}")
