@@ -29,12 +29,12 @@ class PyTryFi(object):
         self.login(username, password)
 
         self._currentUser = FiUser(self._userId)
-        self._currentUser.setUserDetails(self._session)
 
-        houses = getHouseHolds(self._session)
+        userHousehold = getHouseHolds(self._session)
+        self._currentUser.setUserDetails(userHousehold)
         self._pets = []
         self._bases = []
-        for house in houses:
+        for house in userHousehold['userHouseholds']:
             for pet in house['household']['pets']:
                 # If pet doesn't have a collar then ignore it. What good is a pet without a collar!
                 if pet['device'] is None:
