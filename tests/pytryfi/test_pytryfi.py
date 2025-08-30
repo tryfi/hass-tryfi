@@ -2,7 +2,7 @@ import responses
 from custom_components.tryfi.pytryfi import PyTryFi
 from custom_components.tryfi.pytryfi.common.query import REQUEST_GET_HOUSEHOLDS
 from tests.pytryfi.utils import (
-    GRAPHQL_RESP_GET_HOUSEHOLDS,
+    GRAPHQL_PARTIAL_PET,
     mock_graphql,
     mock_household_with_pets,
     mock_login_requests,
@@ -33,9 +33,10 @@ def test_pet_with_no_collar():
 @responses.activate
 def test_generic_init():
     mock_login_requests()
-
-    mock_graphql(
-        query=REQUEST_GET_HOUSEHOLDS, status=200, response=GRAPHQL_RESP_GET_HOUSEHOLDS
+    mock_household_with_pets(
+        pets=[
+            GRAPHQL_PARTIAL_PET
+        ]
     )
 
     tryfi = PyTryFi()

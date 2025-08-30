@@ -5,7 +5,6 @@ import urllib.parse
 
 from custom_components.tryfi.pytryfi.common.query import (
     FRAGMENT_USER_DETAILS,
-    QUERY_CURRENT_USER,
     QUERY_PET_ACTIVE_DETAILS,
     REQUEST_FRAGMENTS_PET_ALL_INFO,
     REQUEST_GET_HOUSEHOLDS,
@@ -39,18 +38,6 @@ def mock_login_requests():
         status=200,
         json={"userId": "userid", "sessionId": "sessionId"},
     )
-    mock_graphql(
-        QUERY_CURRENT_USER + FRAGMENT_USER_DETAILS,
-        status=200,
-        response={
-            "currentUser": {
-                "email": "email",
-                "firstName": "John",
-                "lastName": "Smith",
-                "phoneNumber": "phone",
-            }
-        },
-    )
 
 
 def mock_household_with_pets(pets: list[dict] = [], bases: list[dict] = []):
@@ -58,6 +45,10 @@ def mock_household_with_pets(pets: list[dict] = [], bases: list[dict] = []):
         query=REQUEST_GET_HOUSEHOLDS,
         response={
             "currentUser": {
+                "email": "email",
+                "firstName": "John",
+                "lastName": "Smith",
+                "phoneNumber": "phone",
                 "userHouseholds": [{"household": {"pets": pets, "bases": bases}}]
             }
         },
