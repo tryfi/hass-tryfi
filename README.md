@@ -21,12 +21,9 @@ Current functionality includes:
 * Lost Dog Mode - allows you to select Lost mode if your dog if it is lost and select Safe if it is found
 * Bases - reports the status of the base (online/offline)
 
-## Donate
-If you would like to donate you can use my TryFi referral code "[395FX4](https://shop.tryfi.com/r/395FX4/?utm_source=referrals)" on your next purchase.
-
 # Installation
 ## Pre-Requisities
-* Home Assistant >= 2023.1.0
+* Home Assistant >= 2024.10.0
 * TryFi dog collar with active cellular subscription
 * [HACS](https://github.com/custom-components/hacs) is already installed
 
