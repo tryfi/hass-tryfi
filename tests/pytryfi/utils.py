@@ -5,7 +5,6 @@ import urllib.parse
 
 from custom_components.tryfi.pytryfi.common.query import (
     FRAGMENT_USER_DETAILS,
-    QUERY_CURRENT_USER,
 )
 
 

@@ -94,6 +94,7 @@ class FiPet(object):
             currentPosition = currentLocation['position']
         else:
             currentPosition = activityJSON['position']
+            self._posAccuracy = 0
 
         self._currLongitude = currentPosition['longitude']
         self._currLatitude = currentPosition['latitude']
