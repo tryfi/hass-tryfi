@@ -90,7 +90,7 @@ class FiPet(object):
         self._locationLastUpdate = parse_fi_date(activityJSON['lastReportTimestamp'])
         if activityType == PET_ACTIVITY_ONGOINGWALK:
             currentLocation = activityJSON['positions'][-1]
-            self._posAccuracy = currentPosition['errorRadius'] if 'errorRadius' in currentPosition else None
+            self._posAccuracy = currentLocation['errorRadius'] if 'errorRadius' in currentLocation else None
             currentPosition = currentLocation['position']
         else:
             currentPosition = activityJSON['position']
