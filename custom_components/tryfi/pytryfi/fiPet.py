@@ -22,6 +22,7 @@ class FiPet(object):
         self._weight = None
         self._lastUpdated = None
         self._locationLastUpdate = None
+        self._posAccuracy = None
         
         # Initialize behavior metrics (Series 3+ only)
         self._dailyBarkingCount = 0
@@ -94,6 +95,7 @@ class FiPet(object):
 
         self._currLongitude = currentPosition['longitude']
         self._currLatitude = currentPosition['latitude']
+        self._posAccuracy = currentPosition['radius'] if 'radius' in currentPosition else None
         self._currStartTime = datetime.datetime.fromisoformat(activityJSON['start'].replace('Z', '+00:00'))
 
         if 'place' in activityJSON and activityJSON['place'] is not None:
@@ -348,6 +350,9 @@ class FiPet(object):
     @property
     def currLatitude(self) -> float | None:
         return self._currLatitude
+    @property
+    def positionAccuracy(self) -> float | None:
+        return self._posAccuracy
     @property
     def currStartTime(self):
         return self._currStartTime

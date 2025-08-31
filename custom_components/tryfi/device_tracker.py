@@ -83,6 +83,14 @@ class TryFiPetTracker(CoordinatorEntity, TrackerEntity):
         return None
     
     @property
+    def gps_accuracy(self) -> float | None:
+        """Returns accuracy in meters of the device."""
+        if self.pet:
+            return self.pet.positionAccuracy
+        else:
+            return None
+
+    @property
     def source_type(self) -> SourceType:
         """Return the source type of the device."""
         return SourceType.GPS
