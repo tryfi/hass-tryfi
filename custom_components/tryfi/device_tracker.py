@@ -83,7 +83,7 @@ class TryFiPetTracker(CoordinatorEntity, TrackerEntity):
         return None
     
     @property
-    def gps_accuracy(self) -> float | None:
+    def location_accuracy(self) -> float | None:
         """Returns accuracy in meters of the device."""
         if self.pet:
             return self.pet.positionAccuracy
