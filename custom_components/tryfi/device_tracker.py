@@ -88,7 +88,7 @@ class TryFiPetTracker(CoordinatorEntity, TrackerEntity):
         if self.pet:
             return self.pet.positionAccuracy
         else:
-            return None
+            return 0
 
     @property
     def source_type(self) -> SourceType:
