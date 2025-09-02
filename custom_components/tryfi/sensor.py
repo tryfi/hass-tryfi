@@ -126,7 +126,7 @@ async def async_setup_entry(
             entities.append(PetSleepQualitySensor(coordinator, pet))
             
             # Add behavior sensors for Series 3+ collars
-            if hasattr(pet.device, "hardwareRevision") and pet.device.hardwareRevision in ["Series3+", "prod1"]:
+            if pet.device.supportsAdvancedBehaviorStats():
                 _LOGGER.debug("Adding behavior sensors for Series 3+ collar: %s", pet.name)
                 # Barking sensors
                 entities.append(PetBehaviorSensor(coordinator, pet, "barking", "count", "daily"))

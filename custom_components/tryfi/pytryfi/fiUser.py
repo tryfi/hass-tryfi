@@ -1,4 +1,3 @@
-from .common import query
 import datetime
 
 class FiUser(object):

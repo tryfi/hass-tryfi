@@ -4,7 +4,6 @@ import responses
 import urllib.parse
 
 from custom_components.tryfi.pytryfi.common.query import (
-    FRAGMENT_USER_DETAILS,
     QUERY_PET_ACTIVE_DETAILS,
     REQUEST_FRAGMENTS_PET_ALL_INFO,
     REQUEST_GET_HOUSEHOLDS,
