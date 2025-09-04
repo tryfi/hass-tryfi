@@ -94,7 +94,7 @@ class FiPet(object):
             currentPosition = currentLocation['position']
         else: # OngoingRest
             currentPosition = activityJSON['position']
-            if 'place' in activityJSON:
+            if 'place' in activityJSON and activityJSON['place'] is not None:
                 self._posAccuracy = activityJSON['place']['radius']
             else:
                 self._posAccuracy = 0
