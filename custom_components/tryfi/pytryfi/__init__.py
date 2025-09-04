@@ -103,10 +103,10 @@ class PyTryFi(object):
             basefailed = None
         except Exception as e:
             LOGGER.warning("failed to update base: %s", e, exc_info=True)
-            basefailed = e
-        self.updatePets()
-        if basefailed:
-            LOGGER.warning(f"tryfi update loop. bases={basefailed}, pets=maybe")
+        try:
+            self.updatePets()
+        except Exception as e:
+            LOGGER.warning("failed to update pets: %s", e, exc_info=True)
 
     @property
     def currentUser(self):
