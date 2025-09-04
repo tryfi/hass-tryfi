@@ -1,12 +1,10 @@
-from .common import query
 import datetime
 
 class FiUser(object):
     def __init__(self, userId):
         self._userId = userId
-        
-    def setUserDetails(self, sessionId):
-        response = query.getUserDetail(sessionId)
+
+    def setUserDetails(self, response: dict):
         self._email = response['email']
         self._firstName = response['firstName']
         self._lastName = response['lastName']
