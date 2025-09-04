@@ -100,7 +100,6 @@ class PyTryFi(object):
     def update(self):
         try:
             self.updateBases()
-            basefailed = None
         except Exception as e:
             LOGGER.warning("failed to update base: %s", e, exc_info=True)
         try:

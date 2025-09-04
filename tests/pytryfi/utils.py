@@ -3,9 +3,6 @@ from unittest.mock import Mock
 import responses
 import urllib.parse
 
-from custom_components.tryfi.pytryfi.common.query import (
-    FRAGMENT_USER_DETAILS,
-)
 
 
 def mock_response(status_code: int) -> Mock:
@@ -33,16 +30,4 @@ def mock_login_requests():
         url="https://api.tryfi.com/auth/login",
         status=200,
         json={"userId": "userid", "sessionId": "sessionId"},
-    )
-    mock_graphql(
-        QUERY_CURRENT_USER + FRAGMENT_USER_DETAILS,
-        status=200,
-        response={
-            "currentUser": {
-                "email": "email",
-                "firstName": "John",
-                "lastName": "Smith",
-                "phoneNumber": "phone",
-            }
-        },
     )
