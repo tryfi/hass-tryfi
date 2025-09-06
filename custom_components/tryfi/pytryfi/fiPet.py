@@ -22,7 +22,6 @@ class FiPet(object):
         self._weight = None
         self._lastUpdated = None
         self._locationLastUpdate = None
-        self._posAccuracy = None
         
         # Initialize behavior metrics (Series 3+ only)
         self._dailyBarkingCount = 0
@@ -89,15 +88,9 @@ class FiPet(object):
         self._areaName = activityJSON['areaName']
         self._locationLastUpdate = parse_fi_date(activityJSON['lastReportTimestamp'])
         if activityType == PET_ACTIVITY_ONGOINGWALK:
-            currentLocation = activityJSON['positions'][-1]
-            self._posAccuracy = currentLocation['errorRadius'] if 'errorRadius' in currentLocation else None
-            currentPosition = currentLocation['position']
-        else: # OngoingRest
+            currentPosition = activityJSON['positions'][-1]['position']
+        else:
             currentPosition = activityJSON['position']
-            if 'place' in activityJSON:
-                self._posAccuracy = activityJSON['place']['radius']
-            else:
-                self._posAccuracy = 0
 
         self._currLongitude = currentPosition['longitude']
         self._currLatitude = currentPosition['latitude']
