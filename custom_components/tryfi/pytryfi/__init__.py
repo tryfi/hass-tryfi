@@ -29,12 +29,12 @@ class PyTryFi(object):
         self.login(username, password)
 
         self._currentUser = FiUser(self._userId)
-        self._currentUser.setUserDetails(self._session)
 
-        houses = getHouseHolds(self._session)
+        userHousehold = getHouseHolds(self._session)
+        self._currentUser.setUserDetails(userHousehold)
         self._pets = []
         self._bases = []
-        for house in houses:
+        for house in userHousehold['userHouseholds']:
             for pet in house['household']['pets']:
                 # If pet doesn't have a collar then ignore it. What good is a pet without a collar!
                 if pet['device'] is None:
@@ -42,10 +42,8 @@ class PyTryFi(object):
                     continue
 
                 p = FiPet(pet['id'])
+                p.setCurrentLocation(pet['ongoingActivity'])
                 p.setPetDetailsJSON(pet)
-                p.updatePetLocation(self._session)
-                p.updateStats(self._session) # update steps
-                p.updateRestStats(self._session)
                 LOGGER.debug(f"Adding Pet: {p._name} with Device: {p._device.deviceId}")
                 self._pets.append(p)
 
