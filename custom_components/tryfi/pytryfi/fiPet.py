@@ -349,9 +349,6 @@ class FiPet(object):
     def currLatitude(self) -> float | None:
         return self._currLatitude
     @property
-    def positionAccuracy(self) -> float | None:
-        return self._posAccuracy
-    @property
     def currStartTime(self):
         return self._currStartTime
     @property

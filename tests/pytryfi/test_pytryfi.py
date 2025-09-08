@@ -1,9 +1,7 @@
 import responses
 from custom_components.tryfi.pytryfi import PyTryFi
-from custom_components.tryfi.pytryfi.common.query import REQUEST_GET_HOUSEHOLDS
 from tests.pytryfi.utils import (
     GRAPHQL_PARTIAL_PET,
-    mock_graphql,
     mock_household_with_pets,
     mock_login_requests,
 )
