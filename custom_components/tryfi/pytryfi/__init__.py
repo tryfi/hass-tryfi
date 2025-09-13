@@ -42,10 +42,8 @@ class PyTryFi(object):
                     continue
 
                 p = FiPet(pet['id'])
+                p.setCurrentLocation(pet['ongoingActivity'])
                 p.setPetDetailsJSON(pet)
-                p.updatePetLocation(self._session)
-                p.updateStats(self._session) # update steps
-                p.updateRestStats(self._session)
                 LOGGER.debug(f"Adding Pet: {p._name} with Device: {p._device.deviceId}")
                 self._pets.append(p)
 
@@ -111,7 +109,7 @@ class PyTryFi(object):
     def currentUser(self):
         return self._currentUser
     @property
-    def pets(self):
+    def pets(self) -> list[FiPet]:
         return self._pets
     @property
     def bases(self):
