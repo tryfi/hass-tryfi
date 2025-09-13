@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             len(tryfi.bases)
         )
     except Exception as err:
-        _LOGGER.error("Failed to initialize TryFi API: %s", err)
+        _LOGGER.error("Failed to initialize TryFi API: %s", err, exc_info=True)
         raise ConfigEntryNotReady from err
     
     # Verify successful login

@@ -6,8 +6,12 @@ class FiBase(object):
     
     def setBaseDetailsJSON(self, baseJSON):
         self._name = baseJSON['name']
-        self._latitude = baseJSON['position']['latitude']
-        self._longitude = baseJSON['position']['longitude']
+        if baseJSON['position'] is not None:
+            self._latitude = baseJSON['position']['latitude']
+            self._longitude = baseJSON['position']['longitude']
+        else:
+            self._latitude = None
+            self._longitude = None
         self._online = baseJSON['online']
         self._onlineQuality = baseJSON['onlineQuality']
         self._lastUpdated = baseJSON['infoLastUpdated']
