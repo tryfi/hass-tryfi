@@ -110,7 +110,7 @@ class PyTryFi(object):
     def currentUser(self):
         return self._currentUser
     @property
-    def pets(self):
+    def pets(self) -> list[FiPet]:
         return self._pets
     @property
     def bases(self):
