@@ -16,7 +16,7 @@ from custom_components.tryfi.const import CONF_POLLING_RATE, DOMAIN
 
 
 @pytest.fixture
-def mock_setup_entry() -> AsyncMock:
+def mock_setup_entry():
     """Mock setup entry."""
     with patch(
         "custom_components.tryfi.async_setup_entry", return_value=True
