@@ -843,7 +843,7 @@ dev = [
     { name = "pytest-homeassistant-custom-component" },
     { name = "pytest-timeout" },
     { name = "responses", specifier = ">=0.25.8" },
-    { name = "ruff", specifier = ">=0.12.2" },
+    { name = "ruff", specifier = ">=0.13.2" },
     { name = "sentry-sdk", specifier = ">=2.32.0" },
 ]
 
