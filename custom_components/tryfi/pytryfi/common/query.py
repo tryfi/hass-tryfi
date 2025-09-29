@@ -173,11 +173,10 @@ def query(session: requests.Session, qString):
     url = getGraphqlURL()
     params = {'query': qString}
     resp = _execute(url, session, params=params)
-    if not resp.ok:
-        LOGGER.warning(f"non-okay response: (first 10 bytes: {resp.text[:10]})")
     if resp.status_code in [401, 403]:
         raise ApiNotAuthorizedError()
-    resp.raise_for_status()
+    if resp.status_code >= 500 and resp.status_code <= 599
+        LOGGER.warning(f"server error: (first 10 bytes: {resp.text[:10]})")
     if not resp.text:
         raise RemoteApiError("Empty response payload from tryfi.com")
 
@@ -192,6 +191,7 @@ def query(session: requests.Session, qString):
         if any(auth_err in error_msg.lower() for auth_err in ['unauthorized', 'unauthenticated', 'authentication', 'forbidden']):
             raise ApiNotAuthorizedError()
         raise RemoteApiError(f"GraphQL error: {error_msg}")
+    resp.raise_for_status()
 
     return json_object
 
