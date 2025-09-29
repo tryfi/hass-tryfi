@@ -175,7 +175,7 @@ def query(session: requests.Session, qString):
     resp = _execute(url, session, params=params)
     if resp.status_code in [401, 403]:
         raise ApiNotAuthorizedError()
-    if resp.status_code >= 500 and resp.status_code <= 599
+    if resp.status_code >= 500 and resp.status_code <= 599:
         LOGGER.warning(f"server error: (first 10 bytes: {resp.text[:10]})")
     if not resp.text:
         raise RemoteApiError("Empty response payload from tryfi.com")
