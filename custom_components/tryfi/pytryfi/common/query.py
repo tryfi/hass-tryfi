@@ -32,7 +32,7 @@ FRAGMENT_LED_DETAILS = "fragment LedColorDetails on LedColor {  __typename  ledC
 FRAGMENT_LOCATION_POINT = "fragment LocationPoint on Location {  __typename  date  errorRadius  position {    __typename    ...PositionCoordinates  }}"
 FRAGMENT_ONGOING_ACTIVITY_DETAILS = "fragment OngoingActivityDetails on OngoingActivity {  __typename  start  lastReportTimestamp  areaName  ... on OngoingWalk {    distance    positions {      __typename      ...LocationPoint    }    path {      __typename      ...PositionCoordinates    }  }  ... on OngoingRest {    position {      __typename      ...PositionCoordinates    }    place {      __typename      ...PlaceDetails    }  }}"
 FRAGMENT_OPERATIONAL_DETAILS = "fragment OperationParamsDetails on OperationParams {  __typename  mode  ledEnabled  ledOffAt}"
-FRAGMENT_PET_PROFILE = "fragment PetProfile on Pet {  __typename  ...BasePetProfile  chip {    __typename    shortId  }  device {    __typename    ...DeviceDetails  }}"
+FRAGMENT_PET_PROFILE = "fragment PetProfile on Pet {  __typename  ...BasePetProfile  chip {    __typename    shortId  }  device {    __typename    ...DeviceDetails  } ongoingActivity { __typename ...OngoingActivityDetails }}"
 FRAGMENT_PHOTO_DETAILS = "fragment PhotoDetails on Photo {  __typename  id  date  image {    __typename    fullSize  }}"
 FRAGMENT_PLACE_DETAILS = "fragment PlaceDetails on Place {  __typename  id  name  address  position {    __typename    ...PositionCoordinates  }  radius}"
 FRAGMENT_POSITION_COORDINATES = "fragment PositionCoordinates on Position {  __typename  latitude  longitude}"
@@ -47,10 +47,10 @@ REQUEST_FRAGMENTS_PET_ALL_INFO = FRAGMENT_ACTIVITY_SUMMARY_DETAILS + FRAGMENT_ON
         + FRAGMENT_REST_SUMMARY_DETAILS + FRAGMENT_POSITION_COORDINATES + FRAGMENT_LOCATION_POINT + FRAGMENT_USER_DETAILS + FRAGMENT_PLACE_DETAILS
 
 REQUEST_GET_HOUSEHOLDS = QUERY_CURRENT_USER_FULL_DETAIL + FRAGMENT_USER_FULL_DETAILS \
-    + FRAGMENT_USER_FULL_DETAILS + FRAGMENT_PET_PROFILE + FRAGMENT_BASE_PET_PROFILE \
+    + FRAGMENT_USER_DETAILS + FRAGMENT_PET_PROFILE + FRAGMENT_BASE_PET_PROFILE \
     + FRAGMENT_BASE_DETAILS + FRAGMENT_POSITION_COORDINATES + FRAGMENT_BREED_DETAILS \
     + FRAGMENT_PHOTO_DETAILS + FRAGMENT_DEVICE_DETAILS + FRAGMENT_LED_DETAILS + FRAGMENT_OPERATIONAL_DETAILS \
-    + FRAGMENT_CONNECTION_STATE_DETAILS
+    + FRAGMENT_CONNECTION_STATE_DETAILS + FRAGMENT_LOCATION_POINT + FRAGMENT_PLACE_DETAILS + FRAGMENT_ONGOING_ACTIVITY_DETAILS
 
 def getHouseHolds(session: requests.Session):
     qString = REQUEST_GET_HOUSEHOLDS
@@ -173,11 +173,10 @@ def query(session: requests.Session, qString):
     url = getGraphqlURL()
     params = {'query': qString}
     resp = _execute(url, session, params=params)
-    if not resp.ok:
-        LOGGER.warning(f"non-okay response: (first 10 bytes: {resp.text[:10]})")
     if resp.status_code in [401, 403]:
         raise ApiNotAuthorizedError()
-    resp.raise_for_status()
+    if resp.status_code >= 500 and resp.status_code <= 599:
+        LOGGER.warning(f"server error: (first 10 bytes: {resp.text[:10]})")
     if not resp.text:
         raise RemoteApiError("Empty response payload from tryfi.com")
 
@@ -192,6 +191,7 @@ def query(session: requests.Session, qString):
         if any(auth_err in error_msg.lower() for auth_err in ['unauthorized', 'unauthenticated', 'authentication', 'forbidden']):
             raise ApiNotAuthorizedError()
         raise RemoteApiError(f"GraphQL error: {error_msg}")
+    resp.raise_for_status()
 
     return json_object
 
