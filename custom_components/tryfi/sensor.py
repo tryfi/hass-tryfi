@@ -593,7 +593,7 @@ class PetBehaviorSensor(TryFiSensorBase):
             self._attr_native_unit_of_measurement = "events"
             self._attr_state_class = SensorStateClass.MEASUREMENT
         else:  # duration
-            self._attr_native_unit_of_measurement = UnitOfTime.SECONDS
+            self._attr_native_unit_of_measurement = UnitOfTime.MINUTES
             self._attr_device_class = SensorDeviceClass.DURATION
             self._attr_state_class = SensorStateClass.MEASUREMENT
         
@@ -605,6 +605,11 @@ class PetBehaviorSensor(TryFiSensorBase):
             model="Series 3+ Collar",
         )
     
+    def _fipet_attr_name(self) -> str:
+        attr_name = f"{self._period}{self._behavior_type.title()}{'Count' if self._metric_type == 'count' else 'Duration'}"
+
+        return attr_name
+
     @property
     def native_value(self) -> StateType:
         """Return the behavior metric value."""
@@ -613,12 +618,11 @@ class PetBehaviorSensor(TryFiSensorBase):
             return None
         
         # Build attribute name
-        attr_name = f"{self._period}{self._behavior_type.title()}{'Count' if self._metric_type == 'count' else 'Duration'}"
-        attr_name = attr_name.replace("Licking", "Licking").replace("Barking", "Barking").replace("Scratching", "Scratching").replace("Eating", "Eating").replace("Drinking", "Drinking")
+        attr_name = self._fipet_attr_name()
         
         # Get the value from the pet object
-        value = getattr(pet, attr_name, 0)
-        
+        value = getattr(pet, attr_name, None)
+
         # Return 0 if None
         return value if value is not None else 0
 

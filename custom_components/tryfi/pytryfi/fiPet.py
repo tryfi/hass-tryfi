@@ -198,7 +198,7 @@ class FiPet(object):
             try:
                 self.updateBehaviorStats(session)
             except Exception as e:
-                LOGGER.debug(f"Could not update behavior stats for Pet {self.name}. This may be an older collar model.\n{e}")
+                LOGGER.warning(f"Could not update behavior stats for Pet {self.name}.\n{e}")
                 # Behavior stats may not be available for older collars
                 pass
 
@@ -207,7 +207,19 @@ class FiPet(object):
         """Update behavior statistics for Series 3+ collars."""
         healthTrendsJSON = query.getPetHealthTrends(sessionId, self.petId, 'DAY')
         behavior_trends = healthTrendsJSON.get('behaviorTrends', [])
+
         self.setBehaviorStatsFromTrends(behavior_trends)
+
+    def _parseBehaviorDuration(self, input: str) -> int:
+        # examples: '46min'
+        if input.startswith('<'):
+            return 0
+        elif input.endswith('min'):
+            return int(input.replace('min', ''), 10)
+        elif input.endswith('hr'):
+            return int(input.replace('hr', ''), 10) * 60
+        else:
+            return int(input)
 
     def setBehaviorStatsFromTrends(self, behaviorTrends):
         """Parse behavior data from health trends API."""
@@ -245,16 +257,7 @@ class FiPet(object):
             duration_summary = summary.get('durationSummary')
             duration_seconds = 0
             if duration_summary:
-                if duration_summary.startswith('<'):
-                    duration_seconds = 30
-                else:
-                    parts = duration_summary.replace('h', '').replace('m', '').split()
-                    if len(parts) == 2:
-                        duration_seconds = int(parts[0]) * 3600 + int(parts[1]) * 60
-                    elif 'h' in duration_summary:
-                        duration_seconds = int(parts[0]) * 3600
-                    else:
-                        duration_seconds = int(parts[0]) * 60
+                duration_seconds = self._parseBehaviorDuration(duration_summary)
 
             # Map to our attributes
             if trend_id == 'barking:DAY':
