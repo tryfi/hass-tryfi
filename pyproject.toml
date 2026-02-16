@@ -5,7 +5,6 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13.2"
 dependencies = [
-    "homeassistant==2025.2",
 ]
 
 [tool.ruff.lint]
@@ -32,4 +31,19 @@ dev = [
     "pytest-homeassistant-custom-component",
     "pytest-timeout",
     "ty>=0.0.1a19",
+]
+oldest = [
+    "homeassistant==2025.2",
+]
+latest = [
+    "homeassistant==2026.2",
+]
+
+[tool.uv]
+default-groups = ["dev", "latest"]
+conflicts = [
+    [
+      { group = "oldest" },
+      { group = "latest" },
+    ],
 ]

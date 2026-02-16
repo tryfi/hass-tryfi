@@ -3,10 +3,31 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+        name: Download repo
+        with:
+          fetch-depth: 0
+
+      - name: Syntax check source files
+        uses: astral-sh/ruff-action@v3
+
+      - uses: hacs/action@22.5.0
+        with:
+          category: integration
+
   ci:
+    needs: lint
+    strategy:
+      matrix:
+        uv_group: ["oldest", "latest"]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.2.2
@@ -25,10 +46,7 @@ jobs:
           python-version-file: ".python-version"
 
       - name: Install project dependencies
-        run: uv sync --locked --all-extras --dev
-
-      - name: Syntax check source files
-        uses: astral-sh/ruff-action@v3
+        run: uv sync --locked --all-extras --dev --group ${{ matrix.uv_group }}
 
       - name: Type check Python files
         run: uv run ty check custom_components/
@@ -36,7 +54,3 @@ jobs:
       - name: Run tests
         # Unshare to prevent any accidental network calls to the real API
         run: sudo unshare --net sudo -u $USER $(which uv) run --locked pytest tests
-
-      - uses: hacs/action@22.5.0
-        with:
-          category: integration
