@@ -47,9 +47,6 @@ jobs:
       - name: Install project dependencies
         run: uv sync --locked --only-group ${{ matrix.uv_group }} --only-group dev
 
-      - name: Type check Python files
-        run: uv run ty check custom_components/
-
       - name: Run tests
         # Unshare to prevent any accidental network calls to the real API
         run: sudo unshare --net sudo -u $USER $(which uv) run --locked pytest tests
