@@ -1,5 +1,4 @@
 from custom_components.tryfi.pytryfi import FiPet, FiDevice
-from custom_components.tryfi.pytryfi.common.query import getPetHealthTrends
 from .utils import mock_graphql, GRAPHQL_FIXTURE_PET_ALL_INFO, REQ_PET_ALL_INFO
 
 import json
