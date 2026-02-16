@@ -24,7 +24,6 @@ jobs:
           category: integration
 
   ci:
-    needs: lint
     strategy:
       matrix:
         uv_group: ["oldest", "latest"]
