@@ -49,4 +49,4 @@ jobs:
 
       - name: Run tests
         # Unshare to prevent any accidental network calls to the real API
-        run: sudo unshare --net sudo -u $USER $(which uv) run --locked pytest tests
+        run: sudo unshare --net sudo -u $USER $(which uv) run --locked --no-sync --group dev --group ${{ matrix.uv_group }} pytest tests
