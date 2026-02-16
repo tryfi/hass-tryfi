@@ -1,0 +1,52 @@
+[
+    {
+        "__typename": "PetHealthTrend",
+        "id": "barking:DAY",
+        "title": "Barking",
+        "summaryComponents": {
+            "__typename": "PetHealthTrendSummary",
+            "eventsSummary": "24 events",
+            "durationSummary": "46min"
+        }
+    },
+    {
+        "__typename": "PetHealthTrend",
+        "id": "eating:DAY",
+        "title": "Eating",
+        "summaryComponents": {
+            "__typename": "PetHealthTrendSummary",
+            "eventsSummary": "6 events",
+            "durationSummary": "6min"
+        }
+    },
+    {
+        "__typename": "PetHealthTrend",
+        "id": "drinking:DAY",
+        "title": "Drinking",
+        "summaryComponents": {
+            "__typename": "PetHealthTrendSummary",
+            "eventsSummary": "3 events",
+            "durationSummary": "<1min"
+        }
+    },
+    {
+        "__typename": "PetHealthTrend",
+        "id": "cleaning_self:DAY",
+        "title": "Licking",
+        "summaryComponents": {
+            "__typename": "PetHealthTrendSummary",
+            "eventsSummary": "6 events",
+            "durationSummary": "6min"
+        }
+    },
+    {
+        "__typename": "PetHealthTrend",
+        "id": "scratching:DAY",
+        "title": "Scratching",
+        "summaryComponents": {
+            "__typename": "PetHealthTrendSummary",
+            "eventsSummary": "4 events",
+            "durationSummary": "1min"
+        }
+    }
+]
