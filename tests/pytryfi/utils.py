@@ -25,7 +25,7 @@ def mock_response(status_code: int) -> Mock:
     return response
 
 
-def mock_graphql(query: str, status: int, response: dict):
+def mock_graphql(query: str, status: int, response: dict | None):
     url = f"https://api.tryfi.com/graphql?query={urllib.parse.quote_plus(query)}"
     responses.add(method=responses.GET, url=url, status=status, json={"data": response})
 

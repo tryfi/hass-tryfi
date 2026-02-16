@@ -36,42 +36,43 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """Validate the user input allows us to connect."""
     username = data[CONF_USERNAME]
     password = data[CONF_PASSWORD]
-    
+
     try:
         # Test the connection
         tryfi = await hass.async_add_executor_job(PyTryFi, username, password)
-        
+
         # Verify we can authenticate
         if not hasattr(tryfi, "currentUser") or tryfi.currentUser is None:
             raise CannotConnect("Failed to authenticate")
-            
+
     except Exception as err:
         _LOGGER.error("Failed to connect to TryFi: %s", err)
         raise CannotConnect from err
-    
+
     # Return info that you want to store in the config entry
     return {"title": username}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TryFi."""
-    
+
     VERSION = 1
-    
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
-    
+        return OptionsFlowHandler()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-        
+
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
@@ -82,7 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
-        
+
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
@@ -90,30 +91,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle TryFi options."""
-    
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-    
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
         return await self.async_step_user()
-    
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle options flow."""
         errors: dict[str, str] = {}
-        
+
         if user_input is not None:
             # If username/password changed, validate them
             username = user_input.get(CONF_USERNAME, self.config_entry.data.get(CONF_USERNAME))
             password = user_input.get(CONF_PASSWORD, self.config_entry.data.get(CONF_PASSWORD))
-            
+
             # Only validate if credentials changed
-            if (username != self.config_entry.data.get(CONF_USERNAME) or 
+            if (username != self.config_entry.data.get(CONF_USERNAME) or
                 password != self.config_entry.data.get(CONF_PASSWORD)):
                 try:
                     await validate_input(self.hass, {
@@ -125,7 +122,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 except Exception:  # pylint: disable=broad-except
                     _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
-            
+
             if not errors:
                 # Update config entry with new data
                 new_data = dict(self.config_entry.data)
@@ -135,7 +132,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     data=new_data,
                 )
                 return self.async_create_entry(title="", data={})
-        
+
         # Show form with current values as defaults
         data_schema = vol.Schema(
             {
@@ -153,7 +150,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=3600)),
             }
         )
-        
+
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
