@@ -35,7 +35,7 @@ jobs:
 
       - name: Run tests
         # Unshare to prevent any accidental network calls to the real API
-        run: sudo unshare --net sudo -u $USER $(which uv) run pytest tests
+        run: sudo unshare --net sudo -u $USER $(which uv) run --locked pytest tests
 
       - uses: hacs/action@22.5.0
         with:
