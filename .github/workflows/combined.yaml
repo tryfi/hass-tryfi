@@ -45,7 +45,7 @@ jobs:
           python-version-file: ".python-version"
 
       - name: Install project dependencies
-        run: uv sync --locked --all-extras --dev --group ${{ matrix.uv_group }}
+        run: uv sync --locked --only-group ${{ matrix.uv_group }} --only-group dev
 
       - name: Type check Python files
         run: uv run ty check custom_components/
