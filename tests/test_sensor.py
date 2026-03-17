@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from custom_components.tryfi.const import DOMAIN
 from custom_components.tryfi.sensor import (
     PetGenericSensor,
+    PetSleepQualitySensor,
     PetStatsSensor,
     TryFiBatterySensor,
     TryFiBaseSensor,
@@ -180,3 +181,23 @@ async def test_sensor_no_data(hass: HomeAssistant, mock_coordinator) -> None:
     # Test generic sensor with no data
     sensor = PetGenericSensor(mock_coordinator, mock_pet, "Activity Type")
     assert sensor.native_value is None
+
+
+async def test_sleep_quality_sensor_with_none_values(
+    hass: HomeAssistant, mock_coordinator
+) -> None:
+    """Test PetSleepQualitySensor handles None values for dailySleep and dailyNap."""
+    mock_pet = Mock()
+    mock_pet.petId = "test_pet_123"
+    mock_pet.name = "Fido"
+    mock_pet.dailySleep = None
+    mock_pet.dailyNap = None
+
+    mock_coordinator.data.getPet.return_value = mock_pet
+
+    sensor = PetSleepQualitySensor(mock_coordinator, mock_pet)
+
+    assert sensor.unique_id == "test_pet_123-sleep-quality"
+    assert sensor.name == "Fido Sleep Quality Score"
+    assert sensor.native_value == 0
+    assert sensor.icon == "mdi:sleep"

@@ -528,6 +528,11 @@ class PetSleepQualitySensor(TryFiSensorBase):
         # Get daily sleep and nap in seconds from API
         daily_sleep_seconds = getattr(pet, "dailySleep", 0)
         daily_nap_seconds = getattr(pet, "dailyNap", 0)
+
+        if daily_sleep_seconds is None:
+            daily_sleep_seconds = 0
+        if daily_nap_seconds is None:
+            daily_nap_seconds = 0
         
         # Convert to minutes for calculation
         daily_sleep = daily_sleep_seconds / 60
