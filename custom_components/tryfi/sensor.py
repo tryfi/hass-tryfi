@@ -306,6 +306,8 @@ class PetGenericSensor(TryFiSensorBase):
         elif sensor_type == "Signal Strength":
             self._attr_native_unit_of_measurement = PERCENTAGE
             self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif sensor_type == 'Activity Type':
+            self._attr_device_class = SensorDeviceClass.ENUM
     
     def _get_icon(self) -> str:
         """Get icon based on sensor type."""
