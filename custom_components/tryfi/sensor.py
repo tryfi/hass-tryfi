@@ -335,6 +335,13 @@ class PetGenericSensor(TryFiSensorBase):
             "manufacturer": MANUFACTURER,
             "model": MODEL,
         }
+
+    @property
+    def options(self) -> list[str] | None:
+        if self._sensor_type == "Activity Type":
+            return ['OngoingWalk', 'OngoingRest']
+        else:
+            return None
     
     @property
     def native_value(self) -> StateType:
