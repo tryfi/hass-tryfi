@@ -90,16 +90,15 @@ async def test_sensor_icon_selection(hass: HomeAssistant, mock_coordinator) -> N
 
     # Test generic sensor icons
     sensor_types_icons = {
-        "Activity Type": "mdi:run",
-        "Current Place Name": "mdi:map-marker",
-        "Current Place Address": "mdi:home-map-marker",
-        "Connected To": "mdi:wifi",
-        "Unknown Type": "mdi:information",  # Default
+        "activity_type": "mdi:run",
+        "current_place_name": "mdi:map-marker",
+        "current_place_address": "mdi:home-map-marker",
+        "connected_to": "mdi:wifi"
     }
 
     for sensor_type, expected_icon in sensor_types_icons.items():
         sensor = PetGenericSensor(mock_coordinator, pet, sensor_type)
-        assert sensor._attr_icon == expected_icon
+        assert sensor.icon == expected_icon
 
 
 async def test_stats_sensor_attributes(hass: HomeAssistant, mock_coordinator) -> None:

@@ -114,7 +114,7 @@ async def test_generic_sensor(
     mock_coordinator.data.getPet.return_value = mock_pet_with_stats
 
     # Test activity type sensor
-    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "Activity Type")
+    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "activity_type")
 
     assert sensor.unique_id == "test_pet_123-activity-type"
     assert sensor.name == "Fido Activity Type"
@@ -123,7 +123,7 @@ async def test_generic_sensor(
 
     # Test current place sensor
     sensor = PetGenericSensor(
-        mock_coordinator, mock_pet_with_stats, "Current Place Name"
+        mock_coordinator, mock_pet_with_stats, "current_place_name"
     )
 
     assert sensor.unique_id == "test_pet_123-current-place-name"
@@ -132,7 +132,7 @@ async def test_generic_sensor(
     assert sensor.icon == "mdi:map-marker"
 
     # Test connection sensor
-    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "Connected To")
+    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "connected_to")
 
     assert sensor.unique_id == "test_pet_123-connected-to"
     assert sensor.name == "Fido Connected To"
