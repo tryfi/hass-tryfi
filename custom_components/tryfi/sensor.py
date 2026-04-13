@@ -128,21 +128,10 @@ async def async_setup_entry(
             # Add behavior sensors for Series 3+ collars
             if pet.device.supportsAdvancedBehaviorStats():
                 _LOGGER.debug("Adding behavior sensors for Series 3+ collar: %s", pet.name)
-                # Barking sensors
-                entities.append(PetBehaviorSensor(coordinator, pet, "barking", "count", "daily"))
-                entities.append(PetBehaviorSensor(coordinator, pet, "barking", "duration", "daily"))
-                # Licking sensors
-                entities.append(PetBehaviorSensor(coordinator, pet, "licking", "count", "daily"))
-                entities.append(PetBehaviorSensor(coordinator, pet, "licking", "duration", "daily"))
-                # Scratching sensors
-                entities.append(PetBehaviorSensor(coordinator, pet, "scratching", "count", "daily"))
-                entities.append(PetBehaviorSensor(coordinator, pet, "scratching", "duration", "daily"))
-                # Eating sensors
-                entities.append(PetBehaviorSensor(coordinator, pet, "eating", "count", "daily"))
-                entities.append(PetBehaviorSensor(coordinator, pet, "eating", "duration", "daily"))
-                # Drinking sensors
-                entities.append(PetBehaviorSensor(coordinator, pet, "drinking", "count", "daily"))
-                entities.append(PetBehaviorSensor(coordinator, pet, "drinking", "duration", "daily"))
+                for period in ["daily", "weekly", "monthly"]:
+                    for behavior in ["barking", "licking", "scratching", "eating", "drinking"]:
+                        entities.append(PetBehaviorSensor(coordinator, pet, behavior, "count", period))
+                        entities.append(PetBehaviorSensor(coordinator, pet, behavior, "duration", period))
     
     # Add base sensors
     for base in tryfi.bases:

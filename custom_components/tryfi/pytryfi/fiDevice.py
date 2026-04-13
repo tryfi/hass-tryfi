@@ -22,7 +22,11 @@ class FiDevice(object):
     def setDeviceDetailsJSON(self, deviceJSON: dict):
         self._moduleId = deviceJSON['moduleId']
         self._buildId = deviceJSON['info']['buildId']
-        self._batteryPercent = int(deviceJSON['info']['batteryPercent'])
+        try:
+            self._batteryPercent = int(deviceJSON['info']['batteryPercent'])
+        except (ValueError, TypeError):
+            LOGGER.warning("Non-numeric batteryPercent: %s", deviceJSON['info'].get('batteryPercent'))
+            self._batteryPercent = None
         
         #V1 of the collar has this parameter but V2 it is missing
         if 'isCharging' in deviceJSON['info']:
