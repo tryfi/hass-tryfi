@@ -36,9 +36,10 @@ class TryFiDataUpdateCoordinator(DataUpdateCoordinator[PyTryFi]):
         try:
             await self.hass.async_add_executor_job(self.tryfi.update)
             _LOGGER.info(
-                "TryFi data updated: %d pets, %d bases", 
-                len(self.tryfi.pets), 
-                len(self.tryfi.bases)
+                "TryFi data updated: %d pets, %d bases, %d wifi networks",
+                len(self.tryfi.pets),
+                len(self.tryfi.bases),
+                len(self.tryfi.wifiNetworks),
             )
             
             # Check for state changes and fire events

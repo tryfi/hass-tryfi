@@ -12,6 +12,7 @@ API_GRAPHQL         = "/graphql"
 API_LOGIN           = "/auth/login"
 
 VAR_PET_ID = "__PET_ID__"
+VAR_HOUSEHOLD_ID = "__HOUSEHOLD_ID__"
 
 QUERY_CURRENT_USER_FULL_DETAIL  = "query {  currentUser {    ...UserFullDetails  }}"
 
@@ -38,10 +39,14 @@ FRAGMENT_PLACE_DETAILS = "fragment PlaceDetails on Place {  __typename  id  name
 FRAGMENT_POSITION_COORDINATES = "fragment PositionCoordinates on Position {  __typename  latitude  longitude}"
 FRAGMENT_REST_SUMMARY_DETAILS = "fragment RestSummaryDetails on RestSummary {  __typename  start  end  data {    __typename    ... on ConcreteRestSummaryData {      sleepAmounts {        __typename        type        duration      }    }  }}"
 FRAGMENT_USER_DETAILS = "fragment UserDetails on User {  __typename   id  email  firstName  lastName  phoneNumber }"
-FRAGMENT_USER_FULL_DETAILS = "fragment UserFullDetails on User {  __typename  ...UserDetails  userHouseholds {    __typename    household {      __typename      pets {        __typename        ...PetProfile      }      bases {        __typename        ...BaseDetails      }    }  }}"
+FRAGMENT_USER_FULL_DETAILS = "fragment UserFullDetails on User {  __typename  ...UserDetails  userHouseholds {    __typename    household {      __typename      id      pets {        __typename        ...PetProfile      }      bases {        __typename        ...BaseDetails      }    }  }}"
 
 MUTATION_DEVICE_OPS = "mutation UpdateDeviceOperationParams($input: UpdateDeviceOperationParamsInput!) {  updateDeviceOperationParams(input: $input) {    __typename    ...DeviceDetails  }}"
 MUTATION_SET_LED_COLOR = "mutation SetDeviceLed($moduleId: String!, $ledColorCode: Int!) {  setDeviceLed(moduleId: $moduleId, ledColorCode: $ledColorCode) {    __typename    ...DeviceDetails  }}"
+
+FRAGMENT_WIFI_NETWORK_DETAILS = "fragment WifiNetworkDetails on WifiNetwork {  ssid  state  addressLabel  isHidden  position {    latitude    longitude  }}"
+QUERY_GET_WIFI_NETWORKS = "query GetWifiNetworks($householdId: ID!) {  household(id: $householdId) {    id    wifiNetworks {      credentialPackHash      maximumNetworkCount      networks {        __typename        ...WifiNetworkDetails      }    }  }}"
+MUTATION_UPDATE_WIFI_NETWORK = "mutation UpdateWifiNetwork($input: UpdateWifiNetworkInput!) {  updateWifiNetwork(input: $input) {    __typename    ...WifiNetworkDetails  }}"
 
 REQUEST_FRAGMENTS_PET_ALL_INFO = FRAGMENT_ACTIVITY_SUMMARY_DETAILS + FRAGMENT_ONGOING_ACTIVITY_DETAILS + FRAGMENT_OPERATIONAL_DETAILS + FRAGMENT_CONNECTION_STATE_DETAILS + FRAGMENT_LED_DETAILS \
         + FRAGMENT_REST_SUMMARY_DETAILS + FRAGMENT_POSITION_COORDINATES + FRAGMENT_LOCATION_POINT + FRAGMENT_USER_DETAILS + FRAGMENT_PLACE_DETAILS
@@ -159,6 +164,29 @@ def setLostDogMode(session: requests.Session, moduleId, action: bool):
     response = mutation(session, qString, qVariables)
     LOGGER.debug(f"setLostDogMode: {response}")
     return response['data']
+
+def getWifiNetworks(session: requests.Session, householdId: str):
+    qString = QUERY_GET_WIFI_NETWORKS + FRAGMENT_WIFI_NETWORK_DETAILS
+    qVariables = {"householdId": householdId}
+    response = mutation(session, qString, qVariables)
+    LOGGER.debug(f"getWifiNetworks: {response}")
+    return response['data']['household']['wifiNetworks']
+
+def updateWifiNetwork(session: requests.Session, householdId: str, ssid: str, latitude: float, longitude: float):
+    qString = MUTATION_UPDATE_WIFI_NETWORK + FRAGMENT_WIFI_NETWORK_DETAILS
+    qVariables = {
+        "input": {
+            "householdId": householdId,
+            "ssid": ssid,
+            "position": {
+                "latitude": latitude,
+                "longitude": longitude
+            }
+        }
+    }
+    response = mutation(session, qString, qVariables)
+    LOGGER.debug(f"updateWifiNetwork: {response}")
+    return response['data']['updateWifiNetwork']
 
 def getGraphqlURL():
     return API_HOST_URL_BASE + API_GRAPHQL

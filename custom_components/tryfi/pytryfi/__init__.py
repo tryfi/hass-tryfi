@@ -7,12 +7,14 @@ from .fiUser import FiUser
 from .fiPet import FiPet
 from .fiBase import FiBase
 from .fiDevice import FiDevice
-from .common.query import API_HOST_URL_BASE, API_LOGIN, getHouseHolds, getBaseList
+from .fiWifiNetwork import FiWifiNetwork
+from .common.query import API_HOST_URL_BASE, API_LOGIN, getHouseHolds, getBaseList, getWifiNetworks, updateWifiNetwork
 
 __all__ = [
     'FiDevice',
     'FiPet',
     'FiUser',
+    'FiWifiNetwork',
     'PyTryFi'
 ]
 
@@ -34,7 +36,14 @@ class PyTryFi(object):
         self._currentUser.setUserDetails(userHousehold)
         self._pets = []
         self._bases = []
+        self._householdIds = []
+        self._wifiNetworks = []
         for house in userHousehold['userHouseholds']:
+            householdId = house['household'].get('id')
+            if householdId:
+                self._householdIds.append(householdId)
+                LOGGER.debug(f"Found household ID: {householdId}")
+
             for pet in house['household']['pets']:
                 # If pet doesn't have a collar then ignore it. What good is a pet without a collar!
                 if pet['device'] is None:
@@ -58,6 +67,9 @@ class PyTryFi(object):
                     self._bases.append(b)
                 except (KeyError, TypeError, ValueError) as e:
                     LOGGER.warning("Skipping base with invalid data: %s", e)
+
+        # Fetch WiFi networks for each household
+        self.updateWifiNetworks()
 
     def __str__(self):
         instString = f"Username: {self.username}"
@@ -107,6 +119,35 @@ class PyTryFi(object):
         LOGGER.error(f"Cannot find Base: {baseId}")
         return None
 
+    def updateWifiNetworks(self):
+        updatedNetworks = []
+        for householdId in self._householdIds:
+            try:
+                wifiData = getWifiNetworks(self._session, householdId)
+                for network in wifiData.get('networks', []):
+                    ssid = network.get('ssid')
+                    if ssid:
+                        w = FiWifiNetwork(ssid, householdId)
+                        w.setDetailsJSON(network)
+                        LOGGER.debug(f"Adding WiFi Network: {w.ssid} State: {w.state}")
+                        updatedNetworks.append(w)
+            except Exception as e:
+                LOGGER.warning("failed to fetch WiFi networks for household %s: %s", householdId, e, exc_info=True)
+        self._wifiNetworks = updatedNetworks
+
+    def getWifiNetwork(self, ssid):
+        for w in self._wifiNetworks:
+            if w.ssid == ssid:
+                return w
+        LOGGER.error(f"Cannot find WiFi Network: {ssid}")
+        return None
+
+    def setWifiNetworkLocation(self, ssid, latitude, longitude):
+        network = self.getWifiNetwork(ssid)
+        if not network:
+            raise Exception(f"WiFi network not found: {ssid}")
+        return updateWifiNetwork(self._session, network.householdId, ssid, latitude, longitude)
+
     def update(self):
         try:
             self.updateBases()
@@ -116,6 +157,10 @@ class PyTryFi(object):
             self.updatePets()
         except Exception as e:
             LOGGER.warning("failed to update pets: %s", e, exc_info=True)
+        try:
+            self.updateWifiNetworks()
+        except Exception as e:
+            LOGGER.warning("failed to update wifi networks: %s", e, exc_info=True)
 
     @property
     def currentUser(self):
@@ -126,6 +171,12 @@ class PyTryFi(object):
     @property
     def bases(self):
         return self._bases
+    @property
+    def wifiNetworks(self) -> list[FiWifiNetwork]:
+        return self._wifiNetworks
+    @property
+    def householdIds(self):
+        return self._householdIds
     @property
     def username(self):
         return self._username

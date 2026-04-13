@@ -51,3 +51,34 @@ set_lost_mode:
           options:
             - "Safe"
             - "Lost"
+
+set_wifi_location:
+  name: Set WiFi Network Location
+  description: Set the geographic location of a TryFi WiFi network
+  fields:
+    ssid:
+      name: SSID
+      description: The WiFi network SSID
+      required: true
+      selector:
+        text:
+    latitude:
+      name: Latitude
+      description: Latitude of the WiFi network location
+      required: true
+      selector:
+        number:
+          min: -90
+          max: 90
+          step: 0.000001
+          mode: box
+    longitude:
+      name: Longitude
+      description: Longitude of the WiFi network location
+      required: true
+      selector:
+        number:
+          min: -180
+          max: 180
+          step: 0.000001
+          mode: box
