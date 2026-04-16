@@ -48,10 +48,16 @@ class PyTryFi(object):
                 self._pets.append(p)
 
             for base in house['household']['bases']:
-                b = FiBase(base['baseId'])
-                b.setBaseDetailsJSON(base)
-                LOGGER.debug(f"Adding Base: {b._name} Online: {b._online}")
-                self._bases.append(b)
+                if base is None:
+                    LOGGER.warning("Skipping null base entry in API response")
+                    continue
+                try:
+                    b = FiBase(base['baseId'])
+                    b.setBaseDetailsJSON(base)
+                    LOGGER.debug(f"Adding Base: {b._name} Online: {b._online}")
+                    self._bases.append(b)
+                except (KeyError, TypeError, ValueError) as e:
+                    LOGGER.warning("Skipping base with invalid data: %s", e)
 
     def __str__(self):
         instString = f"Username: {self.username}"
@@ -82,9 +88,15 @@ class PyTryFi(object):
         baseListJSON = getBaseList(self._session)
         for house in baseListJSON:
             for base in house['household']['bases']:
-                b = FiBase(base['baseId'])
-                b.setBaseDetailsJSON(base)
-                updatedBases.append(b)
+                if base is None:
+                    LOGGER.warning("Skipping null base entry in API response")
+                    continue
+                try:
+                    b = FiBase(base['baseId'])
+                    b.setBaseDetailsJSON(base)
+                    updatedBases.append(b)
+                except (KeyError, TypeError, ValueError) as e:
+                    LOGGER.warning("Skipping base with invalid data: %s", e)
         self._bases = updatedBases
 
     # return the pet object based on petId

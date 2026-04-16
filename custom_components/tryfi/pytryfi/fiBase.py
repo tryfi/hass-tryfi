@@ -5,6 +5,8 @@ class FiBase(object):
         self._baseId = baseId
     
     def setBaseDetailsJSON(self, baseJSON):
+        if baseJSON is None:
+            raise ValueError("baseJSON is None")
         self._name = baseJSON['name']
         if baseJSON['position'] is not None:
             self._latitude = baseJSON['position']['latitude']

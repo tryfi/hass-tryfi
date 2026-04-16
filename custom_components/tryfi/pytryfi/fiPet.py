@@ -189,8 +189,8 @@ class FiPet(object):
         self.device.setDeviceDetailsJSON(petJson['device'])
         self.setCurrentLocation(petJson['ongoingActivity'])
         self.setStats(petJson['dailyStepStat'], petJson['weeklyStepStat'], petJson['monthlyStepStat'])
-        # TODO: Support weekly
         self._dailySleep, self._dailyNap = self._extractSleep(petJson['dailySleepStat'])
+        self._weeklySleep, self._weeklyNap = self._extractSleep(petJson['weeklySleepStat'])
         self._monthlySleep, self._monthlyNap = self._extractSleep(petJson['monthlySleepStat'])
 
         if self.device.supportsAdvancedBehaviorStats():
@@ -205,35 +205,47 @@ class FiPet(object):
     # Update behavior stats for Series 3+ collars
     def updateBehaviorStats(self, sessionId: requests.Session):
         """Update behavior statistics for Series 3+ collars."""
-        healthTrendsJSON = query.getPetHealthTrends(sessionId, self.petId, 'DAY')
-        behavior_trends = healthTrendsJSON.get('behaviorTrends', [])
-
-        self.setBehaviorStatsFromTrends(behavior_trends)
+        for period in ['DAY', 'WEEK', 'MONTH']:
+            try:
+                healthTrendsJSON = query.getPetHealthTrends(sessionId, self.petId, period)
+                behavior_trends = healthTrendsJSON.get('behaviorTrends', [])
+                self.setBehaviorStatsFromTrends(behavior_trends, period)
+            except Exception as e:
+                LOGGER.warning(f"Could not fetch {period} behavior trends for {self.name}: {e}")
 
     def _parseBehaviorDuration(self, input: str) -> int:
-        # examples: '46min'
+        # examples: '46min', '1.5hr', '<1min', '10.1'
         if input.startswith('<'):
             return 0
         elif input.endswith('min'):
-            return int(input.replace('min', ''), 10)
+            return round(float(input.replace('min', '')))
         elif input.endswith('hr'):
-            return int(input.replace('hr', ''), 10) * 60
+            return round(float(input.replace('hr', '')) * 60)
         else:
-            return int(input)
+            return round(float(input))
 
-    def setBehaviorStatsFromTrends(self, behaviorTrends):
+    def setBehaviorStatsFromTrends(self, behaviorTrends, period: str = 'DAY'):
         """Parse behavior data from health trends API."""
-        # Reset all metrics
-        self._dailyBarkingCount = 0
-        self._dailyBarkingDuration = 0
-        self._dailyLickingCount = 0
-        self._dailyLickingDuration = 0
-        self._dailyScratchingCount = 0
-        self._dailyScratchingDuration = 0
-        self._dailyEatingCount = 0
-        self._dailyEatingDuration = 0
-        self._dailyDrinkingCount = 0
-        self._dailyDrinkingDuration = 0
+        PERIOD_PREFIX_MAP = {
+            'DAY': 'daily',
+            'WEEK': 'weekly',
+            'MONTH': 'monthly',
+        }
+        prefix = PERIOD_PREFIX_MAP.get(period, 'daily')
+
+        # Map from API behavior id prefix to our attribute name fragment
+        BEHAVIOR_MAP = {
+            'barking': 'Barking',
+            'cleaning_self': 'Licking',
+            'scratching': 'Scratching',
+            'eating': 'Eating',
+            'drinking': 'Drinking',
+        }
+
+        # Reset metrics for this period
+        for attr_suffix in BEHAVIOR_MAP.values():
+            setattr(self, f'_{prefix}{attr_suffix}Count', 0)
+            setattr(self, f'_{prefix}{attr_suffix}Duration', 0)
 
         for trend in behaviorTrends:
             if not isinstance(trend, dict):
@@ -248,33 +260,22 @@ class FiPet(object):
             events_count = 0
             if events_summary is None:
                 # This will be None when the collar doesn't support the stat
-                # Skip it and move to the next one
                 continue
             if events_summary and 'event' in events_summary:
-                events_count = int(events_summary.split()[0])
+                events_count = round(float(events_summary.split()[0]))
 
             # Extract duration
             duration_summary = summary.get('durationSummary')
-            duration_seconds = 0
+            duration_minutes = 0
             if duration_summary:
-                duration_seconds = self._parseBehaviorDuration(duration_summary)
+                duration_minutes = self._parseBehaviorDuration(duration_summary)
 
-            # Map to our attributes
-            if trend_id == 'barking:DAY':
-                self._dailyBarkingCount = events_count
-                self._dailyBarkingDuration = duration_seconds
-            elif trend_id == 'cleaning_self:DAY':
-                self._dailyLickingCount = events_count
-                self._dailyLickingDuration = duration_seconds
-            elif trend_id == 'scratching:DAY':
-                self._dailyScratchingCount = events_count
-                self._dailyScratchingDuration = duration_seconds
-            elif trend_id == 'eating:DAY':
-                self._dailyEatingCount = events_count
-                self._dailyEatingDuration = duration_seconds
-            elif trend_id == 'drinking:DAY':
-                self._dailyDrinkingCount = events_count
-                self._dailyDrinkingDuration = duration_seconds
+            # Parse the behavior type from the trend_id (e.g., "barking:DAY" -> "barking")
+            behavior_key = trend_id.split(':')[0] if ':' in trend_id else trend_id
+            attr_suffix = BEHAVIOR_MAP.get(behavior_key)
+            if attr_suffix:
+                setattr(self, f'_{prefix}{attr_suffix}Count', events_count)
+                setattr(self, f'_{prefix}{attr_suffix}Duration', duration_minutes)
 
     # set the color code of the led light on the pet collar
     def setLedColorCode(self, session: requests.Session, colorCode):

@@ -160,6 +160,7 @@ GRAPHQL_PARTIAL_PET = {
             }
         ]
     },
+    "weeklySleepStat": {"restSummaries": [{"data": {}}]},
     "monthlySleepStat": {"restSummaries": [{"data": {}}]},
 }
 

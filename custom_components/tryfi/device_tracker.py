@@ -150,14 +150,14 @@ class TryFiBaseTracker(CoordinatorEntity, TrackerEntity):
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the base station."""
-        if self.base and hasattr(self.base, "latitude"):
+        if self.base and self.base.latitude is not None:
             return float(self.base.latitude)
         return None
-    
+
     @property
     def longitude(self) -> float | None:
         """Return longitude value of the base station."""
-        if self.base and hasattr(self.base, "longitude"):
+        if self.base and self.base.longitude is not None:
             return float(self.base.longitude)
         return None
     
