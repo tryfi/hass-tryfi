@@ -27,6 +27,7 @@ from custom_components.tryfi.pytryfi.fiPet import FiPet
 
 from .const import DOMAIN, MANUFACTURER, MODEL, SENSOR_STATS_BY_TIME, SENSOR_STATS_BY_TYPE
 from .pytryfi import PyTryFi
+from .pytryfi.fiWifiNetwork import FiWifiNetwork
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,8 +143,33 @@ async def async_setup_entry(
             TryFiBaseDiagnosticSensor(coordinator, base, "Base ID"),
             TryFiBaseDiagnosticSensor(coordinator, base, "Connection Quality"),
         ])
-    
+
+    # Add WiFi network sensors
+    known_wifi_ssids: set[str] = set()
+    for network in tryfi.wifiNetworks:
+        _LOGGER.debug("Adding sensors for WiFi network: %s", network.ssid)
+        known_wifi_ssids.add(network.ssid)
+        entities.extend([
+            TryFiWifiNetworkSensor(coordinator, network, "Status"),
+            TryFiWifiNetworkSensor(coordinator, network, "Address"),
+        ])
+
     async_add_entities(entities)
+
+    # Listen for new WiFi networks on coordinator updates
+    def _check_new_wifi_networks() -> None:
+        new_entities = []
+        for network in coordinator.data.wifiNetworks:
+            if network.ssid not in known_wifi_ssids:
+                known_wifi_ssids.add(network.ssid)
+                new_entities.extend([
+                    TryFiWifiNetworkSensor(coordinator, network, "Status"),
+                    TryFiWifiNetworkSensor(coordinator, network, "Address"),
+                ])
+        if new_entities:
+            async_add_entities(new_entities)
+
+    config_entry.async_on_unload(coordinator.async_add_listener(_check_new_wifi_networks))
 
 
 class TryFiSensorBase(CoordinatorEntity, SensorEntity):
@@ -619,6 +645,53 @@ class PetBehaviorSensor(TryFiSensorBase):
 
         # Return 0 if None
         return value if value is not None else 0
+
+
+class TryFiWifiNetworkSensor(TryFiSensorBase):
+    """Representation of a TryFi WiFi network sensor."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: Any, network: FiWifiNetwork, sensor_type: str) -> None:
+        """Initialize the WiFi network sensor."""
+        super().__init__(coordinator)
+        self._ssid = network.ssid
+        self._sensor_type = sensor_type
+        self._attr_unique_id = f"wifi-{network.ssid}-{sensor_type.lower()}"
+        self._attr_name = sensor_type
+        self._attr_icon = "mdi:wifi-settings" if sensor_type == "Status" else "mdi:map-marker-outline"
+
+    @property
+    def network(self) -> FiWifiNetwork | None:
+        """Get the WiFi network object from coordinator data."""
+        return self.coordinator.data.getWifiNetwork(self._ssid)
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return device information."""
+        network = self.network
+        if not network:
+            return {}
+        return {
+            "identifiers": {(DOMAIN, f"wifi-{network.ssid}")},
+            "name": f"WiFi {network.ssid}",
+            "manufacturer": MANUFACTURER,
+            "model": "WiFi Network",
+        }
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        network = self.network
+        if not network:
+            return None
+
+        if self._sensor_type == "Status":
+            return network.state
+        elif self._sensor_type == "Address":
+            return network.addressLabel
+
+        return None
 
 
 def icon_for_battery_level(

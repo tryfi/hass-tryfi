@@ -43,9 +43,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         tryfi = await hass.async_add_executor_job(PyTryFi, username, password)
         _LOGGER.info(
-            "TryFi API initialized: %d pets, %d bases", 
-            len(tryfi.pets), 
-            len(tryfi.bases)
+            "TryFi API initialized: %d pets, %d bases, %d wifi networks",
+            len(tryfi.pets),
+            len(tryfi.bases),
+            len(tryfi.wifiNetworks),
         )
     except Exception as err:
         _LOGGER.error("Failed to initialize TryFi API: %s", err, exc_info=True)
@@ -118,10 +119,11 @@ async def async_remove_config_entry_device(
     try:
         coordinator = hass.data[DOMAIN][entry.entry_id]
         
-        # Get all current pet and base IDs from the API
+        # Get all current pet, base, and WiFi network IDs from the API
         current_pet_ids = {pet.petId for pet in coordinator.data.pets}
         current_base_ids = {base.baseId for base in coordinator.data.bases}
-        
+        current_wifi_ids = {f"wifi-{n.ssid}" for n in coordinator.data.wifiNetworks}
+
         # Check if this device is still in the API
         for identifier in device_entry.identifiers:
             if identifier[0] == DOMAIN:
@@ -131,7 +133,7 @@ async def async_remove_config_entry_device(
                     _LOGGER.info("Allowing removal of old format base device with base_ prefix: %s", device_id)
                     return True
                 # If the device is no longer in the API, allow removal
-                if device_id not in current_pet_ids and device_id not in current_base_ids:
+                if device_id not in current_pet_ids and device_id not in current_base_ids and device_id not in current_wifi_ids:
                     _LOGGER.info("Allowing removal of device not in API: %s", device_id)
                     return True
     except Exception as e:
@@ -247,8 +249,35 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         
         raise HomeAssistantError(f"Pet not found for entity {entity_id}")
     
+    async def handle_set_wifi_location(call: ServiceCall) -> None:
+        """Handle set WiFi network location service."""
+        ssid = call.data.get("ssid")
+        latitude = call.data.get("latitude")
+        longitude = call.data.get("longitude")
+
+        if not ssid:
+            raise HomeAssistantError("No ssid provided")
+        if latitude is None or longitude is None:
+            raise HomeAssistantError("Both latitude and longitude are required")
+
+        for entry_id, coordinator in hass.data[DOMAIN].items():
+            if isinstance(coordinator, TryFiDataUpdateCoordinator):
+                network = coordinator.data.getWifiNetwork(ssid)
+                if network:
+                    await hass.async_add_executor_job(
+                        coordinator.data.setWifiNetworkLocation,
+                        ssid,
+                        float(latitude),
+                        float(longitude),
+                    )
+                    await coordinator.async_request_refresh()
+                    return
+
+        raise HomeAssistantError(f"WiFi network not found: {ssid}")
+
     # Register services
     hass.services.async_register(DOMAIN, "set_led_color", handle_set_led_color)
     hass.services.async_register(DOMAIN, "turn_on_led", handle_turn_on_led)
     hass.services.async_register(DOMAIN, "turn_off_led", handle_turn_off_led)
     hass.services.async_register(DOMAIN, "set_lost_mode", handle_set_lost_mode)
+    hass.services.async_register(DOMAIN, "set_wifi_location", handle_set_wifi_location)
