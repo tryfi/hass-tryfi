@@ -113,7 +113,7 @@ async def test_stats_sensor_attributes(hass: HomeAssistant, mock_coordinator) ->
     sensor = PetStatsSensor(mock_coordinator, pet, "DISTANCE", "WEEKLY")
     assert sensor._attr_name == "Test Weekly Distance"
     assert sensor._attr_unique_id == "test_pet-weekly-distance"
-    assert hasattr(sensor, "_attr_native_unit_of_measurement")
+    assert sensor.native_unit_of_measurement == "km"
 
     # Test with invalid stat type
     sensor = PetStatsSensor(mock_coordinator, pet, "INVALID", "DAILY")

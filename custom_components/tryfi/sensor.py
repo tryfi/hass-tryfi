@@ -264,7 +264,8 @@ class TryFiSensorBase(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.entity_description = entity_description
+        if entity_description:
+            self.entity_description = entity_description
 
 
 class TryFiBatterySensor(TryFiSensorBase):
@@ -333,12 +334,7 @@ class PetStatsSensor(TryFiSensorBase):
         # Set attributes from description
         if stat_type.lower() in SENSOR_DESCRIPTIONS:
             description = SENSOR_DESCRIPTIONS[stat_type.lower()]
-            self._attr_device_class = description.device_class
-            self._attr_native_unit_of_measurement = (
-                description.native_unit_of_measurement
-            )
-            self._attr_state_class = description.state_class
-            self._attr_icon = description.icon
+            self.entity_description = description
 
     @property
     def device_info(self) -> dict[str, Any]:
