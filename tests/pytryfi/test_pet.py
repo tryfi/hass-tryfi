@@ -7,6 +7,42 @@ import responses
 import urllib.parse
 
 
+class TestParseBehaviorDuration:
+    """Tests for _parseBehaviorDuration method - GitHub Issue #30."""
+
+    def test_parse_minutes_only(self):
+        pet = FiPet("test-pet")
+        assert pet._parseBehaviorDuration("46min") == 46
+
+    def test_parse_hours_decimal(self):
+        pet = FiPet("test-pet")
+        assert pet._parseBehaviorDuration("1.5hr") == 90
+
+    def test_parse_less_than_minute(self):
+        pet = FiPet("test-pet")
+        assert pet._parseBehaviorDuration("<1min") == 0
+
+    def test_parse_decimal_minutes(self):
+        pet = FiPet("test-pet")
+        assert pet._parseBehaviorDuration("10.1") == 10
+
+    def test_parse_hours_and_minutes_with_space(self):
+        """Test parsing 'Xhr Ymin' format (e.g., '1hr 5min') - GitHub Issue #30."""
+        pet = FiPet("test-pet")
+        assert pet._parseBehaviorDuration("1hr 5min") == 65
+
+    def test_parse_hours_and_minutes_single_digits(self):
+        """Test parsing 'Xhr Ymin' with single digit values - GitHub Issue #30."""
+        pet = FiPet("test-pet")
+        assert pet._parseBehaviorDuration("1hr 1min") == 61
+
+    def test_parse_hours_and_minutes_multiple_hours(self):
+        """Test parsing longer durations with multiple hours."""
+        pet = FiPet("test-pet")
+        assert pet._parseBehaviorDuration("6hr 20min") == 380
+        assert pet._parseBehaviorDuration("7hr 28min") == 448
+
+
 @responses.activate
 def test_load_location():
     mock_graphql(

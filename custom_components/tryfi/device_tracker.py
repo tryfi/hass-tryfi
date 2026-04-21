@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL
-from .pytryfi import PyTryFi, FiPet, FiBase
+from .pytryfi import PyTryFi, FiPet, FiBase, FiWifiNetwork
 from . import TryFiDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,8 +40,26 @@ async def async_setup_entry(
         TryFiBaseTracker(coordinator, base)
         for base in tryfi.bases
     ])
-    
+
+    # Add WiFi network trackers
+    known_wifi_ssids: set[str] = set()
+    for network in tryfi.wifiNetworks:
+        known_wifi_ssids.add(network.ssid)
+        entities.append(TryFiWifiNetworkTracker(coordinator, network))
+
     async_add_entities(entities, True)
+
+    # Listen for new WiFi networks on coordinator updates
+    def _check_new_wifi_networks() -> None:
+        new_entities = []
+        for network in coordinator.data.wifiNetworks:
+            if network.ssid not in known_wifi_ssids:
+                known_wifi_ssids.add(network.ssid)
+                new_entities.append(TryFiWifiNetworkTracker(coordinator, network))
+        if new_entities:
+            async_add_entities(new_entities, True)
+
+    config_entry.async_on_unload(coordinator.async_add_listener(_check_new_wifi_networks))
 
 
 class TryFiPetTracker(CoordinatorEntity, TrackerEntity):
@@ -150,14 +168,14 @@ class TryFiBaseTracker(CoordinatorEntity, TrackerEntity):
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the base station."""
-        if self.base and hasattr(self.base, "latitude"):
+        if self.base and self.base.latitude is not None:
             return float(self.base.latitude)
         return None
-    
+
     @property
     def longitude(self) -> float | None:
         """Return longitude value of the base station."""
-        if self.base and hasattr(self.base, "longitude"):
+        if self.base and self.base.longitude is not None:
             return float(self.base.longitude)
         return None
     
@@ -178,4 +196,56 @@ class TryFiBaseTracker(CoordinatorEntity, TrackerEntity):
             "name": base.name,
             "manufacturer": MANUFACTURER,
             "model": "TryFi Base Station",
+        }
+
+
+class TryFiWifiNetworkTracker(CoordinatorEntity, TrackerEntity):
+    """Representation of a TryFi WiFi network tracker."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(self, coordinator: Any, network: FiWifiNetwork) -> None:
+        """Initialize the WiFi network tracker."""
+        super().__init__(coordinator)
+        self._ssid = network.ssid
+        self._attr_unique_id = f"wifi-{network.ssid}-tracker"
+        self._attr_icon = "mdi:wifi-marker"
+
+    @property
+    def network(self) -> FiWifiNetwork | None:
+        """Get the WiFi network object from coordinator data."""
+        return self.coordinator.data.getWifiNetwork(self._ssid)
+
+    @property
+    def latitude(self) -> float | None:
+        """Return latitude value of the WiFi network."""
+        if self.network and self.network.latitude is not None:
+            return float(self.network.latitude)
+        return None
+
+    @property
+    def longitude(self) -> float | None:
+        """Return longitude value of the WiFi network."""
+        if self.network and self.network.longitude is not None:
+            return float(self.network.longitude)
+        return None
+
+    @property
+    def source_type(self) -> SourceType:
+        """Return the source type of the device."""
+        return SourceType.GPS
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return device information."""
+        network = self.network
+        if not network:
+            return {}
+
+        return {
+            "identifiers": {(DOMAIN, f"wifi-{network.ssid}")},
+            "name": f"WiFi {network.ssid}",
+            "manufacturer": MANUFACTURER,
+            "model": "WiFi Network",
         }
