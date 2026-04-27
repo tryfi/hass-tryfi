@@ -118,7 +118,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "weight": SensorEntityDescription(
         key="weight",
         name="Weight",
-        native_unit_of_measurement=UnitOfMass.POUNDS,
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         device_class=SensorDeviceClass.WEIGHT,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:weight",
