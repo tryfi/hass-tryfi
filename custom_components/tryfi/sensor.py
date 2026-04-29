@@ -86,7 +86,6 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "activity_type": SensorEntityDescription(
         key="activity_type",
         name="Activity Type",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ENUM,
         icon="mdi:run",
     ),

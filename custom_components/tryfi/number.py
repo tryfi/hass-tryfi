@@ -5,7 +5,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberMode,
+    NumberDeviceClass,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfMass
 from homeassistant.core import HomeAssistant
@@ -15,6 +20,21 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, MANUFACTURER, MODEL
 
 _LOGGER = logging.getLogger(__name__)
+
+
+SENSOR_DESCRIPTIONS: dict[str, NumberEntityDescription] = {
+    "weight": NumberEntityDescription(
+        device_class=NumberDeviceClass.WEIGHT,
+        icon="mdi:weight",
+        key="weight-setting",
+        min_value=0,
+        mode=NumberMode.BOX,
+        name="Weight",
+        native_max_value=200,
+        native_step=0.1,
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+    )
+}
 
 
 async def async_setup_entry(
@@ -33,12 +53,8 @@ async def async_setup_entry(
 class TryFiPetWeightNumber(CoordinatorEntity, NumberEntity):
     """Representation of a TryFi pet weight number entity."""
 
+    entity_description = SENSOR_DESCRIPTIONS["weight"]
     _attr_has_entity_name = False
-    _attr_mode = NumberMode.BOX
-    _attr_native_min_value = 0
-    _attr_native_max_value = 200
-    _attr_native_step = 0.1
-    _attr_native_unit_of_measurement = UnitOfMass.POUNDS
 
     def __init__(self, coordinator: Any, pet: Any) -> None:
         """Initialize the number entity."""
@@ -46,7 +62,6 @@ class TryFiPetWeightNumber(CoordinatorEntity, NumberEntity):
         self._pet_id = pet.petId
         self._attr_unique_id = f"{pet.petId}-weight-setting"
         self._attr_name = f"{pet.name} Weight Setting"
-        self._attr_icon = "mdi:weight"
 
     @property
     def pet(self) -> Any:
