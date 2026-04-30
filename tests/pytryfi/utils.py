@@ -48,7 +48,7 @@ def mock_household_with_pets(pets: list[dict] = [], bases: list[dict] = []):
                 "firstName": "John",
                 "lastName": "Smith",
                 "phoneNumber": "phone",
-                "userHouseholds": [{"household": {"pets": pets, "bases": bases}}]
+                "userHouseholds": [{"household": {"pets": pets, "bases": bases}}],
             }
         },
         status=200,

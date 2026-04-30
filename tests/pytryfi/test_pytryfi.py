@@ -31,11 +31,7 @@ def test_pet_with_no_collar():
 @responses.activate
 def test_generic_init():
     mock_login_requests()
-    mock_household_with_pets(
-        pets=[
-            GRAPHQL_PARTIAL_PET
-        ]
-    )
+    mock_household_with_pets(pets=[GRAPHQL_PARTIAL_PET])
 
     tryfi = PyTryFi()
 

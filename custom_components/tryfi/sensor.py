@@ -207,31 +207,51 @@ async def async_setup_entry(
 
             # Add behavior sensors for Series 3+ collars
             if pet.device.supportsAdvancedBehaviorStats():
-                _LOGGER.debug("Adding behavior sensors for Series 3+ collar: %s", pet.name)
+                _LOGGER.debug(
+                    "Adding behavior sensors for Series 3+ collar: %s", pet.name
+                )
                 for period in ["daily", "weekly", "monthly"]:
-                    for behavior in ["barking", "licking", "scratching", "eating", "drinking"]:
-                        entities.append(PetBehaviorSensor(coordinator, pet, behavior, "count", period))
-                        entities.append(PetBehaviorSensor(coordinator, pet, behavior, "duration", period))
-    
+                    for behavior in [
+                        "barking",
+                        "licking",
+                        "scratching",
+                        "eating",
+                        "drinking",
+                    ]:
+                        entities.append(
+                            PetBehaviorSensor(
+                                coordinator, pet, behavior, "count", period
+                            )
+                        )
+                        entities.append(
+                            PetBehaviorSensor(
+                                coordinator, pet, behavior, "duration", period
+                            )
+                        )
+
     # Add base sensors
     for base in tryfi.bases:
         _LOGGER.debug("Adding sensors for base: %s", base.name)
-        entities.extend([
-            TryFiBaseSensor(coordinator, base),
-            TryFiBaseDiagnosticSensor(coordinator, base, "WiFi SSID"),
-            TryFiBaseDiagnosticSensor(coordinator, base, "Base ID"),
-            TryFiBaseDiagnosticSensor(coordinator, base, "Connection Quality"),
-        ])
+        entities.extend(
+            [
+                TryFiBaseSensor(coordinator, base),
+                TryFiBaseDiagnosticSensor(coordinator, base, "WiFi SSID"),
+                TryFiBaseDiagnosticSensor(coordinator, base, "Base ID"),
+                TryFiBaseDiagnosticSensor(coordinator, base, "Connection Quality"),
+            ]
+        )
 
     # Add WiFi network sensors
     known_wifi_ssids: set[str] = set()
     for network in tryfi.wifiNetworks:
         _LOGGER.debug("Adding sensors for WiFi network: %s", network.ssid)
         known_wifi_ssids.add(network.ssid)
-        entities.extend([
-            TryFiWifiNetworkSensor(coordinator, network, "Status"),
-            TryFiWifiNetworkSensor(coordinator, network, "Address"),
-        ])
+        entities.extend(
+            [
+                TryFiWifiNetworkSensor(coordinator, network, "Status"),
+                TryFiWifiNetworkSensor(coordinator, network, "Address"),
+            ]
+        )
 
     async_add_entities(entities)
 
@@ -241,14 +261,18 @@ async def async_setup_entry(
         for network in coordinator.data.wifiNetworks:
             if network.ssid not in known_wifi_ssids:
                 known_wifi_ssids.add(network.ssid)
-                new_entities.extend([
-                    TryFiWifiNetworkSensor(coordinator, network, "Status"),
-                    TryFiWifiNetworkSensor(coordinator, network, "Address"),
-                ])
+                new_entities.extend(
+                    [
+                        TryFiWifiNetworkSensor(coordinator, network, "Status"),
+                        TryFiWifiNetworkSensor(coordinator, network, "Address"),
+                    ]
+                )
         if new_entities:
             async_add_entities(new_entities)
 
-    config_entry.async_on_unload(coordinator.async_add_listener(_check_new_wifi_networks))
+    config_entry.async_on_unload(
+        coordinator.async_add_listener(_check_new_wifi_networks)
+    )
 
 
 class TryFiSensorBase(CoordinatorEntity, SensorEntity):
@@ -719,14 +743,18 @@ class TryFiWifiNetworkSensor(TryFiSensorBase):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: Any, network: FiWifiNetwork, sensor_type: str) -> None:
+    def __init__(
+        self, coordinator: Any, network: FiWifiNetwork, sensor_type: str
+    ) -> None:
         """Initialize the WiFi network sensor."""
         super().__init__(coordinator)
         self._ssid = network.ssid
         self._sensor_type = sensor_type
         self._attr_unique_id = f"wifi-{network.ssid}-{sensor_type.lower()}"
         self._attr_name = sensor_type
-        self._attr_icon = "mdi:wifi-settings" if sensor_type == "Status" else "mdi:map-marker-outline"
+        self._attr_icon = (
+            "mdi:wifi-settings" if sensor_type == "Status" else "mdi:map-marker-outline"
+        )
 
     @property
     def network(self) -> FiWifiNetwork | None:
@@ -761,9 +789,7 @@ class TryFiWifiNetworkSensor(TryFiSensorBase):
         return None
 
 
-def icon_for_battery_level(
-    battery_level: int | None, charging: bool = False
-) -> str:
+def icon_for_battery_level(battery_level: int | None, charging: bool = False) -> str:
     """Return battery icon based on level and charging status."""
     if battery_level is None:
         return "mdi:battery-unknown"

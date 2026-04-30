@@ -14,13 +14,13 @@ class FiWifiNetwork(object):
         self._longitude = None
 
     def setDetailsJSON(self, networkJSON):
-        self._state = networkJSON.get('state')
-        self._addressLabel = networkJSON.get('addressLabel')
-        self._isHidden = networkJSON.get('isHidden', False)
-        position = networkJSON.get('position')
+        self._state = networkJSON.get("state")
+        self._addressLabel = networkJSON.get("addressLabel")
+        self._isHidden = networkJSON.get("isHidden", False)
+        position = networkJSON.get("position")
         if position:
-            self._latitude = position.get('latitude')
-            self._longitude = position.get('longitude')
+            self._latitude = position.get("latitude")
+            self._longitude = position.get("longitude")
         else:
             self._latitude = None
             self._longitude = None

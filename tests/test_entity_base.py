@@ -93,7 +93,7 @@ async def test_sensor_icon_selection(hass: HomeAssistant, mock_coordinator) -> N
         "activity_type": "mdi:run",
         "current_place_name": "mdi:map-marker",
         "current_place_address": "mdi:home-map-marker",
-        "connected_to": "mdi:wifi"
+        "connected_to": "mdi:wifi",
     }
 
     for sensor_type, expected_icon in sensor_types_icons.items():

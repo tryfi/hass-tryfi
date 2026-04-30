@@ -1,4 +1,5 @@
 """Support for TryFi binary sensors."""
+
 from __future__ import annotations
 
 import logging
@@ -31,27 +32,31 @@ async def async_setup_entry(
     tryfi: PyTryFi = coordinator.data
 
     entities = []
-    
-    _LOGGER.info("Setting up TryFi binary sensors - found %d pets and %d bases", len(tryfi.pets), len(tryfi.bases))
-    
+
+    _LOGGER.info(
+        "Setting up TryFi binary sensors - found %d pets and %d bases",
+        len(tryfi.pets),
+        len(tryfi.bases),
+    )
+
     # Add battery charging sensors for pets
-    entities.extend([
-        TryFiBatteryChargingBinarySensor(coordinator, pet)
-        for pet in tryfi.pets
-    ])
-    
+    entities.extend(
+        [TryFiBatteryChargingBinarySensor(coordinator, pet) for pet in tryfi.pets]
+    )
+
     # Add health sensors for base stations
-    entities.extend([
-        TryFiBaseHealthBinarySensor(coordinator, base)
-        for base in tryfi.bases
-    ])
-    
+    entities.extend(
+        [TryFiBaseHealthBinarySensor(coordinator, base) for base in tryfi.bases]
+    )
+
     # Add firmware update sensors for pets with devices
-    entities.extend([
-        TryFiFirmwareUpdateBinarySensor(coordinator, pet)
-        for pet in tryfi.pets
-        if hasattr(pet, "device") and pet.device
-    ])
+    entities.extend(
+        [
+            TryFiFirmwareUpdateBinarySensor(coordinator, pet)
+            for pet in tryfi.pets
+            if hasattr(pet, "device") and pet.device
+        ]
+    )
 
     # Add WiFi network hidden sensors
     known_wifi_ssids: set[str] = set()
@@ -67,117 +72,121 @@ async def async_setup_entry(
         for network in coordinator.data.wifiNetworks:
             if network.ssid not in known_wifi_ssids:
                 known_wifi_ssids.add(network.ssid)
-                new_entities.append(TryFiWifiNetworkHiddenBinarySensor(coordinator, network))
+                new_entities.append(
+                    TryFiWifiNetworkHiddenBinarySensor(coordinator, network)
+                )
         if new_entities:
             async_add_entities(new_entities)
 
-    config_entry.async_on_unload(coordinator.async_add_listener(_check_new_wifi_networks))
+    config_entry.async_on_unload(
+        coordinator.async_add_listener(_check_new_wifi_networks)
+    )
 
 
 class TryFiBatteryChargingBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of a TryFi battery charging binary sensor."""
-    
+
     _attr_has_entity_name = False
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
-    
+
     def __init__(self, coordinator: Any, pet: Any) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator)
         self._pet_id = pet.petId
         self._attr_unique_id = f"{pet.petId}-battery-charging"
         self._attr_name = f"{pet.name} Collar Battery Charging"
-    
+
     @property
     def pet(self) -> Any:
         """Get the pet object from coordinator data."""
         return self.coordinator.data.getPet(self._pet_id)
-    
+
     @property
     def is_on(self) -> bool | None:
         """Return true if the battery is charging."""
         if self.pet and hasattr(self.pet, "device") and self.pet.device:
             return bool(getattr(self.pet.device, "isCharging", False))
         return None
-    
+
     @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
         return "mdi:power-plug" if self.is_on else "mdi:power-plug-off"
-    
+
     @property
     def device_info(self) -> dict[str, Any]:
         """Return device information."""
         pet = self.pet
         if not pet:
             return {}
-        
+
         device_info = {
             "identifiers": {(DOMAIN, pet.petId)},
             "name": pet.name,
             "manufacturer": MANUFACTURER,
             "model": MODEL,
         }
-        
+
         # Add breed if available
         if hasattr(pet, "breed") and pet.breed:
             device_info["model"] = f"{MODEL} - {pet.breed}"
-        
+
         # Add firmware version if available
         if hasattr(pet, "device") and pet.device:
             if hasattr(pet.device, "buildId"):
                 device_info["sw_version"] = pet.device.buildId
-        
+
         return device_info
 
 
 class TryFiBaseHealthBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of a TryFi base station health binary sensor."""
-    
+
     _attr_has_entity_name = False
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-    
+
     def __init__(self, coordinator: Any, base: Any) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator)
         self._base_id = base.baseId
         self._attr_unique_id = f"{base.baseId}-health"
         self._attr_name = f"{base.name} Connection Health"
-    
+
     @property
     def base(self) -> Any:
         """Get the base object from coordinator data."""
         return self.coordinator.data.getBase(self._base_id)
-    
+
     @property
     def is_on(self) -> bool | None:
         """Return true if the base station connection is healthy."""
         base = self.base
         if not base:
             return None
-            
+
         # Connection is healthy if online and not explicitly unhealthy
         if not base.online:
             return False
-            
+
         if hasattr(base, "onlineQuality"):
             return base.onlineQuality != "UNHEALTHY"
-            
+
         return True
-    
+
     @property
     def icon(self) -> str:
         """Return the icon to use in the frontend."""
         if self.is_on:
             return "mdi:wifi-check"
         return "mdi:wifi-alert"
-    
+
     @property
     def device_info(self) -> dict[str, Any]:
         """Return device information."""
         base = self.base
         if not base:
             return {}
-        
+
         return {
             "identifiers": {(DOMAIN, base.baseId)},
             "name": base.name,

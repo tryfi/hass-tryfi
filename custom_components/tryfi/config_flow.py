@@ -1,4 +1,5 @@
 """Config flow for TryFi integration."""
+
 from __future__ import annotations
 
 import logging
@@ -106,17 +107,25 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             # If username/password changed, validate them
-            username = user_input.get(CONF_USERNAME, self.config_entry.data.get(CONF_USERNAME))
-            password = user_input.get(CONF_PASSWORD, self.config_entry.data.get(CONF_PASSWORD))
+            username = user_input.get(
+                CONF_USERNAME, self.config_entry.data.get(CONF_USERNAME)
+            )
+            password = user_input.get(
+                CONF_PASSWORD, self.config_entry.data.get(CONF_PASSWORD)
+            )
 
             # Only validate if credentials changed
-            if (username != self.config_entry.data.get(CONF_USERNAME) or
-                password != self.config_entry.data.get(CONF_PASSWORD)):
+            if username != self.config_entry.data.get(
+                CONF_USERNAME
+            ) or password != self.config_entry.data.get(CONF_PASSWORD):
                 try:
-                    await validate_input(self.hass, {
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                    })
+                    await validate_input(
+                        self.hass,
+                        {
+                            CONF_USERNAME: username,
+                            CONF_PASSWORD: password,
+                        },
+                    )
                 except CannotConnect:
                     errors["base"] = "cannot_connect"
                 except Exception:  # pylint: disable=broad-except
@@ -146,7 +155,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): str,
                 vol.Optional(
                     CONF_POLLING_RATE,
-                    default=self.config_entry.data.get(CONF_POLLING_RATE, DEFAULT_POLLING_RATE),
+                    default=self.config_entry.data.get(
+                        CONF_POLLING_RATE, DEFAULT_POLLING_RATE
+                    ),
                 ): vol.All(vol.Coerce(int), vol.Range(min=1, max=3600)),
             }
         )

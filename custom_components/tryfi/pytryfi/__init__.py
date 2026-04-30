@@ -8,17 +8,19 @@ from .fiPet import FiPet
 from .fiBase import FiBase
 from .fiDevice import FiDevice
 from .fiWifiNetwork import FiWifiNetwork
-from .common.query import API_HOST_URL_BASE, API_LOGIN, getHouseHolds, getBaseList, getWifiNetworks, updateWifiNetwork
+from .common.query import (
+    API_HOST_URL_BASE,
+    API_LOGIN,
+    getHouseHolds,
+    getBaseList,
+    getWifiNetworks,
+    updateWifiNetwork,
+)
 
-__all__ = [
-    'FiDevice',
-    'FiPet',
-    'FiUser',
-    'FiWifiNetwork',
-    'PyTryFi'
-]
+__all__ = ["FiDevice", "FiPet", "FiUser", "FiWifiNetwork", "PyTryFi"]
 
 LOGGER = logging.getLogger(__name__)
+
 
 class PyTryFi(object):
     """base object for TryFi"""
@@ -38,30 +40,32 @@ class PyTryFi(object):
         self._bases = []
         self._householdIds = []
         self._wifiNetworks = []
-        for house in userHousehold['userHouseholds']:
-            householdId = house['household'].get('id')
+        for house in userHousehold["userHouseholds"]:
+            householdId = house["household"].get("id")
             if householdId:
                 self._householdIds.append(householdId)
                 LOGGER.debug(f"Found household ID: {householdId}")
 
-            for pet in house['household']['pets']:
+            for pet in house["household"]["pets"]:
                 # If pet doesn't have a collar then ignore it. What good is a pet without a collar!
-                if pet['device'] is None:
-                    LOGGER.warning(f"Pet {pet['name']} - {pet['id']} has no collar. Ignoring Pet!")
+                if pet["device"] is None:
+                    LOGGER.warning(
+                        f"Pet {pet['name']} - {pet['id']} has no collar. Ignoring Pet!"
+                    )
                     continue
 
-                p = FiPet(pet['id'])
-                p.setCurrentLocation(pet['ongoingActivity'])
+                p = FiPet(pet["id"])
+                p.setCurrentLocation(pet["ongoingActivity"])
                 p.setPetDetailsJSON(pet)
                 LOGGER.debug(f"Adding Pet: {p._name} with Device: {p._device.deviceId}")
                 self._pets.append(p)
 
-            for base in house['household']['bases']:
+            for base in house["household"]["bases"]:
                 if base is None:
                     LOGGER.warning("Skipping null base entry in API response")
                     continue
                 try:
-                    b = FiBase(base['baseId'])
+                    b = FiBase(base["baseId"])
                     b.setBaseDetailsJSON(base)
                     LOGGER.debug(f"Adding Base: {b._name} Online: {b._online}")
                     self._bases.append(b)
@@ -81,7 +85,7 @@ class PyTryFi(object):
             petString = petString + f"{p}"
         return f"TryFi Instance - {instString}\n Pets in Home:\n {petString}\n Bases In Home:\n {baseString}"
 
-    #refresh pet details for all pets
+    # refresh pet details for all pets
     def updatePets(self):
         for pet in self._pets:
             pet.updateAllDetails(self._session)
@@ -94,17 +98,17 @@ class PyTryFi(object):
         LOGGER.error(f"Cannot find Pet: {petId}")
         return None
 
-    #refresh base details
+    # refresh base details
     def updateBases(self):
         updatedBases = []
         baseListJSON = getBaseList(self._session)
         for house in baseListJSON:
-            for base in house['household']['bases']:
+            for base in house["household"]["bases"]:
                 if base is None:
                     LOGGER.warning("Skipping null base entry in API response")
                     continue
                 try:
-                    b = FiBase(base['baseId'])
+                    b = FiBase(base["baseId"])
                     b.setBaseDetailsJSON(base)
                     updatedBases.append(b)
                 except (KeyError, TypeError, ValueError) as e:
@@ -124,15 +128,20 @@ class PyTryFi(object):
         for householdId in self._householdIds:
             try:
                 wifiData = getWifiNetworks(self._session, householdId)
-                for network in wifiData.get('networks', []):
-                    ssid = network.get('ssid')
+                for network in wifiData.get("networks", []):
+                    ssid = network.get("ssid")
                     if ssid:
                         w = FiWifiNetwork(ssid, householdId)
                         w.setDetailsJSON(network)
                         LOGGER.debug(f"Adding WiFi Network: {w.ssid} State: {w.state}")
                         updatedNetworks.append(w)
             except Exception as e:
-                LOGGER.warning("failed to fetch WiFi networks for household %s: %s", householdId, e, exc_info=True)
+                LOGGER.warning(
+                    "failed to fetch WiFi networks for household %s: %s",
+                    householdId,
+                    e,
+                    exc_info=True,
+                )
         self._wifiNetworks = updatedNetworks
 
     def getWifiNetwork(self, ssid):
@@ -146,7 +155,9 @@ class PyTryFi(object):
         network = self.getWifiNetwork(ssid)
         if not network:
             raise Exception(f"WiFi network not found: {ssid}")
-        return updateWifiNetwork(self._session, network.householdId, ssid, latitude, longitude)
+        return updateWifiNetwork(
+            self._session, network.householdId, ssid, latitude, longitude
+        )
 
     def update(self):
         try:
@@ -165,27 +176,35 @@ class PyTryFi(object):
     @property
     def currentUser(self):
         return self._currentUser
+
     @property
     def pets(self) -> list[FiPet]:
         return self._pets
+
     @property
     def bases(self):
         return self._bases
+
     @property
     def wifiNetworks(self) -> list[FiWifiNetwork]:
         return self._wifiNetworks
+
     @property
     def householdIds(self):
         return self._householdIds
+
     @property
     def username(self):
         return self._username
+
     @property
     def session(self):
         return self._session
+
     @property
     def cookies(self):
         return self._cookies
+
     @property
     def userID(self):
         return self._userID
@@ -194,26 +213,28 @@ class PyTryFi(object):
     def login(self, username: str, password: str):
         url = API_HOST_URL_BASE + API_LOGIN
         params = {
-            'email': username,
-            'password': password,
+            "email": username,
+            "password": password,
         }
-        
+
         LOGGER.debug("Logging into TryFi")
         response = self._session.post(url, data=params)
         response.raise_for_status()
-        #validate if the response contains error or not
+        # validate if the response contains error or not
         json = response.json()
-        #if error set or response is non-200
-        if 'error' in json or not response.ok:
-            errorMsg = json['error'].get('message', None)
-            LOGGER.error(f"Cannot login, response: ({response.status_code}): {errorMsg} ")
+        # if error set or response is non-200
+        if "error" in json or not response.ok:
+            errorMsg = json["error"].get("message", None)
+            LOGGER.error(
+                f"Cannot login, response: ({response.status_code}): {errorMsg} "
+            )
             raise Exception("TryFiLoginError")
-        
-        #storing cookies but don't need them. Handled by session mgmt
+
+        # storing cookies but don't need them. Handled by session mgmt
         self._cookies = response.cookies
-        #store unique userId from login for future use
-        self._userId = response.json()['userId']
-        self._sessionId = response.json()['sessionId']
+        # store unique userId from login for future use
+        self._userId = response.json()["userId"]
+        self._sessionId = response.json()["sessionId"]
         LOGGER.debug(f"Successfully logged in. UserId: {self._userId}")
 
-        self.session.headers['content-type'] = 'application/json'
+        self.session.headers["content-type"] = "application/json"
