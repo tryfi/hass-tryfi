@@ -13,7 +13,6 @@ class FiPet(object):
     def __init__(self, petId):
         self._petId = petId
         self._name = None
-        self._homeCityState = None
         self._yearOfBirth = None
         self._monthOfBirth = None
         self._gender = None
@@ -63,7 +62,6 @@ class FiPet(object):
 
     def setPetDetailsJSON(self, petJSON: dict):
         self._name = petJSON.get("name")
-        self._homeCityState = petJSON.get("homeCityState")
         self._yearOfBirth = petJSON["yearOfBirth"]
         self._monthOfBirth = int(petJSON["monthOfBirth"])
         self._dayOfBirth = int(petJSON["dayOfBirth"])
@@ -80,7 +78,7 @@ class FiPet(object):
         self._lastUpdated = datetime.datetime.now()
 
     def __str__(self):
-        return f"Last Updated - {self.lastUpdated} - Pet ID: {self.petId} Name: {self.name} Is Lost: {self.isLost} From: {self.homeCityState} ActivityType: {self.activityType} Located: {self.currLatitude},{self.currLongitude} Last Updated: {self.currStartTime}\n \
+        return f"Last Updated - {self.lastUpdated} - Pet ID: {self.petId} Name: {self.name} Is Lost: {self.isLost} ActivityType: {self.activityType} Located: {self.currLatitude},{self.currLongitude} Last Updated: {self.currStartTime}\n \
             using Device/Collar: {self._device}"
 
     # set the Pet's current location details
@@ -393,10 +391,6 @@ class FiPet(object):
     @property
     def name(self):
         return self._name
-
-    @property
-    def homeCityState(self):
-        return self._homeCityState
 
     @property
     def yearOfBirth(self):
