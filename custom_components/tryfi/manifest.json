@@ -1,7 +1,7 @@
 {
     "domain": "tryfi",
     "name": "TryFi",
-    "version": "0.1.2",
+    "version": "0.1.4",
     "config_flow": true,
     "documentation": "https://github.com/tryfi/hass-tryfi",
     "issue_tracker": "https://github.com/tryfi/hass-tryfi/issues",
