@@ -50,7 +50,6 @@ async def test_tracker_entity_properties(
     assert tracker.latitude == 40.7128
     assert tracker.longitude == -74.0060
     assert tracker.source_type == SourceType.GPS
-    assert tracker.battery_level == 85
 
     device_info = tracker.device_info
     assert device_info["identifiers"] == {(DOMAIN, "test_pet_123")}

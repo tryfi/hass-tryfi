@@ -111,13 +111,6 @@ class TryFiPetTracker(CoordinatorEntity, TrackerEntity):
         return SourceType.GPS
 
     @property
-    def battery_level(self) -> int | None:
-        """Return the battery level of the device."""
-        if self.pet and hasattr(self.pet, "device") and self.pet.device:
-            return getattr(self.pet.device, "batteryPercent", None)
-        return None
-
-    @property
     def device_info(self) -> dict[str, Any]:
         """Return device information."""
         pet = self.pet
