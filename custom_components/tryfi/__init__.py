@@ -63,6 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         tryfi,
         polling_interval,
     )
+    coordinator.config_entry = entry
 
     # Fetch initial data
     await coordinator.async_config_entry_first_refresh()
