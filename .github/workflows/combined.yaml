@@ -18,6 +18,8 @@ jobs:
 
       - name: Syntax check source files
         uses: astral-sh/ruff-action@v3
+        with:
+          version: '0.13.2'
 
       - uses: hacs/action@22.5.0
         with:
