@@ -17,7 +17,7 @@ from custom_components.tryfi.binary_sensor import (
     TryFiWifiNetworkHiddenBinarySensor,
     async_setup_entry,
 )
-from custom_components.tryfi.const import DOMAIN, MANUFACTURER, MODEL
+from custom_components.tryfi.const import DOMAIN, MANUFACTURER
 
 
 @pytest.fixture

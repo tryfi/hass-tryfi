@@ -6,12 +6,12 @@ from unittest.mock import Mock
 
 import pytest
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfTime
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 
-from custom_components.tryfi.const import DOMAIN, MANUFACTURER, MODEL
+from custom_components.tryfi.const import DOMAIN
 from custom_components.tryfi.sensor import (
     PetBehaviorSensor,
     PetGenericSensor,

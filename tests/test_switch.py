@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from custom_components.tryfi.const import DOMAIN, MANUFACTURER, MODEL
+from custom_components.tryfi.const import DOMAIN
 from custom_components.tryfi.switch import TryFiLostModeSwitch, async_setup_entry
 
 
