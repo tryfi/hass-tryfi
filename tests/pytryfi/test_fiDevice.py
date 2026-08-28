@@ -126,3 +126,139 @@ def test_connected_to_unknown_type():
     })
     assert result is None
     assert dev.connectionSignalStrength is None
+
+
+def test_device_details_json_and_properties():
+    """Test setDeviceDetailsJSON parsing and property accessors."""
+    dev = FiDevice("device-123")
+    assert dev.deviceId == "device-123"
+
+    device_json = {
+        "moduleId": "FC3001",
+        "info": {
+            "buildId": "1.2.3",
+            "batteryPercent": "85",
+            "isCharging": True,
+            "temperature": 2500,  # float(2500)/100 = 25.0
+        },
+        "operationParams": {
+            "ledOffAt": "2099-01-01T00:00:00.000Z",
+            "ledEnabled": True,
+            "mode": "LOST_DOG",
+        },
+        "ledColor": {
+            "name": "Red",
+            "hexCode": "#FF0000",
+        },
+        "lastConnectionState": {
+            "__typename": "ConnectedToCellular",
+            "date": "2026-06-26T00:00:00.000Z",
+            "signalStrengthPercent": 90,
+        },
+        "nextLocationUpdateExpectedBy": "2026-06-26T01:00:00.000Z",
+        "availableLedColors": [
+            {"ledColorCode": "1", "hexCode": "#FF0000", "name": "Red"},
+            {"ledColorCode": "2", "hexCode": "#00FF00", "name": "Green"},
+        ],
+    }
+
+    dev.setDeviceDetailsJSON(device_json)
+
+    assert dev.moduleId == "FC3001"
+    assert dev.buildId == "1.2.3"
+    assert dev.batteryPercent == 85
+    assert dev.isCharging is True
+    assert dev.temperature == 25.0
+    assert dev.mode == "LOST_DOG"
+    assert dev.isLost is True
+    assert dev.ledOn is True
+    assert dev.ledColor == "Red"
+    assert dev.ledColorHex == "#FF0000"
+    assert dev.connectedTo == "Cellular"
+    assert dev.connectionStateType == "ConnectedToCellular"
+    assert dev.connectionSignalStrength == 90
+    assert dev._nextLocationUpdatedExpectedBy is not None
+    assert dev.lastUpdated is not None
+    assert len(dev.availableLedColors) == 2
+    assert dev.availableLedColors[0].name == "Red"
+
+    # Test __str__
+    str_repr = str(dev)
+    assert "Device ID: device-123" in str_repr
+    assert "Device Mode: LOST_DOG" in str_repr
+    assert "Battery Left: 85%" in str_repr
+
+
+def test_device_details_non_numeric_battery_and_v2_charging():
+    """Test fallback when batteryPercent is invalid and isCharging is missing."""
+    dev = FiDevice("device-456")
+    device_json = {
+        "moduleId": "FC1001",
+        "info": {
+            "buildId": "1.0.0",
+            "batteryPercent": "invalid",
+        },
+        "operationParams": {
+            "ledOffAt": None,
+            "ledEnabled": False,
+            "mode": "NORMAL",
+        },
+        "ledColor": {
+            "name": "Blue",
+            "hexCode": "#0000FF",
+        },
+        "lastConnectionState": {
+            "__typename": "ConnectedToUser",
+            "date": "2026-06-26T00:00:00.000Z",
+            "user": {"firstName": "Jane", "lastName": "Doe"},
+        },
+        "nextLocationUpdateExpectedBy": "2026-06-26T01:00:00.000Z",
+    }
+
+    dev.setDeviceDetailsJSON(device_json)
+    assert dev.batteryPercent is None
+    assert dev.isCharging is None
+    assert dev.temperature is None
+    assert dev.availableLedColors is None
+    assert dev.isLost is False
+    assert dev.ledOn is False
+
+
+def test_supports_advanced_behavior_stats():
+    """Test module ID checks for advanced behavior stats support."""
+    dev = FiDevice("dev1")
+
+    # None moduleId
+    assert dev.supportsAdvancedBehaviorStats() is False
+
+    # FC1, FC2, M1 series -> False
+    dev._moduleId = "FC123"
+    assert dev.supportsAdvancedBehaviorStats() is False
+    dev._moduleId = "FC245"
+    assert dev.supportsAdvancedBehaviorStats() is False
+    dev._moduleId = "M1001"
+    assert dev.supportsAdvancedBehaviorStats() is False
+
+    # FC3, S3, etc -> True
+    dev._moduleId = "FC3001"
+    assert dev.supportsAdvancedBehaviorStats() is True
+
+
+def test_get_accurate_led_status_and_set_led_off_at_date():
+    """Test LED status calculations based on current time vs ledOffAt."""
+    dev = FiDevice("dev2")
+
+    # None ledOffAt
+    now_utc = dev.setLedOffAtDate(None)
+    assert now_utc is not None
+
+    # LED status False input
+    assert dev.getAccurateLEDStatus(False) is False
+
+    # LED status True with past ledOffAt -> returns False
+    dev._ledOffAt = dev.setLedOffAtDate("2000-01-01T00:00:00.000Z")
+    assert dev.getAccurateLEDStatus(True) is False
+
+    # LED status True with future ledOffAt -> returns True
+    dev._ledOffAt = dev.setLedOffAtDate("2099-01-01T00:00:00.000Z")
+    assert dev.getAccurateLEDStatus(True) is True
