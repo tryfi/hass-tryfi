@@ -164,6 +164,7 @@ class FiPet(object):
 
     # Update the Stats of the pet
     def updateRestStats(self, sessionId: requests.Session):
+        pRestStatsJSON = None
         try:
             pRestStatsJSON = query.getCurrentPetRestStats(sessionId, self.petId)
             self._dailySleep, self._dailyNap = self._extractSleep(

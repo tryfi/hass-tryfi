@@ -207,7 +207,7 @@ class PyTryFi(object):
 
     @property
     def userID(self):
-        return self._userID
+        return self._userId
 
     # login to the api and get a session
     def login(self, username: str, password: str):
