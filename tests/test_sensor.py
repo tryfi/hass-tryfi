@@ -6,13 +6,14 @@ from unittest.mock import Mock
 
 import pytest
 
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 
 from custom_components.tryfi.const import DOMAIN
 from custom_components.tryfi.sensor import (
+    SENSOR_DESCRIPTIONS,
     PetBehaviorSensor,
     PetGenericSensor,
     PetSleepQualitySensor,
@@ -60,7 +61,7 @@ def mock_pet_with_stats():
     pet.weeklyTotalDistance = 17500
     pet.monthlySleep = 864000
     pet.dailySleep = 48000  # 800 minutes
-    pet.dailyNap = 6000     # 100 minutes
+    pet.dailyNap = 6000  # 100 minutes
     pet.dailyBarkingCount = 5
     return pet
 
@@ -103,9 +104,7 @@ def mock_coordinator_sensor(mock_pet_with_stats, mock_base, mock_wifi_network):
     return coordinator
 
 
-async def test_async_setup_entry(
-    hass: HomeAssistant, mock_coordinator_sensor
-) -> None:
+async def test_async_setup_entry(hass: HomeAssistant, mock_coordinator_sensor) -> None:
     """Test setup entry for TryFi sensors."""
     config_entry = Mock()
     config_entry.entry_id = "test_entry"
@@ -471,3 +470,62 @@ def test_icon_for_battery_level_coverage():
     assert icon_for_battery_level(40) == "mdi:battery-40"
     assert icon_for_battery_level(20) == "mdi:battery-20"
     assert icon_for_battery_level(5) == "mdi:battery-alert"
+
+
+def test_period_counters_use_total_state_class() -> None:
+    """Daily/weekly/monthly counters must be TOTAL, not TOTAL_INCREASING.
+
+    These values reset to zero at the start of their period (local midnight for
+    the daily pair), so TOTAL_INCREASING is wrong: Home Assistant treats each
+    reset as a counter reset and records an anomaly in long-term statistics.
+    TOTAL is the state class for a running total that may reset.
+
+    See https://github.com/tryfi/hass-tryfi/issues/13
+    """
+    for key in ("steps", "distance"):
+        description = SENSOR_DESCRIPTIONS[key]
+        assert description.state_class is SensorStateClass.TOTAL, (
+            f"{key!r} resets every period, so it must be TOTAL, "
+            f"not {description.state_class}"
+        )
+        assert description.state_class is not SensorStateClass.TOTAL_INCREASING
+
+
+def test_period_counters_report_a_last_reset(
+    mock_coordinator_sensor, mock_pet_with_stats
+):
+    """Period counters publish last_reset, or every reset is summed as usage.
+
+    The recorder starts a new statistics cycle for a TOTAL sensor only when
+    last_reset changes. Without it the first zero point is kept forever and
+    each period's counters are summed as though they were consumption.
+    """
+    sensor = PetStatsSensor(
+        mock_coordinator_sensor, mock_pet_with_stats, "STEPS", "DAILY"
+    )
+    reset = sensor.last_reset
+    assert reset is not None
+    assert reset.hour == 0 and reset.minute == 0 and reset.second == 0
+    # Home Assistant publishes it as the ISO string the recorder parses.
+    assert sensor.state_attributes == {"last_reset": reset.isoformat()}
+
+    weekly = PetStatsSensor(
+        mock_coordinator_sensor, mock_pet_with_stats, "STEPS", "WEEKLY"
+    )
+    assert weekly.last_reset.weekday() == 0
+
+    monthly = PetStatsSensor(
+        mock_coordinator_sensor, mock_pet_with_stats, "STEPS", "MONTHLY"
+    )
+    assert monthly.last_reset.day == 1
+
+
+def test_non_period_counters_do_not_report_a_last_reset(
+    mock_coordinator_sensor, mock_pet_with_stats
+):
+    """Sleep and nap are durations, not period-resetting counters."""
+    sensor = PetStatsSensor(
+        mock_coordinator_sensor, mock_pet_with_stats, "SLEEP", "DAILY"
+    )
+    assert sensor.last_reset is None
+    assert sensor.state_attributes is None

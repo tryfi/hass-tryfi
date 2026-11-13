@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timedelta
 from typing import Any
 
+from custom_components.tryfi.pytryfi.fiPet import FiPet
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -15,16 +17,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfLength,
-    UnitOfTime,
     UnitOfMass,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.device_registry import DeviceInfo
-from custom_components.tryfi.pytryfi.fiPet import FiPet
+from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
@@ -37,6 +39,9 @@ from .pytryfi import PyTryFi
 from .pytryfi.fiWifiNetwork import FiWifiNetwork
 
 _LOGGER = logging.getLogger(__name__)
+
+# Counters that reset at the start of their period, so they need a last_reset.
+PERIOD_COUNTER_TYPES = frozenset({"STEPS", "DISTANCE"})
 
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "battery": SensorEntityDescription(
@@ -51,7 +56,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         key="steps",
         name="Steps",
         native_unit_of_measurement="steps",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         icon="mdi:paw",
     ),
     "goal": SensorEntityDescription(
@@ -66,7 +71,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         name="Distance",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         icon="mdi:map-marker-distance",
     ),
     "sleep": SensorEntityDescription(
@@ -363,6 +368,31 @@ class PetStatsSensor(TryFiSensorBase):
             "manufacturer": MANUFACTURER,
             "model": MODEL,
         }
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the start of the current period.
+
+        These counters reset to zero at the start of their period, so they use
+        state_class TOTAL. The recorder only starts a new statistics cycle for
+        a TOTAL sensor when last_reset changes; without it the first zero point
+        is kept forever and every later reset is summed as consumption.
+        """
+        if self._stat_type not in PERIOD_COUNTER_TYPES:
+            return None
+        return self._period_start()
+
+    def _period_start(self) -> datetime | None:
+        """Return the instant the current period began, in local time."""
+        now = dt_util.now()
+        if self._stat_time == "DAILY":
+            return now.replace(hour=0, minute=0, second=0, microsecond=0)
+        if self._stat_time == "WEEKLY":
+            start = now - timedelta(days=now.weekday())
+            return start.replace(hour=0, minute=0, second=0, microsecond=0)
+        if self._stat_time == "MONTHLY":
+            return now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        return None
 
     @property
     def native_value(self) -> StateType:
