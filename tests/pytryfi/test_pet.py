@@ -6,6 +6,8 @@ import urllib.parse
 from unittest.mock import patch
 
 from custom_components.tryfi.pytryfi import FiPet, FiDevice
+from custom_components.tryfi.pytryfi.exceptions import ApiNotAuthorizedError
+from custom_components.tryfi.pytryfi.fiPet import BEHAVIOR_AUTH_FAILURE_LIMIT
 from .utils import mock_graphql, GRAPHQL_FIXTURE_PET_ALL_INFO, GRAPHQL_PARTIAL_PET, REQ_PET_ALL_INFO
 
 
@@ -605,3 +607,89 @@ def test_pet_properties_and_getters_coverage():
     assert pet.monthlyDrinkingCount == 34
     assert pet.monthlyDrinkingDuration == 64
 
+
+
+class TestBehaviorAuthBackoff:
+    """A collar refused health trends stops costing calls, without affecting others."""
+
+    def _pet(self, name="TestPet"):
+        pet = FiPet("pet-1")
+        pet._name = name
+        return pet
+
+    def test_success_resets_the_counter(self):
+        pet = self._pet()
+        pet._behaviorAuthFailures = 2
+        with patch(
+            "custom_components.tryfi.pytryfi.common.query.getPetHealthTrends",
+            return_value={"behaviorTrends": []},
+        ):
+            pet.updateBehaviorStats(requests.Session())
+        assert pet._behaviorAuthFailures == 0
+        assert pet._behaviorAuthRetryAt is None
+
+    def test_one_refusal_asks_once_not_three_times(self):
+        """The refusal is per collar, so WEEK/MONTH fail the same way."""
+        pet = self._pet()
+        with patch(
+            "custom_components.tryfi.pytryfi.common.query.getPetHealthTrends",
+            side_effect=ApiNotAuthorizedError("GraphQL: Unauthorized"),
+        ) as mocked:
+            pet.updateBehaviorStats(requests.Session())
+        assert mocked.call_count == 1
+
+    def test_repeated_refusals_start_a_backoff(self):
+        pet = self._pet()
+        with patch(
+            "custom_components.tryfi.pytryfi.common.query.getPetHealthTrends",
+            side_effect=ApiNotAuthorizedError("GraphQL: Unauthorized"),
+        ) as mocked:
+            for _ in range(BEHAVIOR_AUTH_FAILURE_LIMIT):
+                pet.updateBehaviorStats(requests.Session())
+            assert pet._behaviorAuthRetryAt is not None
+            calls_before = mocked.call_count
+            # While the backoff is live, no further calls are made.
+            pet.updateBehaviorStats(requests.Session())
+            assert mocked.call_count == calls_before
+
+    def test_calls_resume_after_the_backoff_expires(self):
+        pet = self._pet()
+        pet._behaviorAuthRetryAt = datetime.datetime.now(
+            datetime.timezone.utc
+        ) - datetime.timedelta(seconds=1)
+        pet._behaviorAuthFailures = BEHAVIOR_AUTH_FAILURE_LIMIT
+        with patch(
+            "custom_components.tryfi.pytryfi.common.query.getPetHealthTrends",
+            return_value={"behaviorTrends": []},
+        ) as mocked:
+            pet.updateBehaviorStats(requests.Session())
+        assert mocked.call_count == 3
+        assert pet._behaviorAuthFailures == 0
+
+    def test_backoff_is_per_pet(self):
+        """A refused collar must not silence a working one."""
+        refused = self._pet("Refused")
+        working = self._pet("Working")
+        refused._behaviorAuthRetryAt = datetime.datetime.now(
+            datetime.timezone.utc
+        ) + datetime.timedelta(minutes=10)
+
+        def trends(session, pet_id, period):
+            if pet_id == "pet-1":
+                raise ApiNotAuthorizedError("GraphQL: Unauthorized")
+            return {"behaviorTrends": []}
+
+        with patch(
+            "custom_components.tryfi.pytryfi.common.query.getPetHealthTrends",
+            side_effect=trends,
+        ) as mocked:
+            refused.updateBehaviorStats(requests.Session())
+            assert mocked.call_count == 0
+            working._petId = "pet-2"
+            working.updateBehaviorStats(requests.Session())
+            assert mocked.call_count == 3
+
+
+def test_api_not_authorized_error_always_has_a_message():
+    """str() of the error is never empty, so log lines do not end at the colon."""
+    assert str(ApiNotAuthorizedError())

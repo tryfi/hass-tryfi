@@ -5,13 +5,24 @@ from .common import query
 from .const import PET_ACTIVITY_ONGOINGWALK
 from .fiDevice import FiDevice
 from .common.response_handlers import parse_fi_date
+from .exceptions import ApiNotAuthorizedError
 
 LOGGER = logging.getLogger(__name__)
+
+# A collar can be permanently refused health trends while the rest of the
+# account works (TryFi answers 200 with a GraphQL "Unauthorized"). Retrying it
+# every poll costs three calls per cycle indefinitely, so stop asking that
+# collar after repeated refusals and try again later. State is per pet, so a
+# refusal for one never suppresses another.
+BEHAVIOR_AUTH_FAILURE_LIMIT = 3
+BEHAVIOR_AUTH_BACKOFF = datetime.timedelta(minutes=30)
 
 
 class FiPet(object):
     def __init__(self, petId):
         self._petId = petId
+        self._behaviorAuthFailures = 0
+        self._behaviorAuthRetryAt = None
         self._name = None
         self._yearOfBirth = None
         self._monthOfBirth = None
@@ -238,6 +249,9 @@ class FiPet(object):
     # Update behavior stats for Series 3+ collars
     def updateBehaviorStats(self, sessionId: requests.Session):
         """Update behavior statistics for Series 3+ collars."""
+        now = datetime.datetime.now(datetime.timezone.utc)
+        if self._behaviorAuthRetryAt is not None and now < self._behaviorAuthRetryAt:
+            return
         for period in ["DAY", "WEEK", "MONTH"]:
             try:
                 healthTrendsJSON = query.getPetHealthTrends(
@@ -245,6 +259,24 @@ class FiPet(object):
                 )
                 behavior_trends = healthTrendsJSON.get("behaviorTrends", [])
                 self.setBehaviorStatsFromTrends(behavior_trends, period)
+                self._behaviorAuthFailures = 0
+                self._behaviorAuthRetryAt = None
+            except ApiNotAuthorizedError as e:
+                # The refusal is per collar, not per period, so the remaining
+                # periods fail identically; ask once per cycle, not three times.
+                self._behaviorAuthFailures += 1
+                if self._behaviorAuthFailures >= BEHAVIOR_AUTH_FAILURE_LIMIT:
+                    self._behaviorAuthRetryAt = now + BEHAVIOR_AUTH_BACKOFF
+                    LOGGER.warning(
+                        f"Behavior trends for {self.name} refused "
+                        f"{self._behaviorAuthFailures} times in a row: {e}. "
+                        f"Not asking again for {BEHAVIOR_AUTH_BACKOFF}."
+                    )
+                else:
+                    LOGGER.warning(
+                        f"Could not fetch {period} behavior trends for {self.name}: {e}"
+                    )
+                return
             except Exception as e:
                 LOGGER.warning(
                     f"Could not fetch {period} behavior trends for {self.name}: {e}"

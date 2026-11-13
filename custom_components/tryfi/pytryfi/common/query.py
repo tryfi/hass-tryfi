@@ -196,7 +196,12 @@ def getPetHealthTrends(session: requests.Session, petId: str, period: str = "DAY
         }}
     }}
     """
-    response = query(session, qString)
+    try:
+        response = query(session, qString)
+    except ApiNotAuthorizedError as err:
+        # query() does not know which pet or period it was asked about, and the
+        # caller's log line is the only place the operator can see it.
+        raise ApiNotAuthorizedError(f"{err} (pet {petId}, period {period})") from err
     LOGGER.debug(f"getPetHealthTrends: {response}")
     return response["data"]["getPetHealthTrendsForPet"]
 
@@ -306,7 +311,7 @@ def query(session: requests.Session, qString):
     params = {"query": qString}
     resp = _execute(url, session, params=params)
     if resp.status_code in [401, 403]:
-        raise ApiNotAuthorizedError()
+        raise ApiNotAuthorizedError(f"HTTP {resp.status_code} from {url}")
     if resp.status_code >= 500 and resp.status_code <= 599:
         LOGGER.warning(f"server error: (first 10 bytes: {resp.text[:10]})")
     if not resp.text:
@@ -336,7 +341,7 @@ def query(session: requests.Session, qString):
                 "forbidden",
             ]
         ):
-            raise ApiNotAuthorizedError()
+            raise ApiNotAuthorizedError(f"GraphQL: {error_msg}")
         raise RemoteApiError(f"GraphQL error: {error_msg}")
     resp.raise_for_status()
 

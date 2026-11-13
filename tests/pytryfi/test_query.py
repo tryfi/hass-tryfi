@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 import requests
@@ -399,8 +399,12 @@ def test_query_auth_error_status_codes(status_code):
         url="https://api.tryfi.com/graphql?query=auth-test",
         status=status_code,
     )
-    with pytest.raises(ApiNotAuthorizedError):
+    with pytest.raises(ApiNotAuthorizedError) as exc_info:
         query(requests.Session(), "auth-test")
+    # Callers interpolate this into a log line, so an empty message leaves the
+    # line ending at its colon with nothing after it.
+    assert str(exc_info.value)
+    assert str(status_code) in str(exc_info.value)
 
 
 @pytest.mark.parametrize(
@@ -416,8 +420,9 @@ def test_query_graphql_auth_error_messages(auth_msg):
         status=200,
         json={"errors": [{"message": f"Error: {auth_msg}"}]},
     )
-    with pytest.raises(ApiNotAuthorizedError):
+    with pytest.raises(ApiNotAuthorizedError) as exc_info:
         query(requests.Session(), "auth-msg-test")
+    assert auth_msg.lower() in str(exc_info.value).lower()
 
 
 def test_execute_invalid_method():
@@ -454,3 +459,22 @@ def test_get_households():
     assert result["email"] == "user@example.com"
 
 
+
+
+@responses.activate
+def test_get_pet_health_trends_auth_error_names_pet_and_period():
+    """An auth refusal carries the pet and period the caller asked about.
+
+    query() has no idea which pet or period it was asked to fetch, so without
+    this the only context in the log line is whatever the caller happens to add.
+    """
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.query",
+        side_effect=ApiNotAuthorizedError("HTTP 401"),
+    ):
+        with pytest.raises(ApiNotAuthorizedError) as exc_info:
+            getPetHealthTrends(requests.Session(), "pet-1", "DAY")
+    message = str(exc_info.value)
+    assert "pet-1" in message
+    assert "DAY" in message
+    assert "HTTP 401" in message
