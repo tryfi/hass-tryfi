@@ -8,7 +8,12 @@ from unittest.mock import patch
 from custom_components.tryfi.pytryfi import FiPet, FiDevice
 from custom_components.tryfi.pytryfi.exceptions import ApiNotAuthorizedError
 from custom_components.tryfi.pytryfi.fiPet import BEHAVIOR_AUTH_FAILURE_LIMIT
-from .utils import mock_graphql, GRAPHQL_FIXTURE_PET_ALL_INFO, GRAPHQL_PARTIAL_PET, REQ_PET_ALL_INFO
+from .utils import (
+    mock_graphql,
+    GRAPHQL_FIXTURE_PET_ALL_INFO,
+    GRAPHQL_PARTIAL_PET,
+    REQ_PET_ALL_INFO,
+)
 
 
 class TestParseBehaviorDuration:
@@ -89,7 +94,6 @@ def test_update_behavior_stats():
         getPetHealthTrendsForPet(petId: "test-pet", period: DAY) {
             behaviorTrends {
                 __typename
-                id
                 title
                 summaryComponents {
                     __typename
@@ -223,7 +227,11 @@ def test_pet_set_current_location_ongoing_rest_no_place():
         "info": {"buildId": "1.0", "batteryPercent": "90"},
         "operationParams": {"ledOffAt": None, "ledEnabled": False, "mode": "NORMAL"},
         "ledColor": {"name": "Red", "hexCode": "#FF0000"},
-        "lastConnectionState": {"__typename": "ConnectedToCellular", "date": "2026-06-26T00:00:00.000Z", "signalStrengthPercent": 80},
+        "lastConnectionState": {
+            "__typename": "ConnectedToCellular",
+            "date": "2026-06-26T00:00:00.000Z",
+            "signalStrengthPercent": 80,
+        },
         "nextLocationUpdateExpectedBy": "2026-06-26T01:00:00.000Z",
     }
     pet._device.setDeviceDetailsJSON(device_json)
@@ -251,9 +259,27 @@ def test_pet_set_current_location_ongoing_rest_no_place():
 def test_pet_set_stats_and_getters():
     """Test setStats with daily, weekly, and monthly data, and test getters."""
     pet = FiPet("test-pet")
-    daily = {"stepGoal": "5000", "totalSteps": "4200", "totalDistance": "3100.5"}
-    weekly = {"stepGoal": "35000", "totalSteps": "28000", "totalDistance": "21000.0"}
-    monthly = {"stepGoal": "150000", "totalSteps": "120000", "totalDistance": "90000.0"}
+    daily = {
+        "stepSummary": {
+            "stepGoal": "5000",
+            "totalSteps": "4200",
+            "totalWalkDistanceMeters": "3100.5",
+        }
+    }
+    weekly = {
+        "stepSummary": {
+            "stepGoal": "35000",
+            "totalSteps": "28000",
+            "totalWalkDistanceMeters": "21000.0",
+        }
+    }
+    monthly = {
+        "stepSummary": {
+            "stepGoal": "150000",
+            "totalSteps": "120000",
+            "totalWalkDistanceMeters": "90000.0",
+        }
+    }
 
     pet.setStats(daily, weekly, monthly)
 
@@ -279,32 +305,64 @@ def test_pet_set_stats_and_getters():
     assert pet.getMonthlyDistance() == 90000.0
 
 
+def test_pet_set_stats_missing_fields():
+    """setStats survives summaries missing stepGoal/other fields."""
+    pet = FiPet("test-pet")
+    daily = {"stepSummary": {"totalSteps": "4200"}}
+    weekly = {"stepSummary": {"stepGoal": None, "totalSteps": "28000"}}
+    monthly = {"stepSummary": {}}
+
+    pet.setStats(daily, weekly, monthly)
+
+    assert pet.dailyGoal is None
+    assert pet.dailySteps == 4200
+    assert pet.dailyTotalDistance is None
+    assert pet.weeklyGoal is None
+    assert pet.weeklySteps == 28000
+    assert pet.monthlyGoal is None
+    assert pet.monthlySteps is None
+    assert pet.monthlyTotalDistance is None
+
+
 def test_pet_update_stats_success_and_failure():
     """Test updateStats success and exception paths."""
     pet = FiPet("test-pet")
 
     stats_response = {
-        "dailyStat": {"stepGoal": "5000", "totalSteps": "1000", "totalDistance": "500.0"},
+        "dailyStat": {
+            "stepSummary": {
+                "stepGoal": "5000",
+                "totalSteps": "1000",
+                "totalWalkDistanceMeters": "500.0",
+            }
+        },
         "weeklyStat": None,
         "monthlyStat": None,
     }
 
-    with patch("custom_components.tryfi.pytryfi.common.query.getCurrentPetStats", return_value=stats_response):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.getCurrentPetStats",
+        return_value=stats_response,
+    ):
         assert pet.updateStats(requests.Session()) is True
         assert pet.dailySteps == 1000
         assert getattr(pet, "_weeklyGoal", None) is None
 
-    with patch("custom_components.tryfi.pytryfi.common.query.getCurrentPetStats", side_effect=Exception("Error")):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.getCurrentPetStats",
+        side_effect=Exception("Error"),
+    ):
         assert pet.updateStats(requests.Session()) is False
 
 
 def test_pet_extract_sleep_missing_amounts():
-    """Test _extractSleep returning None, None when sleepAmounts is missing."""
+    """Test _extractSleep returning None, None when restSummary is missing."""
     pet = FiPet("test-pet")
-    rest_obj = {"restSummaries": [{"data": {}}]}
+    rest_obj = {"restSummary": {}}
     sleep, nap = pet._extractSleep(rest_obj)
     assert sleep is None
     assert nap is None
+    assert pet._extractSleep(None) == (None, None)
 
 
 def test_pet_update_rest_stats_success_and_failure():
@@ -312,45 +370,19 @@ def test_pet_update_rest_stats_success_and_failure():
     pet = FiPet("test-pet")
 
     rest_stats = {
-        "dailyStat": {
-            "restSummaries": [
-                {
-                    "data": {
-                        "sleepAmounts": [
-                            {"type": "SLEEP", "duration": 480},
-                            {"type": "NAP", "duration": 60},
-                        ]
-                    }
-                }
-            ]
-        },
+        "dailyStat": {"restSummary": {"sleepSecondsTotal": 480, "napSecondsTotal": 60}},
         "weeklyStat": {
-            "restSummaries": [
-                {
-                    "data": {
-                        "sleepAmounts": [
-                            {"type": "SLEEP", "duration": 3360},
-                            {"type": "NAP", "duration": 420},
-                        ]
-                    }
-                }
-            ]
+            "restSummary": {"sleepSecondsTotal": 3360, "napSecondsTotal": 420}
         },
         "monthlyStat": {
-            "restSummaries": [
-                {
-                    "data": {
-                        "sleepAmounts": [
-                            {"type": "SLEEP", "duration": 14400},
-                            {"type": "NAP", "duration": 1800},
-                        ]
-                    }
-                }
-            ]
+            "restSummary": {"sleepSecondsTotal": 14400, "napSecondsTotal": 1800}
         },
     }
 
-    with patch("custom_components.tryfi.pytryfi.common.query.getCurrentPetRestStats", return_value=rest_stats):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.getCurrentPetRestStats",
+        return_value=rest_stats,
+    ):
         assert pet.updateRestStats(requests.Session()) is True
         assert pet.dailySleep == 480
         assert pet.dailyNap == 60
@@ -359,7 +391,10 @@ def test_pet_update_rest_stats_success_and_failure():
         assert pet.monthlySleep == 14400
         assert pet.monthlyNap == 1800
 
-    with patch("custom_components.tryfi.pytryfi.common.query.getCurrentPetRestStats", side_effect=Exception("Error")):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.getCurrentPetRestStats",
+        side_effect=Exception("Error"),
+    ):
         assert pet.updateRestStats(requests.Session()) is False
 
 
@@ -376,28 +411,48 @@ def test_pet_update_pet_location_and_device_details():
         "start": "2026-06-26T11:30:00.000Z",
         "position": {"latitude": 10.0, "longitude": 20.0},
     }
-    with patch("custom_components.tryfi.pytryfi.common.query.getCurrentPetLocation", return_value=loc_response):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.getCurrentPetLocation",
+        return_value=loc_response,
+    ):
         assert pet.updatePetLocation(requests.Session()) is True
         assert pet.currLatitude == 10.0
 
-    with patch("custom_components.tryfi.pytryfi.common.query.getCurrentPetLocation", side_effect=Exception("Error")):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.getCurrentPetLocation",
+        side_effect=Exception("Error"),
+    ):
         assert pet.updatePetLocation(requests.Session()) is False
 
     device_response = {
         "device": {
             "moduleId": "FC1001",
             "info": {"buildId": "1.0", "batteryPercent": "90"},
-            "operationParams": {"ledOffAt": None, "ledEnabled": False, "mode": "NORMAL"},
+            "operationParams": {
+                "ledOffAt": None,
+                "ledEnabled": False,
+                "mode": "NORMAL",
+            },
             "ledColor": {"name": "Red", "hexCode": "#FF0000"},
-            "lastConnectionState": {"__typename": "ConnectedToCellular", "date": "2026-06-26T00:00:00.000Z", "signalStrengthPercent": 80},
+            "lastConnectionState": {
+                "__typename": "ConnectedToCellular",
+                "date": "2026-06-26T00:00:00.000Z",
+                "signalStrengthPercent": 80,
+            },
             "nextLocationUpdateExpectedBy": "2026-06-26T01:00:00.000Z",
         }
     }
-    with patch("custom_components.tryfi.pytryfi.common.query.getDevicedetails", return_value=device_response):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.getDevicedetails",
+        return_value=device_response,
+    ):
         assert pet.updateDeviceDetails(requests.Session()) is True
         assert pet.device.moduleId == "FC1001"
 
-    with patch("custom_components.tryfi.pytryfi.common.query.getDevicedetails", side_effect=Exception("Error")):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.getDevicedetails",
+        side_effect=Exception("Error"),
+    ):
         assert pet.updateDeviceDetails(requests.Session()) is False
 
 
@@ -407,8 +462,15 @@ def test_pet_update_all_details_behavior_warning():
     pet._device = FiDevice("dev-series3")
     pet._device._moduleId = "FC3001"  # supports advanced behavior stats
 
-    with patch("custom_components.tryfi.pytryfi.common.query.getPetAllInfo", return_value=GRAPHQL_PARTIAL_PET), \
-         patch.object(pet, "updateBehaviorStats", side_effect=Exception("Behavior error")):
+    with (
+        patch(
+            "custom_components.tryfi.pytryfi.common.query.getPetAllInfo",
+            return_value=GRAPHQL_PARTIAL_PET,
+        ),
+        patch.object(
+            pet, "updateBehaviorStats", side_effect=Exception("Behavior error")
+        ),
+    ):
         pet.updateAllDetails(requests.Session())
         assert pet.currLatitude is not None
 
@@ -420,13 +482,13 @@ def test_pet_set_behavior_stats_from_trends_edge_cases():
     behavior_trends = [
         "invalid_string_item",  # Non-dict item
         {
-            "id": "barking:DAY",
+            "title": "Barking",
             "summaryComponents": {
                 "eventsSummary": None,  # None eventsSummary
             },
         },
         {
-            "id": "eating:DAY",
+            "title": "Eating",
             "summaryComponents": {
                 "eventsSummary": "5 events",
                 "durationSummary": None,
@@ -443,7 +505,10 @@ def test_pet_set_behavior_stats_from_trends_edge_cases():
 def test_pet_update_behavior_stats_exception():
     """Test updateBehaviorStats exception logging during period iterations."""
     pet = FiPet("test-pet")
-    with patch("custom_components.tryfi.pytryfi.common.query.getPetHealthTrends", side_effect=Exception("Trend error")):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.getPetHealthTrends",
+        side_effect=Exception("Trend error"),
+    ):
         # Should not raise exception
         pet.updateBehaviorStats(requests.Session())
 
@@ -455,60 +520,117 @@ def test_pet_led_and_lost_mode_controls():
     pet.device._moduleId = "FC3001"
 
     # setLedColorCode success
-    with patch("custom_components.tryfi.pytryfi.common.query.setLedColor", return_value={"setDeviceLed": {
-        "moduleId": "FC3001",
-        "info": {"buildId": "1.0", "batteryPercent": "90"},
-        "operationParams": {"ledOffAt": None, "ledEnabled": True, "mode": "NORMAL"},
-        "ledColor": {"name": "Green", "hexCode": "#00FF00"},
-        "lastConnectionState": {"__typename": "ConnectedToCellular", "date": "2026-06-26T00:00:00.000Z", "signalStrengthPercent": 80},
-        "nextLocationUpdateExpectedBy": "2026-06-26T01:00:00.000Z",
-    }}):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.setLedColor",
+        return_value={
+            "setDeviceLed": {
+                "moduleId": "FC3001",
+                "info": {"buildId": "1.0", "batteryPercent": "90"},
+                "operationParams": {
+                    "ledOffAt": None,
+                    "ledEnabled": True,
+                    "mode": "NORMAL",
+                },
+                "ledColor": {"name": "Green", "hexCode": "#00FF00"},
+                "lastConnectionState": {
+                    "__typename": "ConnectedToCellular",
+                    "date": "2026-06-26T00:00:00.000Z",
+                    "signalStrengthPercent": 80,
+                },
+                "nextLocationUpdateExpectedBy": "2026-06-26T01:00:00.000Z",
+            }
+        },
+    ):
         assert pet.setLedColorCode(requests.Session(), 2) is True
 
     # setLedColorCode inner exception (setDeviceDetailsJSON fail)
-    with patch("custom_components.tryfi.pytryfi.common.query.setLedColor", return_value={"setDeviceLed": None}):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.setLedColor",
+        return_value={"setDeviceLed": None},
+    ):
         assert pet.setLedColorCode(requests.Session(), 2) is True
 
     # setLedColorCode outer exception
-    with patch("custom_components.tryfi.pytryfi.common.query.setLedColor", side_effect=Exception("API error")):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.setLedColor",
+        side_effect=Exception("API error"),
+    ):
         assert pet.setLedColorCode(requests.Session(), 2) is False
 
     # turnOnOffLed success
-    with patch("custom_components.tryfi.pytryfi.common.query.turnOnOffLed", return_value={"updateDeviceOperationParams": {
-        "moduleId": "FC3001",
-        "info": {"buildId": "1.0", "batteryPercent": "90"},
-        "operationParams": {"ledOffAt": None, "ledEnabled": True, "mode": "NORMAL"},
-        "ledColor": {"name": "Green", "hexCode": "#00FF00"},
-        "lastConnectionState": {"__typename": "ConnectedToCellular", "date": "2026-06-26T00:00:00.000Z", "signalStrengthPercent": 80},
-        "nextLocationUpdateExpectedBy": "2026-06-26T01:00:00.000Z",
-    }}):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.turnOnOffLed",
+        return_value={
+            "updateDeviceOperationParams": {
+                "moduleId": "FC3001",
+                "info": {"buildId": "1.0", "batteryPercent": "90"},
+                "operationParams": {
+                    "ledOffAt": None,
+                    "ledEnabled": True,
+                    "mode": "NORMAL",
+                },
+                "ledColor": {"name": "Green", "hexCode": "#00FF00"},
+                "lastConnectionState": {
+                    "__typename": "ConnectedToCellular",
+                    "date": "2026-06-26T00:00:00.000Z",
+                    "signalStrengthPercent": 80,
+                },
+                "nextLocationUpdateExpectedBy": "2026-06-26T01:00:00.000Z",
+            }
+        },
+    ):
         assert pet.turnOnOffLed(requests.Session(), True) is True
 
     # turnOnOffLed inner exception
-    with patch("custom_components.tryfi.pytryfi.common.query.turnOnOffLed", return_value={"updateDeviceOperationParams": None}):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.turnOnOffLed",
+        return_value={"updateDeviceOperationParams": None},
+    ):
         assert pet.turnOnOffLed(requests.Session(), True) is True
 
     # turnOnOffLed outer exception
-    with patch("custom_components.tryfi.pytryfi.common.query.turnOnOffLed", side_effect=Exception("API error")):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.turnOnOffLed",
+        side_effect=Exception("API error"),
+    ):
         assert pet.turnOnOffLed(requests.Session(), True) is False
 
     # setLostDogMode success
-    with patch("custom_components.tryfi.pytryfi.common.query.setLostDogMode", return_value={"updateDeviceOperationParams": {
-        "moduleId": "FC3001",
-        "info": {"buildId": "1.0", "batteryPercent": "90"},
-        "operationParams": {"ledOffAt": None, "ledEnabled": True, "mode": "LOST_DOG"},
-        "ledColor": {"name": "Red", "hexCode": "#FF0000"},
-        "lastConnectionState": {"__typename": "ConnectedToCellular", "date": "2026-06-26T00:00:00.000Z", "signalStrengthPercent": 80},
-        "nextLocationUpdateExpectedBy": "2026-06-26T01:00:00.000Z",
-    }}):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.setLostDogMode",
+        return_value={
+            "updateDeviceOperationParams": {
+                "moduleId": "FC3001",
+                "info": {"buildId": "1.0", "batteryPercent": "90"},
+                "operationParams": {
+                    "ledOffAt": None,
+                    "ledEnabled": True,
+                    "mode": "LOST_DOG",
+                },
+                "ledColor": {"name": "Red", "hexCode": "#FF0000"},
+                "lastConnectionState": {
+                    "__typename": "ConnectedToCellular",
+                    "date": "2026-06-26T00:00:00.000Z",
+                    "signalStrengthPercent": 80,
+                },
+                "nextLocationUpdateExpectedBy": "2026-06-26T01:00:00.000Z",
+            }
+        },
+    ):
         assert pet.setLostDogMode(requests.Session(), True) is True
 
     # setLostDogMode inner exception
-    with patch("custom_components.tryfi.pytryfi.common.query.setLostDogMode", return_value={"updateDeviceOperationParams": None}):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.setLostDogMode",
+        return_value={"updateDeviceOperationParams": None},
+    ):
         assert pet.setLostDogMode(requests.Session(), True) is True
 
     # setLostDogMode outer exception
-    with patch("custom_components.tryfi.pytryfi.common.query.setLostDogMode", side_effect=Exception("API error")):
+    with patch(
+        "custom_components.tryfi.pytryfi.common.query.setLostDogMode",
+        side_effect=Exception("API error"),
+    ):
         assert pet.setLostDogMode(requests.Session(), True) is False
 
 
@@ -528,9 +650,17 @@ def test_pet_properties_and_getters_coverage():
             "id": "dev-999",
             "moduleId": "FC3001",
             "info": {"buildId": "1.0", "batteryPercent": "95"},
-            "operationParams": {"ledOffAt": None, "ledEnabled": False, "mode": "NORMAL"},
+            "operationParams": {
+                "ledOffAt": None,
+                "ledEnabled": False,
+                "mode": "NORMAL",
+            },
             "ledColor": {"name": "Yellow", "hexCode": "#FFFF00"},
-            "lastConnectionState": {"__typename": "ConnectedToCellular", "date": "2026-06-26T00:00:00.000Z", "signalStrengthPercent": 90},
+            "lastConnectionState": {
+                "__typename": "ConnectedToCellular",
+                "date": "2026-06-26T00:00:00.000Z",
+                "signalStrengthPercent": 90,
+            },
             "nextLocationUpdateExpectedBy": "2026-06-26T01:00:00.000Z",
         },
     }
@@ -606,7 +736,6 @@ def test_pet_properties_and_getters_coverage():
     assert pet.weeklyDrinkingDuration == 24
     assert pet.monthlyDrinkingCount == 34
     assert pet.monthlyDrinkingDuration == 64
-
 
 
 class TestBehaviorAuthBackoff:

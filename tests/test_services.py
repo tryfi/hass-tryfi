@@ -69,9 +69,7 @@ async def test_set_led_color_valid(
         blocking=True,
     )
 
-    mock_pet.setLedColorCode.assert_called_once_with(
-        mock_coordinator.data.session, 1
-    )
+    mock_pet.setLedColorCode.assert_called_once_with(mock_coordinator.data.session, 1)
     mock_coordinator.async_request_refresh.assert_called_once()
 
 
@@ -88,9 +86,7 @@ async def test_set_led_color_invalid_color_fallback(
         blocking=True,
     )
 
-    mock_pet.setLedColorCode.assert_called_once_with(
-        mock_coordinator.data.session, 8
-    )
+    mock_pet.setLedColorCode.assert_called_once_with(mock_coordinator.data.session, 8)
     mock_coordinator.async_request_refresh.assert_called_once()
 
 
@@ -116,7 +112,8 @@ async def test_set_led_color_pet_not_found(
     hass.data.setdefault(DOMAIN, {})["entry_id"] = mock_coordinator
 
     with pytest.raises(
-        HomeAssistantError, match="Pet not found for entity light.nonexistent_collar_light"
+        HomeAssistantError,
+        match="Pet not found for entity light.nonexistent_collar_light",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -139,9 +136,7 @@ async def test_turn_on_led_valid(
         blocking=True,
     )
 
-    mock_pet.turnOnOffLed.assert_called_once_with(
-        mock_coordinator.data.session, True
-    )
+    mock_pet.turnOnOffLed.assert_called_once_with(mock_coordinator.data.session, True)
     mock_coordinator.async_request_refresh.assert_called_once()
 
 
@@ -167,7 +162,8 @@ async def test_turn_on_led_pet_not_found(
     hass.data.setdefault(DOMAIN, {})["entry_id"] = mock_coordinator
 
     with pytest.raises(
-        HomeAssistantError, match="Pet not found for entity light.nonexistent_collar_light"
+        HomeAssistantError,
+        match="Pet not found for entity light.nonexistent_collar_light",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -190,9 +186,7 @@ async def test_turn_off_led_valid(
         blocking=True,
     )
 
-    mock_pet.turnOnOffLed.assert_called_once_with(
-        mock_coordinator.data.session, False
-    )
+    mock_pet.turnOnOffLed.assert_called_once_with(mock_coordinator.data.session, False)
     mock_coordinator.async_request_refresh.assert_called_once()
 
 
@@ -218,7 +212,8 @@ async def test_turn_off_led_pet_not_found(
     hass.data.setdefault(DOMAIN, {})["entry_id"] = mock_coordinator
 
     with pytest.raises(
-        HomeAssistantError, match="Pet not found for entity light.nonexistent_collar_light"
+        HomeAssistantError,
+        match="Pet not found for entity light.nonexistent_collar_light",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -241,9 +236,7 @@ async def test_set_lost_mode_lost(
         blocking=True,
     )
 
-    mock_pet.setLostDogMode.assert_called_once_with(
-        mock_coordinator.data.session, True
-    )
+    mock_pet.setLostDogMode.assert_called_once_with(mock_coordinator.data.session, True)
     mock_coordinator.async_request_refresh.assert_called_once()
 
 
@@ -288,7 +281,8 @@ async def test_set_lost_mode_pet_not_found(
     hass.data.setdefault(DOMAIN, {})["entry_id"] = mock_coordinator
 
     with pytest.raises(
-        HomeAssistantError, match="Pet not found for entity select.nonexistent_lost_mode"
+        HomeAssistantError,
+        match="Pet not found for entity select.nonexistent_lost_mode",
     ):
         await hass.services.async_call(
             DOMAIN,

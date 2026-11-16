@@ -71,9 +71,7 @@ def mock_coordinator_tracker(mock_pet_location, mock_base_location, mock_wifi_ne
     return coordinator
 
 
-async def test_async_setup_entry(
-    hass: HomeAssistant, mock_coordinator_tracker
-) -> None:
+async def test_async_setup_entry(hass: HomeAssistant, mock_coordinator_tracker) -> None:
     """Test setup entry for device trackers."""
     config_entry = Mock()
     config_entry.entry_id = "test_entry"

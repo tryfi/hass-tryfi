@@ -20,12 +20,12 @@ QUERY_GET_BASES = "query { currentUser { userHouseholds { household { bases { __
 QUERY_PET_ACTIVE_DETAILS = (
     'query {  pet (id: "'
     + VAR_PET_ID
-    + '") { ongoingActivity { __typename ...OngoingActivityDetails } dailyStepStat: currentActivitySummary (period: DAILY) { ...ActivitySummaryDetails } weeklyStepStat: currentActivitySummary (period: WEEKLY) { ...ActivitySummaryDetails } monthlyStepStat: currentActivitySummary (period: MONTHLY) { ...ActivitySummaryDetails } device { __typename moduleId info operationParams {    __typename    ...OperationParamsDetails  }  nextLocationUpdateExpectedBy  lastConnectionState {    __typename    ...ConnectionStateDetails  }  ledColor {    __typename    ...LedColorDetails }} dailySleepStat: restSummaryFeed(cursor: null, period: DAILY, limit: 1) {      __typename      restSummaries {        __typename        ...RestSummaryDetails }} weeklySleepStat: restSummaryFeed(cursor: null, period: WEEKLY, limit: 1) {      __typename      restSummaries {        __typename        ...RestSummaryDetails }} monthlySleepStat: restSummaryFeed(cursor: null, period: MONTHLY, limit: 1) {      __typename      restSummaries {        __typename        ...RestSummaryDetails }} }}'
+    + '") { ongoingActivity { __typename ...OngoingActivityDetails } dailyStepStat: stepFeed (period: DAY) { ...StepFeedSummary } weeklyStepStat: stepFeed (period: WEEK) { ...StepFeedSummary } monthlyStepStat: stepFeed (period: MONTH) { ...StepFeedSummary } device { __typename moduleId info operationParams {    __typename    ...OperationParamsDetails  }  nextLocationUpdateExpectedBy  lastConnectionState {    __typename    ...ConnectionStateDetails  }  ledColor {    __typename    ...LedColorDetails }} dailySleepStat: restFeed (period: DAY) { ...RestFeedSummary } weeklySleepStat: restFeed (period: WEEK) { ...RestFeedSummary } monthlySleepStat: restFeed (period: MONTH) { ...RestFeedSummary } }}'
 )
 QUERY_PET_ACTIVITY = (
     'query {  pet (id: "'
     + VAR_PET_ID
-    + '") {       dailyStat: currentActivitySummary (period: DAILY) {      ...ActivitySummaryDetails    }    weeklyStat: currentActivitySummary (period: WEEKLY) {      ...ActivitySummaryDetails    }    monthlyStat: currentActivitySummary (period: MONTHLY) {      ...ActivitySummaryDetails    }  }}'
+    + '") {       dailyStat: stepFeed (period: DAY) {      ...StepFeedSummary    }    weeklyStat: stepFeed (period: WEEK) {      ...StepFeedSummary    }    monthlyStat: stepFeed (period: MONTH) {      ...StepFeedSummary    }  }}'
 )
 QUERY_PET_CURRENT_LOCATION = (
     'query {  pet (id: "'
@@ -38,10 +38,10 @@ QUERY_PET_DEVICE_DETAILS = (
 QUERY_PET_REST = (
     'query {  pet (id: "'
     + VAR_PET_ID
-    + '") {	dailyStat: restSummaryFeed(cursor: null, period: DAILY, limit: 1) {      __typename      restSummaries {        __typename        ...RestSummaryDetails      }    }	weeklyStat: restSummaryFeed(cursor: null, period: WEEKLY, limit: 1) {      __typename      restSummaries {        __typename        ...RestSummaryDetails      }    }	monthlyStat: restSummaryFeed(cursor: null, period: MONTHLY, limit: 1) {      __typename      restSummaries {        __typename        ...RestSummaryDetails      }    }  }}'
+    + '") {	dailyStat: restFeed(period: DAY) {      __typename      ...RestFeedSummary    }	weeklyStat: restFeed(period: WEEK) {      __typename      ...RestFeedSummary    }	monthlyStat: restFeed(period: MONTH) {      __typename      ...RestFeedSummary    }  }}'
 )
 
-FRAGMENT_ACTIVITY_SUMMARY_DETAILS = "fragment ActivitySummaryDetails on ActivitySummary {  __typename  totalSteps  stepGoal  totalDistance}"
+FRAGMENT_STEP_FEED_SUMMARY = "fragment StepFeedSummary on StepFeed {  __typename  stepSummary {    __typename    totalSteps    stepGoal    totalWalkDistanceMeters  }}"
 FRAGMENT_BASE_DETAILS = "fragment BaseDetails on ChargingBase {  __typename  baseId  name  position {    __typename    ...PositionCoordinates  }  infoLastUpdated  networkName  online  onlineQuality}"
 FRAGMENT_BASE_PET_PROFILE = "fragment BasePetProfile on BasePet {  __typename  id  name  yearOfBirth  monthOfBirth  dayOfBirth  gender  weight  isPurebred  breed {    __typename    ...BreedDetails  }  photos {    __typename    first {      __typename      ...PhotoDetails    }    items {      __typename      ...PhotoDetails    }  }  }"
 FRAGMENT_BREED_DETAILS = "fragment BreedDetails on Breed {  __typename  id  name  }"
@@ -59,7 +59,7 @@ FRAGMENT_PLACE_DETAILS = "fragment PlaceDetails on Place {  __typename  id  name
 FRAGMENT_POSITION_COORDINATES = (
     "fragment PositionCoordinates on Position {  __typename  latitude  longitude}"
 )
-FRAGMENT_REST_SUMMARY_DETAILS = "fragment RestSummaryDetails on RestSummary {  __typename  start  end  data {    __typename    ... on ConcreteRestSummaryData {      sleepAmounts {        __typename        type        duration      }    }  }}"
+FRAGMENT_REST_SUMMARY_DETAILS = "fragment RestFeedSummary on RestFeed {  __typename  restSummary {    __typename    sleepSecondsTotal    napSecondsTotal  }}"
 FRAGMENT_USER_DETAILS = "fragment UserDetails on User {  __typename   id  email  firstName  lastName  phoneNumber }"
 FRAGMENT_USER_FULL_DETAILS = "fragment UserFullDetails on User {  __typename  ...UserDetails  userHouseholds {    __typename    household {      __typename      id      pets {        __typename        ...PetProfile      }      bases {        __typename        ...BaseDetails      }    }  }}"
 
@@ -72,7 +72,7 @@ MUTATION_UPDATE_PET = "mutation UpdatePet($input: UpdatePetInput!) { updatePet(i
 MUTATION_UPDATE_WIFI_NETWORK = "mutation UpdateWifiNetwork($input: UpdateWifiNetworkInput!) {  updateWifiNetwork(input: $input) {    __typename    ...WifiNetworkDetails  }}"
 
 REQUEST_FRAGMENTS_PET_ALL_INFO = (
-    FRAGMENT_ACTIVITY_SUMMARY_DETAILS
+    FRAGMENT_STEP_FEED_SUMMARY
     + FRAGMENT_ONGOING_ACTIVITY_DETAILS
     + FRAGMENT_OPERATIONAL_DETAILS
     + FRAGMENT_CONNECTION_STATE_DETAILS
@@ -143,10 +143,7 @@ def getPetAllInfo(session: requests.Session, petId: str):
 
 
 def getCurrentPetStats(session: requests.Session, petId: str):
-    qString = (
-        QUERY_PET_ACTIVITY.replace(VAR_PET_ID, petId)
-        + FRAGMENT_ACTIVITY_SUMMARY_DETAILS
-    )
+    qString = QUERY_PET_ACTIVITY.replace(VAR_PET_ID, petId) + FRAGMENT_STEP_FEED_SUMMARY
     response = query(session, qString)
     LOGGER.debug(f"getCurrentPetStats: {response}")
     return response["data"]["pet"]
@@ -185,7 +182,6 @@ def getPetHealthTrends(session: requests.Session, petId: str, period: str = "DAY
         getPetHealthTrendsForPet(petId: "{petId}", period: {period}) {{
             behaviorTrends {{
                 __typename
-                id
                 title
                 summaryComponents {{
                     __typename
@@ -207,16 +203,17 @@ def getPetHealthTrends(session: requests.Session, petId: str, period: str = "DAY
 
 
 def updatePetWeight(session: requests.Session, petId: str, weight_kg: float):
-    qString = MUTATION_UPDATE_PET + FRAGMENT_BASE_PET_PROFILE + FRAGMENT_BREED_DETAILS + FRAGMENT_PHOTO_DETAILS
-    qVariables = {
-        "input": {
-            "id": petId,
-            "weight": weight_kg
-        }
-    }
+    qString = (
+        MUTATION_UPDATE_PET
+        + FRAGMENT_BASE_PET_PROFILE
+        + FRAGMENT_BREED_DETAILS
+        + FRAGMENT_PHOTO_DETAILS
+    )
+    qVariables = {"input": {"id": petId, "weight": weight_kg}}
     response = mutation(session, qString, qVariables)
     LOGGER.debug(f"updatePetWeight: {response}")
-    return response['data']['updatePet']['weight']
+    return response["data"]["updatePet"]["weight"]
+
 
 def setLedColor(session: requests.Session, deviceId: str, ledColorCode):
     qString = (

@@ -8,7 +8,6 @@ import requests
 import responses
 
 from custom_components.tryfi.pytryfi.common.query import (
-    FRAGMENT_ACTIVITY_SUMMARY_DETAILS,
     FRAGMENT_BASE_DETAILS,
     FRAGMENT_BASE_PET_PROFILE,
     FRAGMENT_BREED_DETAILS,
@@ -23,6 +22,7 @@ from custom_components.tryfi.pytryfi.common.query import (
     FRAGMENT_PLACE_DETAILS,
     FRAGMENT_POSITION_COORDINATES,
     FRAGMENT_REST_SUMMARY_DETAILS,
+    FRAGMENT_STEP_FEED_SUMMARY,
     FRAGMENT_USER_DETAILS,
     QUERY_GET_BASES,
     QUERY_PET_ACTIVE_DETAILS,
@@ -194,16 +194,15 @@ def test_get_pet_all_info():
 def test_get_current_pet_stats():
     """Test getCurrentPetStats retrieves activity statistics."""
     q_string = (
-        QUERY_PET_ACTIVITY.replace(VAR_PET_ID, "pet-1")
-        + FRAGMENT_ACTIVITY_SUMMARY_DETAILS
+        QUERY_PET_ACTIVITY.replace(VAR_PET_ID, "pet-1") + FRAGMENT_STEP_FEED_SUMMARY
     )
     mock_graphql(
         query=q_string,
         status=200,
-        response={"pet": {"dailyStat": {"totalSteps": 5000}}},
+        response={"pet": {"dailyStat": {"stepSummary": {"totalSteps": 5000}}}},
     )
     result = getCurrentPetStats(requests.Session(), "pet-1")
-    assert result["dailyStat"]["totalSteps"] == 5000
+    assert result["dailyStat"]["stepSummary"]["totalSteps"] == 5000
 
 
 @responses.activate
@@ -215,7 +214,7 @@ def test_get_current_pet_rest_stats():
     mock_graphql(
         query=q_string,
         status=200,
-        response={"pet": {"dailyStat": {"restSummaries": []}}},
+        response={"pet": {"dailyStat": {"restSummary": {"sleepSecondsTotal": 0}}}},
     )
     result = getCurrentPetRestStats(requests.Session(), "pet-1")
     assert "dailyStat" in result
@@ -253,7 +252,6 @@ def test_get_pet_health_trends():
         getPetHealthTrendsForPet(petId: "pet-1", period: MONTH) {
             behaviorTrends {
                 __typename
-                id
                 title
                 summaryComponents {
                     __typename
@@ -280,11 +278,7 @@ def test_set_led_color():
         responses.POST,
         url="https://api.tryfi.com/graphql",
         status=200,
-        json={
-            "data": {
-                "setDeviceLed": {"id": "dev-1", "ledColor": {"name": "Red"}}
-            }
-        },
+        json={"data": {"setDeviceLed": {"id": "dev-1", "ledColor": {"name": "Red"}}}},
     )
     result = setLedColor(requests.Session(), "dev-1", 3)
     assert "setDeviceLed" in result
@@ -351,9 +345,7 @@ def test_get_wifi_networks():
         status=200,
         json={
             "data": {
-                "household": {
-                    "wifiNetworks": {"networks": [{"ssid": "HomeWifi"}]}
-                }
+                "household": {"wifiNetworks": {"networks": [{"ssid": "HomeWifi"}]}}
             }
         },
     )
@@ -457,8 +449,6 @@ def test_get_households():
     )
     result = getHouseHolds(requests.Session())
     assert result["email"] == "user@example.com"
-
-
 
 
 @responses.activate
