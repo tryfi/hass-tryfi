@@ -130,22 +130,36 @@ class FiPet(object):
     # set the Pet's current steps, goals and distance details for daily, weekly and monthly
     def setStats(self, activityJSONDaily, activityJSONWeekly, activityJSONMonthly):
         # distance is in metres
-        dailySummary = activityJSONDaily["stepSummary"]
-        self._dailyGoal = int(dailySummary["stepGoal"])
-        self._dailySteps = int(dailySummary["totalSteps"])
-        self._dailyTotalDistance = float(dailySummary["totalWalkDistanceMeters"])
-        if activityJSONWeekly:
-            weeklySummary = activityJSONWeekly["stepSummary"]
-            self._weeklyGoal = int(weeklySummary["stepGoal"])
-            self._weeklySteps = int(weeklySummary["totalSteps"])
-            self._weeklyTotalDistance = float(weeklySummary["totalWalkDistanceMeters"])
-        if activityJSONMonthly:
-            monthlySummary = activityJSONMonthly["stepSummary"]
-            self._monthlyGoal = int(monthlySummary["stepGoal"])
-            self._monthlySteps = int(monthlySummary["totalSteps"])
-            self._monthlyTotalDistance = float(
-                monthlySummary["totalWalkDistanceMeters"]
+        def summary_values(stepObject):
+            if not stepObject:
+                return None, None, None
+            summary = stepObject.get("stepSummary") or {}
+            goal = summary.get("stepGoal")
+            steps = summary.get("totalSteps")
+            distance = summary.get("totalWalkDistanceMeters")
+            return (
+                int(goal) if goal is not None else None,
+                int(steps) if steps is not None else None,
+                float(distance) if distance is not None else None,
             )
+
+        (
+            self._dailyGoal,
+            self._dailySteps,
+            self._dailyTotalDistance,
+        ) = summary_values(activityJSONDaily)
+        if activityJSONWeekly:
+            (
+                self._weeklyGoal,
+                self._weeklySteps,
+                self._weeklyTotalDistance,
+            ) = summary_values(activityJSONWeekly)
+        if activityJSONMonthly:
+            (
+                self._monthlyGoal,
+                self._monthlySteps,
+                self._monthlyTotalDistance,
+            ) = summary_values(activityJSONMonthly)
 
         self._lastUpdated = datetime.datetime.now()
 

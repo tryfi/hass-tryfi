@@ -278,6 +278,25 @@ def test_pet_set_stats_and_getters():
     assert pet.getMonthlyDistance() == 90000.0
 
 
+def test_pet_set_stats_missing_fields():
+    """setStats survives summaries missing stepGoal/other fields."""
+    pet = FiPet("test-pet")
+    daily = {"stepSummary": {"totalSteps": "4200"}}
+    weekly = {"stepSummary": {"stepGoal": None, "totalSteps": "28000"}}
+    monthly = {"stepSummary": {}}
+
+    pet.setStats(daily, weekly, monthly)
+
+    assert pet.dailyGoal is None
+    assert pet.dailySteps == 4200
+    assert pet.dailyTotalDistance is None
+    assert pet.weeklyGoal is None
+    assert pet.weeklySteps == 28000
+    assert pet.monthlyGoal is None
+    assert pet.monthlySteps is None
+    assert pet.monthlyTotalDistance is None
+
+
 def test_pet_update_stats_success_and_failure():
     """Test updateStats success and exception paths."""
     pet = FiPet("test-pet")
