@@ -68,9 +68,7 @@ async def test_setup_entry_success(
         mock_setup_services.assert_called_once_with(hass)
 
 
-async def test_setup_entry_auth_failed(
-    hass: HomeAssistant, mock_config_entry
-) -> None:
+async def test_setup_entry_auth_failed(hass: HomeAssistant, mock_config_entry) -> None:
     """Test setup when auth fails (no currentUser or currentUser is None)."""
     mock_config_entry.add_to_hass(hass)
 
@@ -82,7 +80,9 @@ async def test_setup_entry_auth_failed(
         instance.wifiNetworks = []
         mock_pytryfi.return_value = instance
 
-        with pytest.raises(ConfigEntryNotReady, match="Failed to authenticate with TryFi API"):
+        with pytest.raises(
+            ConfigEntryNotReady, match="Failed to authenticate with TryFi API"
+        ):
             await async_setup_entry(hass, mock_config_entry)
 
     with patch("custom_components.tryfi.PyTryFi") as mock_pytryfi:
@@ -94,13 +94,13 @@ async def test_setup_entry_auth_failed(
         instance.currentUser = None
         mock_pytryfi.return_value = instance
 
-        with pytest.raises(ConfigEntryNotReady, match="Failed to authenticate with TryFi API"):
+        with pytest.raises(
+            ConfigEntryNotReady, match="Failed to authenticate with TryFi API"
+        ):
             await async_setup_entry(hass, mock_config_entry)
 
 
-async def test_setup_entry_exception(
-    hass: HomeAssistant, mock_config_entry
-) -> None:
+async def test_setup_entry_exception(hass: HomeAssistant, mock_config_entry) -> None:
     """Test setup when PyTryFi raises exception."""
     mock_config_entry.add_to_hass(hass)
 
@@ -112,9 +112,7 @@ async def test_setup_entry_exception(
             await async_setup_entry(hass, mock_config_entry)
 
 
-async def test_async_update_options(
-    hass: HomeAssistant, mock_config_entry
-) -> None:
+async def test_async_update_options(hass: HomeAssistant, mock_config_entry) -> None:
     """Test update options reloads config entry."""
     with patch.object(hass.config_entries, "async_reload") as mock_reload:
         await async_update_options(hass, mock_config_entry)
@@ -128,9 +126,7 @@ async def test_async_unload_entry_success(
     mock_config_entry.add_to_hass(hass)
     hass.data.setdefault(DOMAIN, {})[mock_config_entry.entry_id] = Mock()
 
-    with patch.object(
-        hass.config_entries, "async_unload_platforms", return_value=True
-    ):
+    with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
         result = await async_unload_entry(hass, mock_config_entry)
         assert result is True
         assert mock_config_entry.entry_id not in hass.data[DOMAIN]
@@ -294,9 +290,7 @@ async def test_async_remove_config_entry_device_exception(
     assert result is True
 
 
-async def test_coordinator_update_success(
-    hass: HomeAssistant, mock_pytryfi
-) -> None:
+async def test_coordinator_update_success(hass: HomeAssistant, mock_pytryfi) -> None:
     """Test coordinator update success."""
     coordinator = TryFiDataUpdateCoordinator(hass, mock_pytryfi, 30)
 
@@ -306,9 +300,7 @@ async def test_coordinator_update_success(
     mock_pytryfi.update.assert_called_once()
 
 
-async def test_coordinator_update_failure(
-    hass: HomeAssistant, mock_pytryfi
-) -> None:
+async def test_coordinator_update_failure(hass: HomeAssistant, mock_pytryfi) -> None:
     """Test coordinator update failure."""
     mock_pytryfi.update.side_effect = Exception("API Error")
 

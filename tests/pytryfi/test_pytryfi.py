@@ -211,7 +211,9 @@ def test_pytryfi_wifi_networks():
         method=responses.POST,
         url="https://api.tryfi.com/graphql",
         status=200,
-        json={"data": {"updateWifiNetwork": {"ssid": "HomeWifi", "state": "CONNECTED"}}},
+        json={
+            "data": {"updateWifiNetwork": {"ssid": "HomeWifi", "state": "CONNECTED"}}
+        },
     )
     res = tryfi.setWifiNetworkLocation("HomeWifi", 37.8, -122.4)
     assert res["ssid"] == "HomeWifi"
@@ -257,10 +259,10 @@ def test_pytryfi_update_catches_exceptions(caplog):
     mock_multi_household_setup()
     tryfi = PyTryFi("user@example.com", "password123")
 
-    with patch.object(tryfi, "updateBases", side_effect=Exception("base error")), patch.object(
-        tryfi, "updatePets", side_effect=Exception("pet error")
-    ), patch.object(
-        tryfi, "updateWifiNetworks", side_effect=Exception("wifi error")
+    with (
+        patch.object(tryfi, "updateBases", side_effect=Exception("base error")),
+        patch.object(tryfi, "updatePets", side_effect=Exception("pet error")),
+        patch.object(tryfi, "updateWifiNetworks", side_effect=Exception("wifi error")),
     ):
         tryfi.update()
 
@@ -305,5 +307,3 @@ def test_pytryfi_update_pets():
     with patch.object(tryfi.pets[0], "updateAllDetails") as mock_update:
         tryfi.updatePets()
         mock_update.assert_called_once_with(tryfi.session)
-
-

@@ -143,10 +143,7 @@ def getPetAllInfo(session: requests.Session, petId: str):
 
 
 def getCurrentPetStats(session: requests.Session, petId: str):
-    qString = (
-        QUERY_PET_ACTIVITY.replace(VAR_PET_ID, petId)
-        + FRAGMENT_STEP_FEED_SUMMARY
-    )
+    qString = QUERY_PET_ACTIVITY.replace(VAR_PET_ID, petId) + FRAGMENT_STEP_FEED_SUMMARY
     response = query(session, qString)
     LOGGER.debug(f"getCurrentPetStats: {response}")
     return response["data"]["pet"]
@@ -206,16 +203,17 @@ def getPetHealthTrends(session: requests.Session, petId: str, period: str = "DAY
 
 
 def updatePetWeight(session: requests.Session, petId: str, weight_kg: float):
-    qString = MUTATION_UPDATE_PET + FRAGMENT_BASE_PET_PROFILE + FRAGMENT_BREED_DETAILS + FRAGMENT_PHOTO_DETAILS
-    qVariables = {
-        "input": {
-            "id": petId,
-            "weight": weight_kg
-        }
-    }
+    qString = (
+        MUTATION_UPDATE_PET
+        + FRAGMENT_BASE_PET_PROFILE
+        + FRAGMENT_BREED_DETAILS
+        + FRAGMENT_PHOTO_DETAILS
+    )
+    qVariables = {"input": {"id": petId, "weight": weight_kg}}
     response = mutation(session, qString, qVariables)
     LOGGER.debug(f"updatePetWeight: {response}")
-    return response['data']['updatePet']['weight']
+    return response["data"]["updatePet"]["weight"]
+
 
 def setLedColor(session: requests.Session, deviceId: str, ledColorCode):
     qString = (

@@ -177,9 +177,7 @@ class FiPet(object):
             LOGGER.error(f"Could not update stats for Pet {self.name}.\n{e}")
             return False
 
-    def _extractSleep(
-        self, restObject: dict | None
-    ) -> tuple[int | None, int | None]:
+    def _extractSleep(self, restObject: dict | None) -> tuple[int | None, int | None]:
         if restObject is None:
             return None, None
         restSummary = restObject.get("restSummary")

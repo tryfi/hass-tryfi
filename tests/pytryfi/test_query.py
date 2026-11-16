@@ -194,8 +194,7 @@ def test_get_pet_all_info():
 def test_get_current_pet_stats():
     """Test getCurrentPetStats retrieves activity statistics."""
     q_string = (
-        QUERY_PET_ACTIVITY.replace(VAR_PET_ID, "pet-1")
-        + FRAGMENT_STEP_FEED_SUMMARY
+        QUERY_PET_ACTIVITY.replace(VAR_PET_ID, "pet-1") + FRAGMENT_STEP_FEED_SUMMARY
     )
     mock_graphql(
         query=q_string,
@@ -279,11 +278,7 @@ def test_set_led_color():
         responses.POST,
         url="https://api.tryfi.com/graphql",
         status=200,
-        json={
-            "data": {
-                "setDeviceLed": {"id": "dev-1", "ledColor": {"name": "Red"}}
-            }
-        },
+        json={"data": {"setDeviceLed": {"id": "dev-1", "ledColor": {"name": "Red"}}}},
     )
     result = setLedColor(requests.Session(), "dev-1", 3)
     assert "setDeviceLed" in result
@@ -350,9 +345,7 @@ def test_get_wifi_networks():
         status=200,
         json={
             "data": {
-                "household": {
-                    "wifiNetworks": {"networks": [{"ssid": "HomeWifi"}]}
-                }
+                "household": {"wifiNetworks": {"networks": [{"ssid": "HomeWifi"}]}}
             }
         },
     )
@@ -456,8 +449,6 @@ def test_get_households():
     )
     result = getHouseHolds(requests.Session())
     assert result["email"] == "user@example.com"
-
-
 
 
 @responses.activate

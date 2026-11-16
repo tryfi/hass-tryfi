@@ -89,7 +89,9 @@ async def test_async_setup_entry(
     assert any(isinstance(e, TryFiBatteryChargingBinarySensor) for e in added_entities)
     assert any(isinstance(e, TryFiBaseHealthBinarySensor) for e in added_entities)
     assert any(isinstance(e, TryFiFirmwareUpdateBinarySensor) for e in added_entities)
-    assert any(isinstance(e, TryFiWifiNetworkHiddenBinarySensor) for e in added_entities)
+    assert any(
+        isinstance(e, TryFiWifiNetworkHiddenBinarySensor) for e in added_entities
+    )
 
     # Test coordinator listener callback for new WiFi networks
     assert mock_coordinator_binary.async_add_listener.called
@@ -232,9 +234,7 @@ async def test_firmware_update_binary_sensor(
     hass: HomeAssistant, mock_coordinator_binary, mock_pet_charging
 ) -> None:
     """Test firmware update binary sensor."""
-    sensor = TryFiFirmwareUpdateBinarySensor(
-        mock_coordinator_binary, mock_pet_charging
-    )
+    sensor = TryFiFirmwareUpdateBinarySensor(mock_coordinator_binary, mock_pet_charging)
 
     assert sensor._attr_unique_id == "test_pet_123-firmware-update"
     assert sensor._attr_name == "Fido Firmware Update Available"
