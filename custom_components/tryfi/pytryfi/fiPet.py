@@ -130,17 +130,22 @@ class FiPet(object):
     # set the Pet's current steps, goals and distance details for daily, weekly and monthly
     def setStats(self, activityJSONDaily, activityJSONWeekly, activityJSONMonthly):
         # distance is in metres
-        self._dailyGoal = int(activityJSONDaily["stepGoal"])
-        self._dailySteps = int(activityJSONDaily["totalSteps"])
-        self._dailyTotalDistance = float(activityJSONDaily["totalDistance"])
+        dailySummary = activityJSONDaily["stepSummary"]
+        self._dailyGoal = int(dailySummary["stepGoal"])
+        self._dailySteps = int(dailySummary["totalSteps"])
+        self._dailyTotalDistance = float(dailySummary["totalWalkDistanceMeters"])
         if activityJSONWeekly:
-            self._weeklyGoal = int(activityJSONWeekly["stepGoal"])
-            self._weeklySteps = int(activityJSONWeekly["totalSteps"])
-            self._weeklyTotalDistance = float(activityJSONWeekly["totalDistance"])
+            weeklySummary = activityJSONWeekly["stepSummary"]
+            self._weeklyGoal = int(weeklySummary["stepGoal"])
+            self._weeklySteps = int(weeklySummary["totalSteps"])
+            self._weeklyTotalDistance = float(weeklySummary["totalWalkDistanceMeters"])
         if activityJSONMonthly:
-            self._monthlyGoal = int(activityJSONMonthly["stepGoal"])
-            self._monthlySteps = int(activityJSONMonthly["totalSteps"])
-            self._monthlyTotalDistance = float(activityJSONMonthly["totalDistance"])
+            monthlySummary = activityJSONMonthly["stepSummary"]
+            self._monthlyGoal = int(monthlySummary["stepGoal"])
+            self._monthlySteps = int(monthlySummary["totalSteps"])
+            self._monthlyTotalDistance = float(
+                monthlySummary["totalWalkDistanceMeters"]
+            )
 
         self._lastUpdated = datetime.datetime.now()
 
@@ -158,19 +163,21 @@ class FiPet(object):
             LOGGER.error(f"Could not update stats for Pet {self.name}.\n{e}")
             return False
 
-    def _extractSleep(self, restObject: dict) -> tuple[int | None, int | None]:
-        sleep, nap = 0, 0
-        sleepData = restObject["restSummaries"][0]["data"]
-        if "sleepAmounts" not in sleepData:
+    def _extractSleep(
+        self, restObject: dict | None
+    ) -> tuple[int | None, int | None]:
+        if restObject is None:
+            return None, None
+        restSummary = restObject.get("restSummary")
+        if not restSummary:
             LOGGER.warning(
-                f"Can't extract sleep because sleepAmounts is missing: {restObject}"
+                f"Can't extract sleep because restSummary is missing: {restObject}"
             )
             return None, None
-        for sleepAmount in sleepData["sleepAmounts"]:
-            if sleepAmount["type"] == "SLEEP":
-                sleep = int(sleepAmount["duration"])
-            if sleepAmount["type"] == "NAP":
-                nap = int(sleepAmount["duration"])
+        sleep = restSummary.get("sleepSecondsTotal")
+        nap = restSummary.get("napSecondsTotal")
+        sleep = int(sleep) if sleep is not None else 0
+        nap = int(nap) if nap is not None else 0
         return sleep, nap
 
     # Update the Stats of the pet
@@ -312,9 +319,12 @@ class FiPet(object):
         }
         prefix = PERIOD_PREFIX_MAP.get(period, "daily")
 
-        # Map from API behavior id prefix to our attribute name fragment
+        # Map from API trend title to our attribute name fragment.
+        # The API no longer exposes a stable `id` on health trends (v3.128.0);
+        # the human-readable `title` is the only identifier returned.
         BEHAVIOR_MAP = {
             "barking": "Barking",
+            "licking": "Licking",
             "cleaning_self": "Licking",
             "scratching": "Scratching",
             "eating": "Eating",
@@ -322,7 +332,7 @@ class FiPet(object):
         }
 
         # Reset metrics for this period
-        for attr_suffix in BEHAVIOR_MAP.values():
+        for attr_suffix in set(BEHAVIOR_MAP.values()):
             setattr(self, f"_{prefix}{attr_suffix}Count", 0)
             setattr(self, f"_{prefix}{attr_suffix}Duration", 0)
 
@@ -333,7 +343,7 @@ class FiPet(object):
                 )
                 continue
 
-            trend_id = trend.get("id", "")
+            title = trend.get("title", "")
             summary = trend.get("summaryComponents", {})
 
             # Extract events count
@@ -351,8 +361,8 @@ class FiPet(object):
             if duration_summary:
                 duration_minutes = self._parseBehaviorDuration(duration_summary)
 
-            # Parse the behavior type from the trend_id (e.g., "barking:DAY" -> "barking")
-            behavior_key = trend_id.split(":")[0] if ":" in trend_id else trend_id
+            # Identify the behavior by its title (e.g. "Barking" -> "Barking")
+            behavior_key = title.strip().lower()
             attr_suffix = BEHAVIOR_MAP.get(behavior_key)
             if attr_suffix:
                 setattr(self, f"_{prefix}{attr_suffix}Count", events_count)

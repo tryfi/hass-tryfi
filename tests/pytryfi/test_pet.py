@@ -89,7 +89,6 @@ def test_update_behavior_stats():
         getPetHealthTrendsForPet(petId: "test-pet", period: DAY) {
             behaviorTrends {
                 __typename
-                id
                 title
                 summaryComponents {
                     __typename
@@ -251,9 +250,9 @@ def test_pet_set_current_location_ongoing_rest_no_place():
 def test_pet_set_stats_and_getters():
     """Test setStats with daily, weekly, and monthly data, and test getters."""
     pet = FiPet("test-pet")
-    daily = {"stepGoal": "5000", "totalSteps": "4200", "totalDistance": "3100.5"}
-    weekly = {"stepGoal": "35000", "totalSteps": "28000", "totalDistance": "21000.0"}
-    monthly = {"stepGoal": "150000", "totalSteps": "120000", "totalDistance": "90000.0"}
+    daily = {"stepSummary": {"stepGoal": "5000", "totalSteps": "4200", "totalWalkDistanceMeters": "3100.5"}}
+    weekly = {"stepSummary": {"stepGoal": "35000", "totalSteps": "28000", "totalWalkDistanceMeters": "21000.0"}}
+    monthly = {"stepSummary": {"stepGoal": "150000", "totalSteps": "120000", "totalWalkDistanceMeters": "90000.0"}}
 
     pet.setStats(daily, weekly, monthly)
 
@@ -284,7 +283,7 @@ def test_pet_update_stats_success_and_failure():
     pet = FiPet("test-pet")
 
     stats_response = {
-        "dailyStat": {"stepGoal": "5000", "totalSteps": "1000", "totalDistance": "500.0"},
+        "dailyStat": {"stepSummary": {"stepGoal": "5000", "totalSteps": "1000", "totalWalkDistanceMeters": "500.0"}},
         "weeklyStat": None,
         "monthlyStat": None,
     }
@@ -299,12 +298,13 @@ def test_pet_update_stats_success_and_failure():
 
 
 def test_pet_extract_sleep_missing_amounts():
-    """Test _extractSleep returning None, None when sleepAmounts is missing."""
+    """Test _extractSleep returning None, None when restSummary is missing."""
     pet = FiPet("test-pet")
-    rest_obj = {"restSummaries": [{"data": {}}]}
+    rest_obj = {"restSummary": {}}
     sleep, nap = pet._extractSleep(rest_obj)
     assert sleep is None
     assert nap is None
+    assert pet._extractSleep(None) == (None, None)
 
 
 def test_pet_update_rest_stats_success_and_failure():
@@ -312,42 +312,9 @@ def test_pet_update_rest_stats_success_and_failure():
     pet = FiPet("test-pet")
 
     rest_stats = {
-        "dailyStat": {
-            "restSummaries": [
-                {
-                    "data": {
-                        "sleepAmounts": [
-                            {"type": "SLEEP", "duration": 480},
-                            {"type": "NAP", "duration": 60},
-                        ]
-                    }
-                }
-            ]
-        },
-        "weeklyStat": {
-            "restSummaries": [
-                {
-                    "data": {
-                        "sleepAmounts": [
-                            {"type": "SLEEP", "duration": 3360},
-                            {"type": "NAP", "duration": 420},
-                        ]
-                    }
-                }
-            ]
-        },
-        "monthlyStat": {
-            "restSummaries": [
-                {
-                    "data": {
-                        "sleepAmounts": [
-                            {"type": "SLEEP", "duration": 14400},
-                            {"type": "NAP", "duration": 1800},
-                        ]
-                    }
-                }
-            ]
-        },
+        "dailyStat": {"restSummary": {"sleepSecondsTotal": 480, "napSecondsTotal": 60}},
+        "weeklyStat": {"restSummary": {"sleepSecondsTotal": 3360, "napSecondsTotal": 420}},
+        "monthlyStat": {"restSummary": {"sleepSecondsTotal": 14400, "napSecondsTotal": 1800}},
     }
 
     with patch("custom_components.tryfi.pytryfi.common.query.getCurrentPetRestStats", return_value=rest_stats):
@@ -420,13 +387,13 @@ def test_pet_set_behavior_stats_from_trends_edge_cases():
     behavior_trends = [
         "invalid_string_item",  # Non-dict item
         {
-            "id": "barking:DAY",
+            "title": "Barking",
             "summaryComponents": {
                 "eventsSummary": None,  # None eventsSummary
             },
         },
         {
-            "id": "eating:DAY",
+            "title": "Eating",
             "summaryComponents": {
                 "eventsSummary": "5 events",
                 "durationSummary": None,

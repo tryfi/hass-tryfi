@@ -142,26 +142,22 @@ GRAPHQL_PARTIAL_PET = {
         "start": "2025-06-17T01:00:00.000Z",
     },
     "dailyStepStat": {
-        "stepGoal": 5000,
-        "totalSteps": 4000,
-        "totalDistance": 54,
+        "stepSummary": {
+            "stepGoal": 5000,
+            "totalSteps": 4000,
+            "totalWalkDistanceMeters": 54,
+        }
     },
     "weeklyStepStat": {},
     "monthlyStepStat": {},
     "dailySleepStat": {
-        "restSummaries": [
-            {
-                "data": {
-                    "sleepAmounts": [
-                        {"type": "SLEEP", "duration": 60},
-                        {"type": "NAP", "duration": 30},
-                    ]
-                }
-            }
-        ]
+        "restSummary": {
+            "sleepSecondsTotal": 60,
+            "napSecondsTotal": 30,
+        }
     },
-    "weeklySleepStat": {"restSummaries": [{"data": {}}]},
-    "monthlySleepStat": {"restSummaries": [{"data": {}}]},
+    "weeklySleepStat": {"restSummary": {}},
+    "monthlySleepStat": {"restSummary": {}},
 }
 
 GRAPHQL_BASE = {
