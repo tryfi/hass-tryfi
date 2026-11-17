@@ -26,7 +26,7 @@
         "title": "TryFi Options",
         "description": "Update your TryFi configuration. Current user: {current_user}",
         "data": {
-          "username": "Email (leave blank to keep current)",
+          "username": "Email",
           "password": "Password (leave blank to keep current)",
           "polling": "Update interval (seconds)"
         }

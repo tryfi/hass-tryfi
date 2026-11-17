@@ -19,11 +19,14 @@
   },
   "options": {
     "step": {
-        "init": {
-            "data": {
-                "polling": "Polling"
-            }
+      "user": {
+        "title": "TryFi Options",
+        "data": {
+          "username": "Email",
+          "password": "Password (leave blank to keep current)",
+          "polling": "Update interval (seconds)"
         }
+      }
     }
   }
 }
