@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import voluptuous as vol
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from homeassistant import config_entries, data_entry_flow
@@ -367,3 +368,164 @@ async def test_options_flow_partial_update(hass: HomeAssistant, mock_pytryfi) ->
     assert entry.data[CONF_USERNAME] == "new@email.com"
     assert entry.data[CONF_PASSWORD] == "test-password"
     assert entry.data[CONF_POLLING_RATE] == 30
+
+
+async def test_options_flow_password_not_prefilled(
+    hass: HomeAssistant, mock_pytryfi
+) -> None:
+    """Test the stored password is not exposed in the options form."""
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="test@email.com",
+        data={
+            CONF_USERNAME: "test@email.com",
+            CONF_PASSWORD: "secret-password",
+            CONF_POLLING_RATE: 30,
+        },
+        source=config_entries.SOURCE_USER,
+        options={},
+        entry_id="test",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    schema = result["data_schema"]
+    # The stored secret must never appear in the schema payload
+    assert "secret-password" not in repr(schema)
+    assert "secret-password" not in str(schema)
+
+    for key in schema.schema:
+        if key == CONF_PASSWORD:
+            assert key.default is vol.UNDEFINED
+        elif key == CONF_USERNAME:
+            assert key.default() == "test@email.com"
+        elif key == CONF_POLLING_RATE:
+            assert key.default() == 30
+
+
+async def test_options_flow_blank_password_keeps_stored(
+    hass: HomeAssistant, mock_pytryfi
+) -> None:
+    """Test submitting a blank password keeps the stored password."""
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="test@email.com",
+        data={
+            CONF_USERNAME: "test@email.com",
+            CONF_PASSWORD: "secret-password",
+            CONF_POLLING_RATE: 30,
+        },
+        source=config_entries.SOURCE_USER,
+        options={},
+        entry_id="test",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    with patch(
+        "custom_components.tryfi.config_flow.validate_input",
+    ) as mock_validate:
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "test@email.com",
+                CONF_PASSWORD: "",
+                CONF_POLLING_RATE: 60,
+            },
+        )
+
+        # Credentials did not change, so no validation is needed
+        assert mock_validate.call_count == 0
+
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert entry.data[CONF_PASSWORD] == "secret-password"
+    assert entry.data[CONF_POLLING_RATE] == 60
+
+
+async def test_options_flow_omitted_credentials_keep_stored(
+    hass: HomeAssistant, mock_pytryfi
+) -> None:
+    """Test omitting credentials entirely keeps the stored values."""
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="test@email.com",
+        data={
+            CONF_USERNAME: "test@email.com",
+            CONF_PASSWORD: "secret-password",
+            CONF_POLLING_RATE: 30,
+        },
+        source=config_entries.SOURCE_USER,
+        options={},
+        entry_id="test",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    with patch(
+        "custom_components.tryfi.config_flow.validate_input",
+    ) as mock_validate:
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_POLLING_RATE: 45},
+        )
+
+        assert mock_validate.call_count == 0
+
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert entry.data[CONF_USERNAME] == "test@email.com"
+    assert entry.data[CONF_PASSWORD] == "secret-password"
+    assert entry.data[CONF_POLLING_RATE] == 45
+
+
+async def test_options_flow_new_password_validated(
+    hass: HomeAssistant, mock_pytryfi
+) -> None:
+    """Test a new password is validated and stored."""
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="test@email.com",
+        data={
+            CONF_USERNAME: "test@email.com",
+            CONF_PASSWORD: "secret-password",
+            CONF_POLLING_RATE: 30,
+        },
+        source=config_entries.SOURCE_USER,
+        options={},
+        entry_id="test",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    with patch(
+        "custom_components.tryfi.config_flow.validate_input",
+        return_value={"title": "test@email.com"},
+    ) as mock_validate:
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "test@email.com",
+                CONF_PASSWORD: "new-secret",
+                CONF_POLLING_RATE: 30,
+            },
+        )
+
+        assert mock_validate.call_count == 1
+        mock_validate.assert_called_with(
+            hass,
+            {
+                CONF_USERNAME: "test@email.com",
+                CONF_PASSWORD: "new-secret",
+            },
+        )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert entry.data[CONF_PASSWORD] == "new-secret"

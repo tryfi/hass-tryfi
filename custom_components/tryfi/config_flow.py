@@ -12,6 +12,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CONF_POLLING_RATE,
@@ -106,6 +107,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # Blank credential fields mean "keep the stored value"
+            user_input = dict(user_input)
+            for key in (CONF_USERNAME, CONF_PASSWORD):
+                if not user_input.get(key):
+                    user_input.pop(key, None)
+
             # If username/password changed, validate them
             username = user_input.get(
                 CONF_USERNAME, self.config_entry.data.get(CONF_USERNAME)
@@ -142,17 +149,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 )
                 return self.async_create_entry(title="", data={})
 
-        # Show form with current values as defaults
+        # Show form with current values as defaults. The password is never
+        # pre-filled so the stored secret is not exposed in the flow schema.
         data_schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_USERNAME,
                     default=self.config_entry.data.get(CONF_USERNAME, ""),
-                ): str,
-                vol.Optional(
-                    CONF_PASSWORD,
-                    default=self.config_entry.data.get(CONF_PASSWORD, ""),
-                ): str,
+                ): cv.string,
+                vol.Optional(CONF_PASSWORD): selector.TextSelector(
+                    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+                ),
                 vol.Optional(
                     CONF_POLLING_RATE,
                     default=self.config_entry.data.get(
