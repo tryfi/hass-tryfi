@@ -12,6 +12,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+from custom_components.tryfi import config_flow
 from custom_components.tryfi.config_flow import CannotConnect
 from custom_components.tryfi.const import CONF_POLLING_RATE, DOMAIN
 
@@ -66,6 +67,11 @@ async def test_form_user(
         CONF_POLLING_RATE: 30,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+def test_config_flow_does_not_declare_connection_class() -> None:
+    """Test the flow leaves obsolete connection metadata to Home Assistant."""
+    assert "CONNECTION_CLASS" not in vars(config_flow.ConfigFlow)
 
 
 async def test_form_invalid_auth(hass: HomeAssistant, mock_pytryfi) -> None:
