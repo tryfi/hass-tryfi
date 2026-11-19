@@ -52,8 +52,8 @@ def mock_pet_with_stats():
     pet.device = Mock()
     pet.device.batteryPercent = 75
     pet.device.isCharging = False
-    pet.device.connectedTo = "ConnectedToCellular"
-    pet.device.connectionStateType = "Cellular"
+    pet.device.connectedTo = "Cellular"
+    pet.device.connectionStateType = "ConnectedToCellular"
     pet.device.connectionSignalStrength = -85.0
     pet.device.ledColor = "RED"
     pet.device.moduleId = "mod_123"
@@ -232,7 +232,7 @@ async def test_generic_sensor(
     sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "connected_to")
     assert sensor.unique_id == "test_pet_123-connected-to"
     assert sensor.name == "Fido Connected To"
-    assert sensor.native_value == "ConnectedToCellular"
+    assert sensor.native_value == "Cellular"
     assert sensor.icon == "mdi:wifi"
 
     # Test gender
@@ -255,7 +255,7 @@ async def test_generic_sensor(
 
     # Test connection_state
     sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "connection_state")
-    assert sensor.native_value == "Cellular"
+    assert sensor.native_value == "ConnectedToCellular"
 
     # Test led_color
     sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "led_color")

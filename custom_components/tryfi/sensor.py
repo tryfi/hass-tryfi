@@ -175,28 +175,41 @@ async def async_setup_entry(
     for pet in tryfi.pets:
         _LOGGER.debug("Adding sensors for pet: %s", pet.name)
 
-        # Battery sensor
-        entities.append(TryFiBatterySensor(coordinator, pet))
-
-        # Activity stats sensors
+        # Current stats sensors
         for stat_type in SENSOR_STATS_BY_TYPE:
             for stat_time in SENSOR_STATS_BY_TIME:
                 entities.append(PetStatsSensor(coordinator, pet, stat_type, stat_time))
 
-        # Generic sensors
+        # One set of sensors per collar slot; secondary is the Fi Ultra.
+        slots = (
+            ["primary", "secondary"]
+            if getattr(pet, "secondaryDevice", None)
+            else ["primary"]
+        )
+
+        for slot in slots:
+            # Battery sensor
+            entities.append(TryFiBatterySensor(coordinator, pet, slot))
+
+            # Generic collar-backed sensors
+            for key in (
+                "connected_to",
+                "connection_state",
+                "led_color",
+                "module_id",
+                "signal_strength",
+            ):
+                entities.append(PetGenericSensor(coordinator, pet, key, slot))
+
+        # Pet-level sensors (not tied to a collar slot)
         entities.extend(
             [
                 PetGenericSensor(coordinator, pet, "activity_type"),
                 PetGenericSensor(coordinator, pet, "current_place_name"),
                 PetGenericSensor(coordinator, pet, "current_place_address"),
-                PetGenericSensor(coordinator, pet, "connected_to"),
                 PetGenericSensor(coordinator, pet, "gender"),
                 PetGenericSensor(coordinator, pet, "weight"),
                 PetGenericSensor(coordinator, pet, "age"),
-                PetGenericSensor(coordinator, pet, "connection_state"),
-                PetGenericSensor(coordinator, pet, "led_color"),
-                PetGenericSensor(coordinator, pet, "module_id"),
-                PetGenericSensor(coordinator, pet, "signal_strength"),
             ]
         )
 
@@ -274,6 +287,18 @@ async def async_setup_entry(
     )
 
 
+# Collar slots: primary is the pet's `device`, secondary is the Fi Ultra
+# (`secondaryDevice`). Primary keeps the legacy entity ids/names.
+DEVICE_SLOTS = {
+    "primary": {"device_attr": "device", "unique_id_prefix": "", "name_prefix": ""},
+    "secondary": {
+        "device_attr": "secondaryDevice",
+        "unique_id_prefix": "ultra-",
+        "name_prefix": "Ultra ",
+    },
+}
+
+
 class TryFiSensorBase(CoordinatorEntity, SensorEntity):
     """Base class for TryFi sensors."""
 
@@ -291,14 +316,20 @@ class TryFiSensorBase(CoordinatorEntity, SensorEntity):
 
 
 class TryFiBatterySensor(TryFiSensorBase):
-    """Representation of a TryFi battery sensor."""
+    """Representation of a TryFi battery sensor for a collar slot."""
 
-    def __init__(self, coordinator: Any, pet: Any) -> None:
+    def __init__(self, coordinator: Any, pet: Any, slot: str = "primary") -> None:
         """Initialize the battery sensor."""
         super().__init__(coordinator, SENSOR_DESCRIPTIONS["battery"])
         self._pet_id = pet.petId
-        self._attr_unique_id = f"{pet.petId}-battery"
-        self._attr_name = f"{pet.name} Collar Battery Level"
+        self._device_attr = DEVICE_SLOTS[slot]["device_attr"]
+        prefix = DEVICE_SLOTS[slot]["unique_id_prefix"]
+        self._attr_unique_id = f"{prefix}{pet.petId}-battery"
+        self._attr_name = f"{prefix}{pet.name} Collar Battery Level"
+
+    def _device(self) -> Any | None:
+        pet = self.coordinator.data.getPet(self._pet_id)
+        return getattr(pet, self._device_attr, None) if pet else None
 
     @property
     def device_info(self) -> dict[str, Any]:
@@ -317,9 +348,9 @@ class TryFiBatterySensor(TryFiSensorBase):
         # TODO: Can coordinator.data ever be None?
         if self.coordinator.data is None:
             return None
-        pet = self.coordinator.data.getPet(self._pet_id)
-        if pet and pet.device:
-            return pet.device.batteryPercent
+        device = self._device()
+        if device:
+            return device.batteryPercent
         return None
 
     @property
@@ -328,9 +359,9 @@ class TryFiBatterySensor(TryFiSensorBase):
         battery_level = self.native_value
         charging = False
 
-        pet = self.coordinator.data.getPet(self._pet_id)
-        if pet and pet.device:
-            charging = pet.device.isCharging
+        device = self._device()
+        if device:
+            charging = device.isCharging
 
         return icon_for_battery_level(battery_level, charging)
 
@@ -426,17 +457,52 @@ class PetStatsSensor(TryFiSensorBase):
 
 
 class PetGenericSensor(TryFiSensorBase):
-    """Representation of a generic TryFi pet sensor."""
+    """Representation of a generic TryFi pet sensor.
 
-    def __init__(self, coordinator: Any, pet: Any, key: str) -> None:
+    Device-backed keys (connected_to, connection_state, led_color, module_id,
+    signal_strength) read from the collar slot; pet-level keys read from the
+    pet itself.
+    """
+
+    _DEVICE_KEYS = frozenset(
+        {
+            "connected_to",
+            "connection_state",
+            "led_color",
+            "module_id",
+            "signal_strength",
+        }
+    )
+
+    def __init__(
+        self, coordinator: Any, pet: Any, key: str, slot: str = "primary"
+    ) -> None:
         """Initialize the generic sensor."""
         description = SENSOR_DESCRIPTIONS.get(key)
-        super().__init__(coordinator, description)
+        device_attr = DEVICE_SLOTS[slot]["device_attr"]
+        sensor_type = (
+            DEVICE_SLOTS[slot]["name_prefix"]
+            + (description.name if description else key.replace("_", " ").title())
+            if key in self._DEVICE_KEYS
+            else description.name
+            if description
+            else key.replace("_", " ").title()
+        )
         self._pet_id = pet.petId
         self._key = key
-        sensor_type = description.name if description else key.replace("_", " ").title()
-        self._attr_unique_id = f"{pet.petId}-{key.replace('_', '-').lower()}"
+        self._device_attr = device_attr if key in self._DEVICE_KEYS else None
+        prefix = (
+            DEVICE_SLOTS[slot]["unique_id_prefix"] if key in self._DEVICE_KEYS else ""
+        )
+        self._attr_unique_id = f"{prefix}{pet.petId}-{key.replace('_', '-').lower()}"
         self._attr_name = f"{pet.name} {sensor_type}"
+        super().__init__(coordinator, description)
+
+    def _device(self) -> Any | None:
+        pet = self.coordinator.data.getPet(self._pet_id)
+        if pet and self._device_attr:
+            return getattr(pet, self._device_attr, None)
+        return None
 
     @property
     def device_info(self) -> dict[str, Any]:
@@ -459,6 +525,29 @@ class PetGenericSensor(TryFiSensorBase):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
+        # Device-backed keys
+        if self._device_attr is not None:
+            device = self._device()
+            if not device:
+                return None
+
+            if self._key == "connected_to":
+                return getattr(device, "connectedTo", None)
+            elif self._key == "connection_state":
+                return getattr(device, "connectionStateType", None)
+            elif self._key == "led_color":
+                return getattr(device, "ledColor", None)
+            elif self._key == "module_id":
+                return getattr(device, "moduleId", None)
+            elif self._key == "signal_strength":
+                connected_to = getattr(device, "connectedTo", None)
+                if connected_to == "Cellular":
+                    return device.connectionSignalStrength
+                return None
+
+            return None
+
+        # Pet-level keys
         pet = self.coordinator.data.getPet(self._pet_id)
         if not pet:
             return None
@@ -469,9 +558,6 @@ class PetGenericSensor(TryFiSensorBase):
             return getattr(pet, "currPlaceName", None)
         elif self._key == "current_place_address":
             return getattr(pet, "currPlaceAddress", None)
-        elif self._key == "connected_to":
-            if hasattr(pet, "device") and pet.device:
-                return getattr(pet.device, "connectedTo", None)
         elif self._key == "gender":
             return getattr(pet, "gender", None)
         elif self._key == "weight":
@@ -483,20 +569,6 @@ class PetGenericSensor(TryFiSensorBase):
                 current_year = datetime.now().year
                 age = current_year - pet.yearOfBirth
                 return age
-            return None
-        elif self._key == "connection_state":
-            if hasattr(pet, "device") and pet.device:
-                return getattr(pet.device, "connectionStateType", None)
-        elif self._key == "led_color":
-            if hasattr(pet, "device") and pet.device:
-                return getattr(pet.device, "ledColor", None)
-        elif self._key == "module_id":
-            if hasattr(pet, "device") and pet.device:
-                return getattr(pet.device, "moduleId", None)
-        elif self._key == "signal_strength":
-            connected_to = getattr(pet.device, "connectedTo", None)
-            if connected_to and connected_to == "ConnectedToCellular":
-                return pet.device.connectionSignalStrength
             return None
 
         return None
