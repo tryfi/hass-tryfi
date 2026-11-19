@@ -30,6 +30,7 @@ class FiPet(object):
         self._currPlaceName = None
         self._currPlaceAddress = None
         self._device = None
+        self._secondaryDevice = None
         self._weight = None
         self._lastUpdated = None
         self._locationLastUpdate = None
@@ -86,6 +87,14 @@ class FiPet(object):
             self._photoLink = ""
         self._device = FiDevice(petJSON["device"]["id"])
         self._device.setDeviceDetailsJSON(petJSON["device"])
+
+        secondaryDeviceJSON = petJSON.get("secondaryDevice")
+        if secondaryDeviceJSON:
+            self._secondaryDevice = FiDevice(secondaryDeviceJSON.get("id"))
+            self._secondaryDevice.setDeviceDetailsJSON(secondaryDeviceJSON)
+        else:
+            self._secondaryDevice = None
+
         self._lastUpdated = datetime.datetime.now()
 
     def __str__(self):
@@ -240,6 +249,13 @@ class FiPet(object):
     def updateAllDetails(self, session: requests.Session):
         petJson = query.getPetAllInfo(session, self.petId)
         self.device.setDeviceDetailsJSON(petJson["device"])
+        secondaryDeviceJSON = petJson.get("secondaryDevice")
+        if secondaryDeviceJSON:
+            if self._secondaryDevice is None:
+                self._secondaryDevice = FiDevice(secondaryDeviceJSON.get("id"))
+            self._secondaryDevice.setDeviceDetailsJSON(secondaryDeviceJSON)
+        else:
+            self._secondaryDevice = None
         self.setCurrentLocation(petJson["ongoingActivity"])
         self.setStats(
             petJson["dailyStepStat"],
@@ -447,6 +463,10 @@ class FiPet(object):
     @property
     def device(self):
         return self._device
+
+    @property
+    def secondaryDevice(self):
+        return self._secondaryDevice
 
     @property
     def petId(self):

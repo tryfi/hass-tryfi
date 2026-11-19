@@ -21,44 +21,43 @@ class FiDevice(object):
         self._nextLocationUpdatedExpectedBy = None
 
     def setDeviceDetailsJSON(self, deviceJSON: dict):
-        self._moduleId = deviceJSON["moduleId"]
-        self._buildId = deviceJSON["info"]["buildId"]
+        self._moduleId = deviceJSON.get("moduleId")
+        info = deviceJSON.get("info") or {}
+        self._buildId = info.get("buildId")
         try:
-            self._batteryPercent = int(deviceJSON["info"]["batteryPercent"])
-        except (ValueError, TypeError):
+            self._batteryPercent = int(info["batteryPercent"])
+        except (KeyError, ValueError, TypeError):
             LOGGER.warning(
                 "Non-numeric batteryPercent: %s",
-                deviceJSON["info"].get("batteryPercent"),
+                info.get("batteryPercent"),
             )
             self._batteryPercent = None
 
         # V1 of the collar has this parameter but V2 it is missing
-        if "isCharging" in deviceJSON["info"]:
-            self._isCharging = bool(deviceJSON["info"]["isCharging"])
+        if "isCharging" in info:
+            self._isCharging = bool(info["isCharging"])
         else:
             self._isCharging = None
 
         # self._batteryHealth = deviceJSON['info']['batteryHealth']
-        self._ledOffAt = self.setLedOffAtDate(deviceJSON["operationParams"]["ledOffAt"])
-        self._ledOn = self.getAccurateLEDStatus(
-            bool(deviceJSON["operationParams"]["ledEnabled"])
-        )
-        self._mode = deviceJSON["operationParams"]["mode"]
-        self._ledColor = deviceJSON["ledColor"]["name"]
-        self._ledColorHex = deviceJSON["ledColor"]["hexCode"]
-        self._connectionStateDate = parse_fi_date(
-            deviceJSON["lastConnectionState"]["date"]
-        )
-        self._connectionStateType = deviceJSON["lastConnectionState"]["__typename"]
-        self._connectedTo = self.setConnectedTo(deviceJSON["lastConnectionState"])
+        operationParams = deviceJSON.get("operationParams") or {}
+        self._ledOffAt = self.setLedOffAtDate(operationParams.get("ledOffAt"))
+        self._ledOn = self.getAccurateLEDStatus(bool(operationParams.get("ledEnabled")))
+        self._mode = operationParams.get("mode")
+        ledColor = deviceJSON.get("ledColor") or {}
+        self._ledColor = ledColor.get("name")
+        self._ledColorHex = ledColor.get("hexCode")
+        lastConnectionState = deviceJSON.get("lastConnectionState")
+        if lastConnectionState:
+            self._connectionStateDate = parse_fi_date(lastConnectionState.get("date"))
+            self._connectionStateType = lastConnectionState.get("__typename")
+            self._connectedTo = self.setConnectedTo(lastConnectionState)
         self._nextLocationUpdatedExpectedBy = parse_fi_date(
-            deviceJSON["nextLocationUpdateExpectedBy"]
+            deviceJSON.get("nextLocationUpdateExpectedBy")
         )
         self._lastUpdated = datetime.datetime.now()
-        if "temperature" in deviceJSON["info"]:
-            self._temperature = (
-                float(deviceJSON["info"]["temperature"]) / 100
-            )  # celcius
+        if "temperature" in info:
+            self._temperature = float(info["temperature"]) / 100  # celcius
         if "availableLedColors" in deviceJSON:
             self._availableLedColors = []
             for cString in deviceJSON["availableLedColors"]:
@@ -79,7 +78,10 @@ class FiDevice(object):
             last = connectedToJSON["user"].get("lastName") or ""
             connectedToString = f"{first} {last}".strip()
         elif typename == "ConnectedToCellular":
-            connectedToString = "Cellular"
+            if connectedToJSON.get("isSatellite"):
+                connectedToString = "Satellite"
+            else:
+                connectedToString = "Cellular"
             self._connectionSignalStrength = connectedToJSON["signalStrengthPercent"]
         elif typename == "ConnectedToBase":
             connectedToString = "Base ID - " + connectedToJSON["chargingBase"]["id"]
