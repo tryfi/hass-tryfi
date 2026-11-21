@@ -13,6 +13,7 @@ from custom_components.tryfi.device_tracker import TryFiPetTracker
 from custom_components.tryfi.light import TryFiPetLight
 from custom_components.tryfi.select import TryFiLostModeSelect
 from custom_components.tryfi.sensor import (
+    SENSOR_DESCRIPTIONS,
     PetGenericSensor,
     PetStatsSensor,
     TryFiBaseSensor,
@@ -97,7 +98,9 @@ async def test_sensor_icon_selection(hass: HomeAssistant, mock_coordinator) -> N
     }
 
     for sensor_type, expected_icon in sensor_types_icons.items():
-        sensor = PetGenericSensor(mock_coordinator, pet, sensor_type)
+        sensor = PetGenericSensor(
+            mock_coordinator, pet, SENSOR_DESCRIPTIONS[sensor_type]
+        )
         assert sensor.icon == expected_icon
 
 
