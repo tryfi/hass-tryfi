@@ -1,40 +1,28 @@
-"""Tests for TryFi's Home Assistant diagnostics download."""
+"""Tests for TryFi's Home Assistant diagnostics platform."""
 
 import json
-from http import HTTPStatus
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.loader import async_get_integration
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from pytest_homeassistant_custom_component.typing import ClientSessionGenerator
 
 from custom_components.tryfi.const import CONF_POLLING_RATE, DOMAIN
 from custom_components.tryfi.coordinator import TryFiDataUpdateCoordinator
 from custom_components.tryfi.pytryfi import PyTryFi
 
 
-async def _download_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, entry: ConfigEntry
-):
-    """Read the integration payload through Home Assistant's diagnostics endpoint."""
-    assert await async_setup_component(hass, "diagnostics", {})
-    await hass.async_block_till_done()
-
-    client = await hass_client()
-    async with client.get(
-        f"/api/diagnostics/config_entry/{entry.entry_id}"
-    ) as response:
-        assert response.status == HTTPStatus.OK
-        return (await response.json())["data"]
+async def _get_diagnostics(hass: HomeAssistant, entry: ConfigEntry):
+    """Load the diagnostics platform and call its config-entry hook without HTTP."""
+    integration = await async_get_integration(hass, entry.domain)
+    platform = await integration.async_get_platform("diagnostics")
+    return await platform.async_get_config_entry_diagnostics(hass, entry)
 
 
-async def test_diagnostics_download(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
-):
-    """Download support data without serializing credentials or personal values."""
+async def test_diagnostics_payload(hass: HomeAssistant):
+    """Return support data without serializing credentials or personal values."""
     username = "canary-owner@example.invalid"
     password = "canary-password"
     token = "canary-session-token"
@@ -82,13 +70,10 @@ async def test_diagnostics_download(
 
     coordinator = TryFiDataUpdateCoordinator(hass, tryfi, polling_interval=45)
     hass.data[DOMAIN] = {entry.entry_id: coordinator}
-    # Platform discovery needs a loaded component. The mocked setup avoids API calls.
-    with patch("custom_components.tryfi.async_setup_entry", return_value=True):
-        assert await hass.config_entries.async_setup(entry.entry_id)
     for _ in range(13):
         await coordinator.async_refresh()
 
-    result = await _download_diagnostics(hass, hass_client, entry)
+    result = await _get_diagnostics(hass, entry)
     assert tryfi.update.call_count == 13
     payload = json.dumps(result, allow_nan=False)
     for canary in (
@@ -128,18 +113,14 @@ async def test_diagnostics_download(
     }
 
 
-async def test_diagnostics_before_data(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
-):
+async def test_diagnostics_before_data(hass: HomeAssistant):
     """Return safe config with no coordinator, and preserve unknown poll data."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_POLLING_RATE: "canary-invalid-rate"}
     )
     entry.add_to_hass(hass)
-    with patch("custom_components.tryfi.async_setup_entry", return_value=True):
-        assert await hass.config_entries.async_setup(entry.entry_id)
 
-    result = await _download_diagnostics(hass, hass_client, entry)
+    result = await _get_diagnostics(hass, entry)
     assert result == {
         "config": {
             "entry_version": entry.version,
@@ -155,7 +136,7 @@ async def test_diagnostics_before_data(
             hass, Mock(spec=PyTryFi), polling_interval=60
         )
     }
-    result = await _download_diagnostics(hass, hass_client, entry)
+    result = await _get_diagnostics(hass, entry)
     assert result["devices"] is None
     assert result["coordinator"] == {
         "last_update_success": None,
