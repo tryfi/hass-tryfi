@@ -1,7 +1,9 @@
 """Diagnostics for the TryFi integration."""
 
+from dataclasses import asdict
 from typing import Any
 
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -19,8 +21,8 @@ async def async_get_config_entry_diagnostics(
             "entry_version": entry.version,
             "polling_interval_seconds": (
                 polling_rate
-                if type(polling_rate) is int and 10 <= polling_rate <= 3600
-                else None
+                if polling_rate is None or isinstance(polling_rate, (str, int, float))
+                else REDACTED
             ),
             "polling_disabled": entry.pref_disable_polling,
         },
@@ -50,6 +52,10 @@ async def async_get_config_entry_diagnostics(
             type(last_exception).__name__ if last_exception is not None else None
         ),
         "recent_refresh_results": list(coordinator.recent_refresh_results),
+        "updates": {
+            area: asdict(result)
+            for area, result in coordinator.tryfi.refresh_status.items()
+        },
     }
 
     data = coordinator.data
