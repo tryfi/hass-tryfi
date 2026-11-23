@@ -109,6 +109,10 @@ class PyTryFi(object):
                 if behavior is not None:
                     attempted = True
                     error_type = error_type or behavior.error_type
+        except Exception as e:
+            if attempted:
+                error_type = error_type or type(e).__name__
+            raise
         finally:
             self._record_refresh("behavior_stats", error_type, attempted=attempted)
 

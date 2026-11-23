@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
@@ -151,6 +152,18 @@ async def test_diagnostics_before_data(hass: HomeAssistant):
     }
 
 
+async def test_diagnostics_redacts_structured_polling_value(hass: HomeAssistant):
+    """Keep nested data out of the diagnostic polling field."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_POLLING_RATE: {"arbitrary": "synthetic-private-value"}},
+    )
+    entry.add_to_hass(hass)
+
+    result = await _get_diagnostics(hass, entry)
+    assert result["config"]["polling_interval_seconds"] == REDACTED
+
+
 async def test_diagnostics_reports_partial_refreshes_and_recovery(
     hass: HomeAssistant,
 ):
@@ -182,7 +195,7 @@ async def test_diagnostics_reports_partial_refreshes_and_recovery(
     coordinator = TryFiDataUpdateCoordinator(hass, tryfi, polling_interval=60)
     hass.data[DOMAIN] = {entry.entry_id: coordinator}
     start = datetime(2025, 1, 1, tzinfo=UTC)
-    moments = [start + timedelta(minutes=minute) for minute in range(4)]
+    moments = [start + timedelta(minutes=minute) for minute in range(5)]
     detail = dict.fromkeys(
         [
             "device",
@@ -253,9 +266,24 @@ async def test_diagnostics_reports_partial_refreshes_and_recovery(
             }
 
         clock.now.return_value = moments[2]
-        pets.side_effect = LookupError(marker)
+        tryfi._pets.append(FiPet("synthetic-second-pet"))
+        pets.side_effect = [detail, LookupError(marker)]
         wifi.side_effect = None
         bases.side_effect = None
+        behavior.side_effect = None
+        await coordinator.async_refresh()
+        result = await _get_diagnostics(hass, entry)
+        updates = result["coordinator"]["updates"]
+        assert updates["pets"]["error_type"] == "LookupError"
+        assert updates["behavior_stats"] == {
+            **expected,
+            "status": "error",
+            "last_attempt_at": moments[2].isoformat(),
+            "error_type": "LookupError",
+        }
+
+        clock.now.return_value = moments[3]
+        pets.side_effect = LookupError(marker)
         await coordinator.async_refresh()
         result = await _get_diagnostics(hass, entry)
         updates = result["coordinator"]["updates"]
@@ -264,19 +292,19 @@ async def test_diagnostics_reports_partial_refreshes_and_recovery(
         assert updates["behavior_stats"] == {
             **expected,
             "status": "skipped",
-            "last_attempt_at": moments[1].isoformat(),
+            "last_attempt_at": moments[2].isoformat(),
         }
 
-        clock.now.return_value = moments[3]
+        clock.now.return_value = moments[4]
+        tryfi._pets.pop()
         pets.side_effect = None
-        behavior.side_effect = None
         await coordinator.async_refresh()
         result = await _get_diagnostics(hass, entry)
         assert result["coordinator"]["updates"] == dict.fromkeys(
             areas,
             {
                 **expected,
-                "last_attempt_at": moments[3].isoformat(),
-                "last_success_at": moments[3].isoformat(),
+                "last_attempt_at": moments[4].isoformat(),
+                "last_success_at": moments[4].isoformat(),
             },
         )
