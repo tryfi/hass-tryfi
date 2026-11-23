@@ -50,6 +50,10 @@ Current functionality includes:
 
 ![Setup](https://github.com/tryfi/hass-tryfi/blob/master/docs/setup.jpg?raw=true)
 
+## Diagnostics
+
+On the TryFi integration page, open the menu for the config entry and select **Download diagnostics**. The TryFi section contains polling settings, the last ten refresh outcomes since setup, the latest failure type, and basic collar battery, charging and base connectivity status. It omits account details, device identifiers, location data and raw API messages.
+
 ## Validation
 Once you have added the integration, you will see 1 or more devices and entities associated with this integration. To validate its accuracy, you can review the steps and distance counters for your pet or its current whereabouts.
 

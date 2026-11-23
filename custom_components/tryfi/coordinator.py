@@ -1,5 +1,7 @@
-from datetime import timedelta
 import logging
+from collections import deque
+from datetime import timedelta
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
@@ -24,6 +26,7 @@ class TryFiDataUpdateCoordinator(DataUpdateCoordinator[PyTryFi]):
         """Initialize the coordinator."""
         self.tryfi = tryfi
         self._previous_states = {}
+        self.recent_refresh_results: deque[bool] = deque(maxlen=10)
 
         super().__init__(
             hass,
@@ -47,8 +50,10 @@ class TryFiDataUpdateCoordinator(DataUpdateCoordinator[PyTryFi]):
             await self._check_state_changes()
 
         except Exception as err:
+            self.recent_refresh_results.append(False)
             raise UpdateFailed(f"Error communicating with TryFi API: {err}") from err
 
+        self.recent_refresh_results.append(True)
         return self.tryfi
 
     async def _check_state_changes(self) -> None:
