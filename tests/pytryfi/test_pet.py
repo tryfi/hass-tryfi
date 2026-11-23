@@ -1,5 +1,6 @@
 import datetime
 import json
+import pytest
 import requests
 import responses
 import urllib.parse
@@ -322,6 +323,99 @@ def test_pet_set_stats_missing_fields():
     assert pet.monthlyGoal is None
     assert pet.monthlySteps is None
     assert pet.monthlyTotalDistance is None
+
+
+@pytest.mark.parametrize(
+    ("fake_now", "expected_days"),
+    [
+        (datetime.datetime(2026, 11, 18, 12, 0, 0), 30),  # 30-day month
+        (datetime.datetime(2026, 12, 18, 12, 0, 0), 31),  # 31-day month
+        (datetime.datetime(2026, 2, 18, 12, 0, 0), 28),  # Feb non-leap year
+        (datetime.datetime(2028, 2, 18, 12, 0, 0), 29),  # Feb leap year
+    ],
+)
+def test_pet_set_stats_weekly_monthly_goal_fallback(fake_now, expected_days):
+    """Fall back to scaling dailyGoal when weekly/monthly stepGoal is None."""
+    pet = FiPet("test-pet")
+    daily = {
+        "__typename": "StepFeed",
+        "stepSummary": {
+            "__typename": "StepSummary",
+            "totalSteps": 1983,
+            "stepGoal": 27500,
+            "totalWalkDistanceMeters": 0,
+        },
+    }
+    weekly = {
+        "__typename": "StepFeed",
+        "stepSummary": {
+            "__typename": "StepSummary",
+            "totalSteps": 69775,
+            "stepGoal": None,
+            "totalWalkDistanceMeters": 21035,
+        },
+    }
+    monthly = {
+        "__typename": "StepFeed",
+        "stepSummary": {
+            "__typename": "StepSummary",
+            "totalSteps": 531021,
+            "stepGoal": None,
+            "totalWalkDistanceMeters": 139396,
+        },
+    }
+
+    with patch("custom_components.tryfi.pytryfi.fiPet.datetime") as mock_dt:
+        mock_dt.datetime.now.return_value = fake_now
+        pet.setStats(daily, weekly, monthly)
+
+    assert pet.dailyGoal == 27500
+    assert pet.weeklyGoal == 27500 * 7
+    assert pet.monthlyGoal == 27500 * expected_days
+    assert pet.weeklySteps == 69775
+    assert pet.monthlySteps == 531021
+
+
+def test_pet_set_stats_preserves_explicit_weekly_monthly_goals():
+    """Explicit non-None weekly/monthly stepGoal values from API are preserved."""
+    pet = FiPet("test-pet")
+    daily = {"stepSummary": {"stepGoal": 5000, "totalSteps": 1000}}
+    weekly = {"stepSummary": {"stepGoal": 40000, "totalSteps": 20000}}
+    monthly = {"stepSummary": {"stepGoal": 0, "totalSteps": 50000}}
+
+    pet.setStats(daily, weekly, monthly)
+
+    assert pet.dailyGoal == 5000
+    assert pet.weeklyGoal == 40000
+    assert pet.monthlyGoal == 0
+
+
+def test_pet_set_stats_zero_daily_goal_fallback():
+    """Zero dailyGoal scales to 0 (not None) for missing weekly/monthly goals."""
+    pet = FiPet("test-pet")
+    daily = {"stepSummary": {"stepGoal": 0, "totalSteps": 100}}
+    weekly = {"stepSummary": {"stepGoal": None, "totalSteps": 500}}
+    monthly = {"stepSummary": {"stepGoal": None, "totalSteps": 2000}}
+
+    pet.setStats(daily, weekly, monthly)
+
+    assert pet.dailyGoal == 0
+    assert pet.weeklyGoal == 0
+    assert pet.monthlyGoal == 0
+
+
+def test_pet_set_stats_none_daily_goal_stays_none():
+    """When dailyGoal is also None, weekly/monthly goals remain None without crashing."""
+    pet = FiPet("test-pet")
+    daily = {"stepSummary": {"stepGoal": None, "totalSteps": 100}}
+    weekly = {"stepSummary": {"stepGoal": None, "totalSteps": 500}}
+    monthly = {"stepSummary": {"stepGoal": None, "totalSteps": 2000}}
+
+    pet.setStats(daily, weekly, monthly)
+
+    assert pet.dailyGoal is None
+    assert pet.weeklyGoal is None
+    assert pet.monthlyGoal is None
 
 
 def test_pet_update_stats_success_and_failure():

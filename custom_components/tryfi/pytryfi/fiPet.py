@@ -1,3 +1,4 @@
+import calendar
 import datetime
 import logging
 import requests
@@ -152,6 +153,7 @@ class FiPet(object):
                 float(distance) if distance is not None else None,
             )
 
+        now = datetime.datetime.now()
         (
             self._dailyGoal,
             self._dailySteps,
@@ -163,14 +165,21 @@ class FiPet(object):
                 self._weeklySteps,
                 self._weeklyTotalDistance,
             ) = summary_values(activityJSONWeekly)
+            # Fi's API may return stepGoal=None for weekly/monthly summaries;
+            # fall back to scaling the daily goal when available.
+            if self._weeklyGoal is None and self._dailyGoal is not None:
+                self._weeklyGoal = self._dailyGoal * 7
         if activityJSONMonthly:
             (
                 self._monthlyGoal,
                 self._monthlySteps,
                 self._monthlyTotalDistance,
             ) = summary_values(activityJSONMonthly)
+            if self._monthlyGoal is None and self._dailyGoal is not None:
+                days_in_month = calendar.monthrange(now.year, now.month)[1]
+                self._monthlyGoal = self._dailyGoal * days_in_month
 
-        self._lastUpdated = datetime.datetime.now()
+        self._lastUpdated = now
 
     # Update the Stats of the pet
     def updateStats(self, sessionId: requests.Session):

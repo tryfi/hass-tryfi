@@ -200,6 +200,36 @@ async def test_stats_sensor(
     assert sensor.native_unit_of_measurement == UnitOfTime.MINUTES
 
 
+async def test_stats_sensor_weekly_monthly_goal_fallback(
+    hass: HomeAssistant, mock_coordinator
+) -> None:
+    """Weekly and monthly goal sensors fall back to scaled dailyGoal when API returns None."""
+    import datetime
+    from unittest.mock import patch
+
+    from custom_components.tryfi.pytryfi.fiPet import FiPet
+
+    pet = FiPet("test_pet_123")
+    pet._name = "Fido"
+    with patch("custom_components.tryfi.pytryfi.fiPet.datetime") as mock_dt:
+        mock_dt.datetime.now.return_value = datetime.datetime(2026, 11, 18, 12, 0, 0)
+        pet.setStats(
+            {"stepSummary": {"stepGoal": 27500, "totalSteps": 1983}},
+            {"stepSummary": {"stepGoal": None, "totalSteps": 69775}},
+            {"stepSummary": {"stepGoal": None, "totalSteps": 531021}},
+        )
+
+    mock_coordinator.data.getPet.return_value = pet
+
+    daily_goal = PetStatsSensor(mock_coordinator, pet, "GOAL", "DAILY")
+    weekly_goal = PetStatsSensor(mock_coordinator, pet, "GOAL", "WEEKLY")
+    monthly_goal = PetStatsSensor(mock_coordinator, pet, "GOAL", "MONTHLY")
+
+    assert daily_goal.native_value == 27500
+    assert weekly_goal.native_value == 192500
+    assert monthly_goal.native_value == 825000
+
+
 async def test_generic_sensor(
     hass: HomeAssistant, mock_coordinator, mock_pet_with_stats
 ) -> None:
