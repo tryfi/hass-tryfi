@@ -1,19 +1,34 @@
 """Tests for TryFi's Home Assistant diagnostics download."""
 
 import json
+from http import HTTPStatus
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from pytest_homeassistant_custom_component.components.diagnostics import (
-    get_diagnostics_for_config_entry,
-)
 from pytest_homeassistant_custom_component.typing import ClientSessionGenerator
 
 from custom_components.tryfi.const import CONF_POLLING_RATE, DOMAIN
 from custom_components.tryfi.coordinator import TryFiDataUpdateCoordinator
 from custom_components.tryfi.pytryfi import PyTryFi
+
+
+async def _download_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator, entry: ConfigEntry
+):
+    """Read the integration payload through Home Assistant's diagnostics endpoint."""
+    assert await async_setup_component(hass, "diagnostics", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    async with client.get(
+        f"/api/diagnostics/config_entry/{entry.entry_id}"
+    ) as response:
+        assert response.status == HTTPStatus.OK
+        return (await response.json())["data"]
 
 
 async def test_diagnostics_download(
@@ -73,7 +88,7 @@ async def test_diagnostics_download(
     for _ in range(13):
         await coordinator.async_refresh()
 
-    result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+    result = await _download_diagnostics(hass, hass_client, entry)
     assert tryfi.update.call_count == 13
     payload = json.dumps(result, allow_nan=False)
     for canary in (
@@ -124,7 +139,7 @@ async def test_diagnostics_before_data(
     with patch("custom_components.tryfi.async_setup_entry", return_value=True):
         assert await hass.config_entries.async_setup(entry.entry_id)
 
-    result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+    result = await _download_diagnostics(hass, hass_client, entry)
     assert result == {
         "config": {
             "entry_version": entry.version,
@@ -140,7 +155,7 @@ async def test_diagnostics_before_data(
             hass, Mock(spec=PyTryFi), polling_interval=60
         )
     }
-    result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+    result = await _download_diagnostics(hass, hass_client, entry)
     assert result["devices"] is None
     assert result["coordinator"] == {
         "last_update_success": None,
