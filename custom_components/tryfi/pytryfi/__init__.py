@@ -1,10 +1,13 @@
 """Library dedicated for interacting with tryfi.com"""
 
 import logging
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import Literal
 import requests
 
 from .fiUser import FiUser
-from .fiPet import FiPet
+from .fiPet import BehaviorRefresh, FiPet
 from .fiBase import FiBase
 from .fiDevice import FiDevice
 from .fiWifiNetwork import FiWifiNetwork
@@ -22,10 +25,21 @@ __all__ = ["FiDevice", "FiPet", "FiUser", "FiWifiNetwork", "PyTryFi"]
 LOGGER = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class RefreshStatus:
+    """Diagnostic status for one part of the refresh."""
+
+    status: Literal["success", "error", "skipped"]
+    last_attempt_at: str | None
+    last_success_at: str | None
+    error_type: str | None = None
+
+
 class PyTryFi(object):
     """base object for TryFi"""
 
     def __init__(self, username=None, password=None):
+        self._refresh_status: dict[str, RefreshStatus] = {}
         self._api_host = API_HOST_URL_BASE
         self._session = requests.Session()
         self._user_agent = "pyTryFi"
@@ -86,9 +100,21 @@ class PyTryFi(object):
         return f"TryFi Instance - {instString}\n Pets in Home:\n {petString}\n Bases In Home:\n {baseString}"
 
     # refresh pet details for all pets
-    def updatePets(self):
-        for pet in self._pets:
-            pet.updateAllDetails(self._session)
+    def updatePets(self) -> None:
+        attempted = False
+        error_type = None
+        try:
+            for pet in self._pets:
+                behavior: BehaviorRefresh | None = pet.updateAllDetails(self._session)
+                if behavior is not None:
+                    attempted = True
+                    error_type = error_type or behavior.error_type
+        except Exception as e:
+            if attempted:
+                error_type = error_type or type(e).__name__
+            raise
+        finally:
+            self._record_refresh("behavior_stats", error_type, attempted=attempted)
 
     # return the pet object based on petId
     def getPet(self, petId):
@@ -99,8 +125,9 @@ class PyTryFi(object):
         return None
 
     # refresh base details
-    def updateBases(self):
+    def updateBases(self) -> str | None:
         updatedBases = []
+        error_type = None
         baseListJSON = getBaseList(self._session)
         for house in baseListJSON:
             for base in house["household"]["bases"]:
@@ -113,7 +140,9 @@ class PyTryFi(object):
                     updatedBases.append(b)
                 except (KeyError, TypeError, ValueError) as e:
                     LOGGER.warning("Skipping base with invalid data: %s", e)
+                    error_type = error_type or type(e).__name__
         self._bases = updatedBases
+        return error_type
 
     # return the pet object based on petId
     def getBase(self, baseId):
@@ -123,8 +152,9 @@ class PyTryFi(object):
         LOGGER.error(f"Cannot find Base: {baseId}")
         return None
 
-    def updateWifiNetworks(self):
+    def updateWifiNetworks(self) -> str | None:
         updatedNetworks = []
+        error_type = None
         for householdId in self._householdIds:
             try:
                 wifiData = getWifiNetworks(self._session, householdId)
@@ -142,7 +172,9 @@ class PyTryFi(object):
                     e,
                     exc_info=True,
                 )
+                error_type = error_type or type(e).__name__
         self._wifiNetworks = updatedNetworks
+        return error_type
 
     def getWifiNetwork(self, ssid):
         for w in self._wifiNetworks:
@@ -160,18 +192,38 @@ class PyTryFi(object):
         )
 
     def update(self):
-        try:
-            self.updateBases()
-        except Exception as e:
-            LOGGER.warning("failed to update base: %s", e, exc_info=True)
-        try:
-            self.updatePets()
-        except Exception as e:
-            LOGGER.warning("failed to update pets: %s", e, exc_info=True)
-        try:
-            self.updateWifiNetworks()
-        except Exception as e:
-            LOGGER.warning("failed to update wifi networks: %s", e, exc_info=True)
+        for area, label, refresh in (
+            ("bases", "base", self.updateBases),
+            ("pets", "pets", self.updatePets),
+            ("wifi", "wifi networks", self.updateWifiNetworks),
+        ):
+            try:
+                error_type = refresh()
+            except Exception as e:
+                LOGGER.warning("failed to update %s: %s", label, e, exc_info=True)
+                error_type = type(e).__name__
+            self._record_refresh(area, error_type)
+
+    def _record_refresh(
+        self, area: str, error_type: str | None, *, attempted: bool = True
+    ) -> None:
+        previous = self._refresh_status.get(area)
+        last_attempt_at = previous.last_attempt_at if previous else None
+        last_success_at = previous.last_success_at if previous else None
+        status: Literal["success", "error", "skipped"] = "skipped"
+        if attempted:
+            last_attempt_at = datetime.now(UTC).isoformat()
+            status = "error" if error_type else "success"
+            if error_type is None:
+                last_success_at = last_attempt_at
+        self._refresh_status[area] = RefreshStatus(
+            status, last_attempt_at, last_success_at, error_type
+        )
+
+    @property
+    def refresh_status(self) -> dict[str, RefreshStatus]:
+        """Return a snapshot of per-area refresh outcomes."""
+        return self._refresh_status.copy()
 
     @property
     def currentUser(self):

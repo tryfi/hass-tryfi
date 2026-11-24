@@ -1,5 +1,6 @@
 import calendar
 import datetime
+from dataclasses import dataclass
 import logging
 import requests
 from .common import query
@@ -17,6 +18,13 @@ LOGGER = logging.getLogger(__name__)
 # refusal for one never suppresses another.
 BEHAVIOR_AUTH_FAILURE_LIMIT = 3
 BEHAVIOR_AUTH_BACKOFF = datetime.timedelta(minutes=30)
+
+
+@dataclass(frozen=True)
+class BehaviorRefresh:
+    """Outcome of an attempted behavior refresh."""
+
+    error_type: str | None = None
 
 
 class FiPet(object):
@@ -255,7 +263,7 @@ class FiPet(object):
             return False
 
     # Update all details regarding this pet
-    def updateAllDetails(self, session: requests.Session):
+    def updateAllDetails(self, session: requests.Session) -> BehaviorRefresh | None:
         petJson = query.getPetAllInfo(session, self.petId)
         self.device.setDeviceDetailsJSON(petJson["device"])
         secondaryDeviceJSON = petJson.get("secondaryDevice")
@@ -282,20 +290,23 @@ class FiPet(object):
         if self.device.supportsAdvancedBehaviorStats():
             # Try to fetch behavior data for Series 3+ collars
             try:
-                self.updateBehaviorStats(session)
+                return self.updateBehaviorStats(session)
             except Exception as e:
                 LOGGER.warning(
                     f"Could not update behavior stats for Pet {self.name}.\n{e}"
                 )
-                # Behavior stats may not be available for older collars
-                pass
+                return BehaviorRefresh(type(e).__name__)
+        return None
 
     # Update behavior stats for Series 3+ collars
-    def updateBehaviorStats(self, sessionId: requests.Session):
+    def updateBehaviorStats(
+        self, sessionId: requests.Session
+    ) -> BehaviorRefresh | None:
         """Update behavior statistics for Series 3+ collars."""
         now = datetime.datetime.now(datetime.timezone.utc)
         if self._behaviorAuthRetryAt is not None and now < self._behaviorAuthRetryAt:
-            return
+            return None
+        error_type = None
         for period in ["DAY", "WEEK", "MONTH"]:
             try:
                 healthTrendsJSON = query.getPetHealthTrends(
@@ -320,11 +331,13 @@ class FiPet(object):
                     LOGGER.warning(
                         f"Could not fetch {period} behavior trends for {self.name}: {e}"
                     )
-                return
+                return BehaviorRefresh(error_type or type(e).__name__)
             except Exception as e:
                 LOGGER.warning(
                     f"Could not fetch {period} behavior trends for {self.name}: {e}"
                 )
+                error_type = error_type or type(e).__name__
+        return BehaviorRefresh(error_type)
 
     def _parseBehaviorDuration(self, input: str) -> int:
         # examples: '1hr 5min', '46min', '1.5hr', '<1min', '10.1'
