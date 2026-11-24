@@ -131,6 +131,34 @@ GRAPHQL_PARTIAL_PET = {
         },
         "nextLocationUpdateExpectedBy": "2025-06-17T01:32:35.504Z",
     },
+    "secondaryDevice": {
+        "__typename": "Device",
+        "id": "ULTRA-DEVICEID",
+        "moduleId": "ULTRA-DEVICEID",
+        "info": {
+            "batteryPercent": 77,
+            "buildId": "2.0.0",
+            "isCharging": True,
+        },
+        "operationParams": {
+            "__typename": "OperationParams",
+            "mode": "NORMAL",
+            "ledEnabled": False,
+            "ledOffAt": None,
+        },
+        "ledColor": {
+            "__typename": "LedColor",
+            "ledColorCode": 1,
+            "hexCode": "ff0000",
+            "name": "Red",
+        },
+        "lastConnectionState": {
+            "__typename": "ConnectedToCellular",
+            "date": "2025-06-17T01:25:41.705Z",
+            "signalStrengthPercent": 60,
+        },
+        "nextLocationUpdateExpectedBy": "2025-06-17T01:32:35.504Z",
+    },
     "ongoingActivity": {
         "__typename": "OngoingRest",
         "areaName": "FooArea",

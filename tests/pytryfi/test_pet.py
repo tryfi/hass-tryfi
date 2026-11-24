@@ -916,3 +916,79 @@ class TestBehaviorAuthBackoff:
 def test_api_not_authorized_error_always_has_a_message():
     """str() of the error is never empty, so log lines do not end at the colon."""
     assert str(ApiNotAuthorizedError())
+
+
+class TestSecondaryDevice:
+    """Fi Ultra collars arrive as a secondaryDevice on the Pet (GitHub Issue #49)."""
+
+    def _pet_json(self):
+        pet_json = dict(GRAPHQL_PARTIAL_PET)
+        pet_json["secondaryDevice"] = {
+            "id": "ULTRA-ID",
+            "moduleId": "ULTRA-ID",
+            "info": {"buildId": "2.0.0", "batteryPercent": "77", "isCharging": True},
+            "operationParams": {
+                "ledOffAt": None,
+                "ledEnabled": False,
+                "mode": "NORMAL",
+            },
+            "ledColor": {"name": "Red", "hexCode": "#FF0000"},
+            "lastConnectionState": {
+                "__typename": "ConnectedToCellular",
+                "date": "2026-06-26T00:00:00.000Z",
+                "signalStrengthPercent": 60,
+            },
+            "nextLocationUpdateExpectedBy": "2026-06-26T01:00:00.000Z",
+        }
+        return pet_json
+
+    def test_set_pet_details_parses_secondary_device(self):
+        pet = FiPet("test-pet")
+        pet.setPetDetailsJSON(self._pet_json())
+
+        assert pet.secondaryDevice is not None
+        assert pet.secondaryDevice.deviceId == "ULTRA-ID"
+        assert pet.secondaryDevice.batteryPercent == 77
+        assert pet.secondaryDevice.isCharging is True
+        assert pet.secondaryDevice.connectedTo == "Cellular"
+        assert pet.secondaryDevice.connectionSignalStrength == 60
+        # The primary collar is unaffected.
+        assert pet.device.deviceId == "DEVICEID"
+
+    def test_set_pet_details_without_secondary_device(self):
+        pet = FiPet("test-pet")
+        pet_json = dict(GRAPHQL_PARTIAL_PET)
+        pet_json.pop("secondaryDevice", None)
+        pet.setPetDetailsJSON(pet_json)
+        assert pet.secondaryDevice is None
+
+    def test_update_all_details_parses_secondary_device(self):
+        pet = FiPet("test-pet")
+        pet._device = FiDevice("device-id")
+        with (
+            patch(
+                "custom_components.tryfi.pytryfi.common.query.getPetAllInfo",
+                return_value=self._pet_json(),
+            ),
+            patch.object(pet, "updateBehaviorStats"),
+        ):
+            pet.updateAllDetails(requests.Session())
+
+        assert pet.secondaryDevice is not None
+        assert pet.secondaryDevice.batteryPercent == 77
+
+    def test_update_all_details_clears_removed_secondary_device(self):
+        pet = FiPet("test-pet")
+        pet._device = FiDevice("device-id")
+        pet._secondaryDevice = FiDevice("stale")
+        pet_json = dict(GRAPHQL_PARTIAL_PET)
+        pet_json.pop("secondaryDevice", None)
+        with (
+            patch(
+                "custom_components.tryfi.pytryfi.common.query.getPetAllInfo",
+                return_value=pet_json,
+            ),
+            patch.object(pet, "updateBehaviorStats"),
+        ):
+            pet.updateAllDetails(requests.Session())
+        assert pet.secondaryDevice is None

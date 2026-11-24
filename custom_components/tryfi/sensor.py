@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -42,6 +44,132 @@ _LOGGER = logging.getLogger(__name__)
 
 # Counters that reset at the start of their period, so they need a last_reset.
 PERIOD_COUNTER_TYPES = frozenset({"STEPS", "DISTANCE"})
+
+
+@dataclass(frozen=True, kw_only=True)
+class PetSensorEntityDescription(SensorEntityDescription):
+    """A generic sensor that reads a value from the pet.
+
+    ``attr_name`` defaults to ``key``. ``compute`` derives the value from the
+    pet when it is more than a plain attribute lookup, and ``options`` lists
+    the allowed states of an enum sensor.
+    """
+
+    attr_name: str | None = None
+    compute: Callable[[Any], Any] | None = None
+    options: list[str] | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class DeviceSensorEntityDescription(SensorEntityDescription):
+    """A generic sensor that reads a value from one of the pet's collars.
+
+    The values live on the device rather than the pet, and each collar slot
+    (see ``DEVICE_SLOTS``) gets its own copy. ``attr_name`` defaults to ``key``.
+    """
+
+    attr_name: str | None = None
+    compute: Callable[[Any], Any] | None = None
+
+
+def _pet_age(pet: Any) -> int | None:
+    """Return the pet's age in whole years, or None without a birth year."""
+    year_of_birth = getattr(pet, "yearOfBirth", None)
+    if not year_of_birth:
+        return None
+    return datetime.now().year - year_of_birth
+
+
+def _cellular_signal_strength(device: Any) -> Any:
+    """Return the signal strength, which the collar only reports over cellular."""
+    if getattr(device, "connectedTo", None) != "Cellular":
+        return None
+    return device.connectionSignalStrength
+
+
+# Pet and collar sensors that are neither battery nor period statistics.
+# Entity ids are built from the description key, so keys are kept as they
+# have always been even where the attribute they read is named differently.
+GENERIC_SENSOR_DESCRIPTIONS: tuple[
+    PetSensorEntityDescription | DeviceSensorEntityDescription, ...
+] = (
+    # Pet-level
+    PetSensorEntityDescription(
+        key="activity_type",
+        name="Activity Type",
+        device_class=SensorDeviceClass.ENUM,
+        icon="mdi:run",
+        attr_name="activityType",
+        options=["OngoingWalk", "OngoingRest"],
+    ),
+    PetSensorEntityDescription(
+        key="current_place_name",
+        name="Current Place Name",
+        icon="mdi:map-marker",
+        attr_name="currPlaceName",
+    ),
+    PetSensorEntityDescription(
+        key="current_place_address",
+        name="Current Place Address",
+        icon="mdi:home-map-marker",
+        attr_name="currPlaceAddress",
+    ),
+    PetSensorEntityDescription(
+        key="gender",
+        name="Gender",
+        icon="mdi:gender-male-female",
+    ),
+    PetSensorEntityDescription(
+        key="weight",
+        name="Weight",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        device_class=SensorDeviceClass.WEIGHT,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:weight",
+    ),
+    PetSensorEntityDescription(
+        key="age",
+        name="Age",
+        native_unit_of_measurement="years",
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:calendar-clock",
+        compute=_pet_age,
+    ),
+    # Collar-level, one set per slot
+    DeviceSensorEntityDescription(
+        key="connected_to",
+        name="Connected To",
+        icon="mdi:wifi",
+        attr_name="connectedTo",
+    ),
+    DeviceSensorEntityDescription(
+        key="connection_state",
+        name="Connection State",
+        icon="mdi:connection",
+        attr_name="connectionStateType",
+    ),
+    DeviceSensorEntityDescription(
+        key="led_color",
+        name="LED Color",
+        icon="mdi:palette",
+        attr_name="ledColor",
+    ),
+    DeviceSensorEntityDescription(
+        key="module_id",
+        name="Module ID",
+        icon="mdi:identifier",
+        attr_name="moduleId",
+    ),
+    DeviceSensorEntityDescription(
+        key="signal_strength",
+        name="Signal Strength",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:signal",
+        compute=_cellular_signal_strength,
+    ),
+)
+
 
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "battery": SensorEntityDescription(
@@ -88,69 +216,7 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:power-sleep",
     ),
-    "activity_type": SensorEntityDescription(
-        key="activity_type",
-        name="Activity Type",
-        device_class=SensorDeviceClass.ENUM,
-        icon="mdi:run",
-    ),
-    "current_place_name": SensorEntityDescription(
-        key="current_place_name",
-        name="Current Place Name",
-        icon="mdi:map-marker",
-    ),
-    "current_place_address": SensorEntityDescription(
-        key="current_place_address",
-        name="Current Place Address",
-        icon="mdi:home-map-marker",
-    ),
-    "connected_to": SensorEntityDescription(
-        key="connected_to",
-        name="Connected To",
-        icon="mdi:wifi",
-    ),
-    "gender": SensorEntityDescription(
-        key="gender",
-        name="Gender",
-        icon="mdi:gender-male-female",
-    ),
-    "weight": SensorEntityDescription(
-        key="weight",
-        name="Weight",
-        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
-        device_class=SensorDeviceClass.WEIGHT,
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:weight",
-    ),
-    "age": SensorEntityDescription(
-        key="age",
-        name="Age",
-        native_unit_of_measurement="years",
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:calendar-clock",
-    ),
-    "connection_state": SensorEntityDescription(
-        key="connection_state",
-        name="Connection State",
-        icon="mdi:connection",
-    ),
-    "led_color": SensorEntityDescription(
-        key="led_color",
-        name="LED Color",
-        icon="mdi:palette",
-    ),
-    "module_id": SensorEntityDescription(
-        key="module_id",
-        name="Module ID",
-        icon="mdi:identifier",
-    ),
-    "signal_strength": SensorEntityDescription(
-        key="signal_strength",
-        name="Signal Strength",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:signal",
-    ),
+    **{description.key: description for description in GENERIC_SENSOR_DESCRIPTIONS},
 }
 
 
@@ -175,30 +241,31 @@ async def async_setup_entry(
     for pet in tryfi.pets:
         _LOGGER.debug("Adding sensors for pet: %s", pet.name)
 
-        # Battery sensor
-        entities.append(TryFiBatterySensor(coordinator, pet))
-
-        # Activity stats sensors
+        # Current stats sensors
         for stat_type in SENSOR_STATS_BY_TYPE:
             for stat_time in SENSOR_STATS_BY_TIME:
                 entities.append(PetStatsSensor(coordinator, pet, stat_type, stat_time))
 
-        # Generic sensors
-        entities.extend(
-            [
-                PetGenericSensor(coordinator, pet, "activity_type"),
-                PetGenericSensor(coordinator, pet, "current_place_name"),
-                PetGenericSensor(coordinator, pet, "current_place_address"),
-                PetGenericSensor(coordinator, pet, "connected_to"),
-                PetGenericSensor(coordinator, pet, "gender"),
-                PetGenericSensor(coordinator, pet, "weight"),
-                PetGenericSensor(coordinator, pet, "age"),
-                PetGenericSensor(coordinator, pet, "connection_state"),
-                PetGenericSensor(coordinator, pet, "led_color"),
-                PetGenericSensor(coordinator, pet, "module_id"),
-                PetGenericSensor(coordinator, pet, "signal_strength"),
-            ]
-        )
+        # One set of sensors per collar slot; secondary is the Fi Ultra.
+        slots = ["primary"]
+        if getattr(pet, "secondaryDevice", None):
+            slots.append("secondary")
+
+        for slot in slots:
+            # Battery sensor
+            entities.append(TryFiBatterySensor(coordinator, pet, slot))
+
+            # Generic collar-backed sensors
+            for description in GENERIC_SENSOR_DESCRIPTIONS:
+                if isinstance(description, DeviceSensorEntityDescription):
+                    entities.append(
+                        PetGenericSensor(coordinator, pet, description, slot)
+                    )
+
+        # Pet-level sensors (not tied to a collar slot)
+        for description in GENERIC_SENSOR_DESCRIPTIONS:
+            if isinstance(description, PetSensorEntityDescription):
+                entities.append(PetGenericSensor(coordinator, pet, description))
 
         # Add sleep quality score sensor
         if hasattr(pet, "device") and pet.device:
@@ -274,6 +341,18 @@ async def async_setup_entry(
     )
 
 
+# Collar slots: primary is the pet's `device`, secondary is the Fi Ultra
+# (`secondaryDevice`). Primary keeps the legacy entity ids/names.
+DEVICE_SLOTS = {
+    "primary": {"device_attr": "device", "unique_id_prefix": "", "name_prefix": ""},
+    "secondary": {
+        "device_attr": "secondaryDevice",
+        "unique_id_prefix": "ultra-",
+        "name_prefix": "Ultra ",
+    },
+}
+
+
 class TryFiSensorBase(CoordinatorEntity, SensorEntity):
     """Base class for TryFi sensors."""
 
@@ -291,14 +370,20 @@ class TryFiSensorBase(CoordinatorEntity, SensorEntity):
 
 
 class TryFiBatterySensor(TryFiSensorBase):
-    """Representation of a TryFi battery sensor."""
+    """Representation of a TryFi battery sensor for a collar slot."""
 
-    def __init__(self, coordinator: Any, pet: Any) -> None:
+    def __init__(self, coordinator: Any, pet: Any, slot: str = "primary") -> None:
         """Initialize the battery sensor."""
         super().__init__(coordinator, SENSOR_DESCRIPTIONS["battery"])
         self._pet_id = pet.petId
-        self._attr_unique_id = f"{pet.petId}-battery"
-        self._attr_name = f"{pet.name} Collar Battery Level"
+        self._device_attr = DEVICE_SLOTS[slot]["device_attr"]
+        prefix = DEVICE_SLOTS[slot]["unique_id_prefix"]
+        self._attr_unique_id = f"{prefix}{pet.petId}-battery"
+        self._attr_name = f"{prefix}{pet.name} Collar Battery Level"
+
+    def _device(self) -> Any | None:
+        pet = self.coordinator.data.getPet(self._pet_id)
+        return getattr(pet, self._device_attr, None) if pet else None
 
     @property
     def device_info(self) -> dict[str, Any]:
@@ -317,9 +402,9 @@ class TryFiBatterySensor(TryFiSensorBase):
         # TODO: Can coordinator.data ever be None?
         if self.coordinator.data is None:
             return None
-        pet = self.coordinator.data.getPet(self._pet_id)
-        if pet and pet.device:
-            return pet.device.batteryPercent
+        device = self._device()
+        if device:
+            return device.batteryPercent
         return None
 
     @property
@@ -328,9 +413,9 @@ class TryFiBatterySensor(TryFiSensorBase):
         battery_level = self.native_value
         charging = False
 
-        pet = self.coordinator.data.getPet(self._pet_id)
-        if pet and pet.device:
-            charging = pet.device.isCharging
+        device = self._device()
+        if device:
+            charging = device.isCharging
 
         return icon_for_battery_level(battery_level, charging)
 
@@ -426,17 +511,43 @@ class PetStatsSensor(TryFiSensorBase):
 
 
 class PetGenericSensor(TryFiSensorBase):
-    """Representation of a generic TryFi pet sensor."""
+    """Representation of a generic TryFi pet sensor.
 
-    def __init__(self, coordinator: Any, pet: Any, key: str) -> None:
+    The entity description decides where the value comes from: a
+    ``DeviceSensorEntityDescription`` reads from the collar slot, a
+    ``PetSensorEntityDescription`` from the pet itself.
+    """
+
+    def __init__(
+        self,
+        coordinator: Any,
+        pet: Any,
+        description: PetSensorEntityDescription | DeviceSensorEntityDescription,
+        slot: str = "primary",
+    ) -> None:
         """Initialize the generic sensor."""
-        description = SENSOR_DESCRIPTIONS.get(key)
-        super().__init__(coordinator, description)
+        self.entity_description = description
         self._pet_id = pet.petId
-        self._key = key
-        sensor_type = description.name if description else key.replace("_", " ").title()
-        self._attr_unique_id = f"{pet.petId}-{key.replace('_', '-').lower()}"
+        key = description.key
+
+        if isinstance(description, DeviceSensorEntityDescription):
+            self._device_attr: str | None = DEVICE_SLOTS[slot]["device_attr"]
+            sensor_type = DEVICE_SLOTS[slot]["name_prefix"] + description.name
+            prefix = DEVICE_SLOTS[slot]["unique_id_prefix"]
+        else:
+            self._device_attr = None
+            sensor_type = description.name
+            prefix = ""
+
+        self._attr_unique_id = f"{prefix}{pet.petId}-{key.replace('_', '-').lower()}"
         self._attr_name = f"{pet.name} {sensor_type}"
+        super().__init__(coordinator, description)
+
+    def _device(self) -> Any | None:
+        pet = self.coordinator.data.getPet(self._pet_id)
+        if pet and self._device_attr:
+            return getattr(pet, self._device_attr, None)
+        return None
 
     @property
     def device_info(self) -> dict[str, Any]:
@@ -451,55 +562,24 @@ class PetGenericSensor(TryFiSensorBase):
 
     @property
     def options(self) -> list[str] | None:
-        if self._key == "activity_type":
-            return ["OngoingWalk", "OngoingRest"]
-        else:
-            return None
+        description = self.entity_description
+        if isinstance(description, PetSensorEntityDescription):
+            return description.options
+        return None
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        pet = self.coordinator.data.getPet(self._pet_id)
-        if not pet:
+        description = self.entity_description
+        if isinstance(description, DeviceSensorEntityDescription):
+            source = self._device()
+        else:
+            source = self.coordinator.data.getPet(self._pet_id)
+        if source is None:
             return None
-
-        if self._key == "activity_type":
-            return getattr(pet, "activityType", None)
-        elif self._key == "current_place_name":
-            return getattr(pet, "currPlaceName", None)
-        elif self._key == "current_place_address":
-            return getattr(pet, "currPlaceAddress", None)
-        elif self._key == "connected_to":
-            if hasattr(pet, "device") and pet.device:
-                return getattr(pet.device, "connectedTo", None)
-        elif self._key == "gender":
-            return getattr(pet, "gender", None)
-        elif self._key == "weight":
-            return getattr(pet, "weight", None)
-        elif self._key == "age":
-            if hasattr(pet, "yearOfBirth") and pet.yearOfBirth:
-                from datetime import datetime
-
-                current_year = datetime.now().year
-                age = current_year - pet.yearOfBirth
-                return age
-            return None
-        elif self._key == "connection_state":
-            if hasattr(pet, "device") and pet.device:
-                return getattr(pet.device, "connectionStateType", None)
-        elif self._key == "led_color":
-            if hasattr(pet, "device") and pet.device:
-                return getattr(pet.device, "ledColor", None)
-        elif self._key == "module_id":
-            if hasattr(pet, "device") and pet.device:
-                return getattr(pet.device, "moduleId", None)
-        elif self._key == "signal_strength":
-            connected_to = getattr(pet.device, "connectedTo", None)
-            if connected_to and connected_to == "ConnectedToCellular":
-                return pet.device.connectionSignalStrength
-            return None
-
-        return None
+        if description.compute is not None:
+            return description.compute(source)
+        return getattr(source, description.attr_name or description.key, None)
 
 
 class TryFiBaseSensor(TryFiSensorBase):

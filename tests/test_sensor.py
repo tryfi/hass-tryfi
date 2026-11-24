@@ -52,8 +52,8 @@ def mock_pet_with_stats():
     pet.device = Mock()
     pet.device.batteryPercent = 75
     pet.device.isCharging = False
-    pet.device.connectedTo = "ConnectedToCellular"
-    pet.device.connectionStateType = "Cellular"
+    pet.device.connectedTo = "Cellular"
+    pet.device.connectionStateType = "ConnectedToCellular"
     pet.device.connectionSignalStrength = -85.0
     pet.device.ledColor = "RED"
     pet.device.moduleId = "mod_123"
@@ -236,76 +236,110 @@ async def test_generic_sensor(
     """Test TryFi generic sensor with all keys."""
     mock_coordinator.data.getPet.return_value = mock_pet_with_stats
 
+    def sensor_for(key: str, slot: str = "primary") -> PetGenericSensor:
+        return PetGenericSensor(
+            mock_coordinator, mock_pet_with_stats, SENSOR_DESCRIPTIONS[key], slot
+        )
+
     # Test activity type sensor
-    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "activity_type")
+    sensor = sensor_for("activity_type")
     assert sensor.unique_id == "test_pet_123-activity-type"
     assert sensor.name == "Fido Activity Type"
     assert sensor.native_value == "REST"
     assert sensor.icon == "mdi:run"
 
     # Test current place name
-    sensor = PetGenericSensor(
-        mock_coordinator, mock_pet_with_stats, "current_place_name"
-    )
+    sensor = sensor_for("current_place_name")
     assert sensor.unique_id == "test_pet_123-current-place-name"
     assert sensor.name == "Fido Current Place Name"
     assert sensor.native_value == "Home"
     assert sensor.icon == "mdi:map-marker"
 
     # Test current place address
-    sensor = PetGenericSensor(
-        mock_coordinator, mock_pet_with_stats, "current_place_address"
-    )
+    sensor = sensor_for("current_place_address")
     assert sensor.native_value == "123 Main St"
 
     # Test connected_to
-    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "connected_to")
+    sensor = sensor_for("connected_to")
     assert sensor.unique_id == "test_pet_123-connected-to"
     assert sensor.name == "Fido Connected To"
-    assert sensor.native_value == "ConnectedToCellular"
+    assert sensor.native_value == "Cellular"
     assert sensor.icon == "mdi:wifi"
 
     # Test gender
-    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "gender")
+    sensor = sensor_for("gender")
     assert sensor.native_value == "Male"
 
     # Test weight
-    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "weight")
+    sensor = sensor_for("weight")
     assert sensor.native_value == 30.5
 
     # Test age (with yearOfBirth)
-    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "age")
+    sensor = sensor_for("age")
     assert isinstance(sensor.native_value, int)
     assert sensor.native_value > 0
 
     # Test age (without yearOfBirth)
     mock_pet_with_stats.yearOfBirth = None
-    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "age")
+    sensor = sensor_for("age")
     assert sensor.native_value is None
 
     # Test connection_state
-    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "connection_state")
-    assert sensor.native_value == "Cellular"
+    sensor = sensor_for("connection_state")
+    assert sensor.native_value == "ConnectedToCellular"
 
     # Test led_color
-    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "led_color")
+    sensor = sensor_for("led_color")
     assert sensor.native_value == "RED"
 
     # Test module_id
-    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "module_id")
+    sensor = sensor_for("module_id")
     assert sensor.native_value == "mod_123"
 
     # Test signal_strength (cellular)
-    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "signal_strength")
+    sensor = sensor_for("signal_strength")
     assert sensor.native_value == -85.0
 
     # Test signal_strength (not cellular)
     mock_pet_with_stats.device.connectedTo = "WiFi"
     assert sensor.native_value is None
 
-    # Test unknown key
-    sensor = PetGenericSensor(mock_coordinator, mock_pet_with_stats, "unknown_key")
-    assert sensor.native_value is None
+
+def test_generic_sensor_reads_device_for_secondary_slot(
+    mock_coordinator, mock_pet_with_stats
+) -> None:
+    """Collar sensors target the slot's collar, not the pet's primary one."""
+    mock_coordinator.data.getPet.return_value = mock_pet_with_stats
+    secondary = Mock()
+    secondary.connectedTo = "WiFi"
+    secondary.moduleId = "ultra_mod"
+    mock_pet_with_stats.secondaryDevice = secondary
+
+    sensor = PetGenericSensor(
+        mock_coordinator,
+        mock_pet_with_stats,
+        SENSOR_DESCRIPTIONS["module_id"],
+        "secondary",
+    )
+
+    assert sensor.unique_id == "ultra-test_pet_123-module-id"
+    assert sensor.name == "Fido Ultra Module ID"
+    assert sensor.native_value == "ultra_mod"
+
+
+def test_generic_sensor_pet_description_ignores_collar(
+    mock_coordinator, mock_pet_with_stats
+) -> None:
+    """A pet description reads the pet even when a collar exists."""
+    mock_coordinator.data.getPet.return_value = mock_pet_with_stats
+    mock_pet_with_stats.device.connectedTo = "Cellular"
+
+    sensor = PetGenericSensor(
+        mock_coordinator, mock_pet_with_stats, SENSOR_DESCRIPTIONS["weight"]
+    )
+
+    assert sensor._device_attr is None
+    assert sensor.native_value == 30.5
 
 
 async def test_base_sensor(hass: HomeAssistant, mock_coordinator, mock_base) -> None:
@@ -389,7 +423,9 @@ async def test_sensor_no_data(hass: HomeAssistant, mock_coordinator) -> None:
     sensor = PetStatsSensor(mock_coordinator, mock_pet, "STEPS", "DAILY")
     assert sensor.native_value is None
 
-    sensor = PetGenericSensor(mock_coordinator, mock_pet, "Activity Type")
+    sensor = PetGenericSensor(
+        mock_coordinator, mock_pet, SENSOR_DESCRIPTIONS["activity_type"]
+    )
     assert sensor.native_value is None
 
     sensor = PetSleepQualitySensor(mock_coordinator, mock_pet)

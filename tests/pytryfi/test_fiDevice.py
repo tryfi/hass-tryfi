@@ -114,6 +114,21 @@ def test_connected_to_cellular():
     assert dev.connectionSignalStrength == 75
 
 
+def test_connected_to_cellular_satellite():
+    """ConnectedToCellular with isSatellite returns 'Satellite'."""
+    dev = _make_device()
+    result = dev.setConnectedTo(
+        {
+            "__typename": "ConnectedToCellular",
+            "date": "2026-06-26T00:00:00.000Z",
+            "isSatellite": True,
+            "signalStrengthPercent": 40,
+        }
+    )
+    assert result == "Satellite"
+    assert dev.connectionSignalStrength == 40
+
+
 def test_connected_to_base():
     """ConnectedToBase returns base ID string."""
     dev = _make_device()
