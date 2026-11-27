@@ -167,61 +167,8 @@ Sends notification when battery has charged to 100%.
 # Known Issues
 * It sometimes takes time for the status to accurately refresh in HA. For example the light on/off status and the Lost Mode select status.
 
-# Future Enhacements
-* Allow for the selection of the LED light color
-* Enable possibility of if pet not home and not with owner then trigger lost dog mode
-
-# Version History
-## 0.0.24 
-* updated deprecated classes
-## 0.0.23
-* Added support for dynamic lighting choices. 
-## 0.0.22
-* Added support for changing the color of the colar's LED light. This is currently based on a pre-defined set of colors.
-## 0.0.21
-* Version bump of pytry package
-## 0.0.20
-* Fix - Due to recent changes by TryFi, additional changes were required in the pytryfi library. Bumping version to include those changes/fixes.
-## 0.0.19
-* Fix - pets without collars were causing errors.
-## 0.0.18
-* Enhancement - Battery Charging - it will report if your Pet's collar is charging
-## 0.0.17
-* Enhancement - added the attribute ConnectedTo which will determine if the pet is connected to a person, base, etc.
-* Fix - base data was not updating. This issue is resolved.
-## 0.0.16
-* Enhancement - requested to add the attributes Activity Type, Current Place Name and Current Place Address.
-## 0.0.15
-* Version bump to support latest pytryfi version 0.0.16 that includes multiple households
-## 0.0.14
-* Fix - fixed sleep and nap units from hours to minutes with proper conversion
-## 0.0.13
-* Enhancement - Added Sleep and Nap "sensors"/attributes based on new version of pytryfi
-## 0.0.12
-* Fix - Issue where base status (online/offline) was not set correctly.
-## 0.0.11
-* Version bump to support latest pytryfi version 0.0.14.1
-## 0.0.10
-* Lost Mode is now a select entity instead of a lock entity
-## 0.0.9
-* Updated dependency version of pytryfi
-* Fixed [Issue #30](https://github.com/tryfi/hass-tryfi/issues/30) - Convert to Async
-## 0.0.8
-* Updating dependency version of pytryfi
-## 0.0.7
-* Updating dependency version of pytryfi
-## 0.0.6
-* Steps unit was added to enable charting of dogs steps over time.
-## 0.0.5
-* Fixed [Issue #15](https://github.com/tryfi/hass-tryfi/issues/15) - dependency update
-## 0.0.4
-* Fixed [Issue #17](https://github.com/tryfi/hass-tryfi/issues/17) - converted to async
-## 0.0.3
-* Multiple bases fix
-## 0.0.2
-* Documentation updates
-## 0.0.1
-* Initial Release with basic functionality including light on/off, device tracker, lock mode of dog and general stats
+# Contributor Policy
+The AI Policy for this integration is: No matter if you write code by hand or using AI, you should understand what it's doing and how. Please do a once-over read of your own code before sending a Pull request to make our jobs easier.
 
 # Links
 * [Python TryFi Interface](https://github.com/tryfi/pytryfi)
